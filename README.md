@@ -15,7 +15,7 @@ Sistem ini dirancang sebagai **AI Operating System Terpusat** untuk mengotomasi 
 ## 📂 Struktur Direktori
 
 ```text
-ai-core/
+agent-dashboard/
 ├── PRD.md                             # Product Requirement Document (PRD) Lengkap
 ├── README.md                          # Panduan & Dokumentasi Ringkas
 │
@@ -27,7 +27,8 @@ ai-core/
 │   ├── 03_agent_specifications.md     # Day 3: Spesifikasi Rinci Job Description Agent
 │   ├── 04_business_rules.md           # Day 4: Aturan Bisnis & Batas Ambang Diskon
 │   ├── 05_permission_approval_matrix.md # Day 5: Matriks Hak Akses & Alur Approval
-│   └── 06_database_schema_erd.md      # Day 6: Skema Database & Relasi ke HRIS
+│   ├── 06_database_schema_erd.md      # Day 6: Skema Database & Relasi ke HRIS
+│   └── 07_minggu_1_review_presentation.md # Day 7: Presentasi Eksekutif untuk Owner
 │
 ├── core/                              # Fase Prototype (Minggu 2)
 │   ├── orchestrator.py                # Kernel Eksekusi Utama
@@ -48,7 +49,9 @@ ai-core/
 │   ├── pricing_tools.py               # Kalkulasi tarif sewa & durasi
 │   └── rental_tools.py                # Pembuatan Quotation & SPK
 │
-├── knowledge/                         # Knowledge Base Dinamis (Markdown & JSON)
+├── knowledge/                         # Knowledge Base Dinamis (Markdown, JSON, SQL)
+│   ├── rules_config.json              # Konfigurasi batas diskon & nominal
+│   ├── schema.sql                     # Skema DDL 16 entitas database
 │   ├── sop_rental_terms.md            # Syarat Jaminan KTP/Perusahaan
 │   ├── laptop_catalog.json            # Katalog tipe unit & spesifikasi
 │   └── faq_komplain.md                # Panduan teknis & troubleshooting
@@ -69,8 +72,9 @@ USER INPUT ➔ AI CORE ➔ ROUTER (Hermes) ➔ SPECIALIST AGENT ➔ KNOWLEDGE BA
 ---
 
 ## 📖 Dokumen Referensi Cepat
-- **[PRD Lengkap](file:///c:/server/www/ISKOM/ai-core/PRD.md)**: Gambaran kebutuhan, fitur, dan spesifikasi teknis.
-- **[Rencana Kerja 2 Minggu](file:///c:/server/www/ISKOM/ai-core/docs/ROADMAP_2_WEEKS.md)**: Checklist pengerjaan harian Day 1 sampai Day 14.
-- **[Diagram Arsitektur & Flowchart](file:///c:/server/www/ISKOM/ai-core/docs/ARCHITECTURE_AND_FLOWCHART.md)**: Diagram Mermaid interaktif lengkap.
-- **[Company Process Map](file:///c:/server/www/ISKOM/ai-core/docs/01_company_process_map.md)**: Pemetaan operasional 8 divisi bisnis ISKOM.
-- **[AI Organization Chart](file:///c:/server/www/ISKOM/ai-core/docs/02_ai_organization_chart.md)**: Struktur komando multi-agent.
+- **[PRD Lengkap](file:///c:/server/www/ISKOM/agent-dashboard/PRD.md)**: Gambaran kebutuhan, fitur, dan spesifikasi teknis.
+- **[Rencana Kerja 2 Minggu](file:///c:/server/www/ISKOM/agent-dashboard/docs/ROADMAP_2_WEEKS.md)**: Checklist pengerjaan harian Day 1 sampai Day 14.
+- **[Diagram Arsitektur & Flowchart](file:///c:/server/www/ISKOM/agent-dashboard/docs/ARCHITECTURE_AND_FLOWCHART.md)**: Diagram Mermaid interaktif lengkap.
+- **[Company Process Map](file:///c:/server/www/ISKOM/agent-dashboard/docs/01_company_process_map.md)**: Pemetaan operasional 8 divisi bisnis ISKOM.
+- **[AI Organization Chart](file:///c:/server/www/ISKOM/agent-dashboard/docs/02_ai_organization_chart.md)**: Struktur komando multi-agent.
+- **[Review Minggu 1](file:///c:/server/www/ISKOM/agent-dashboard/docs/07_minggu_1_review_presentation.md)**: Presentasi eksekutif fondasi desain.
