@@ -1,6 +1,6 @@
 """
 ISKOM AI-OS Semantic Intent Router
-Orchestrating prompt categorization and routing to specialist agents.
+Orchestrating prompt categorization, security interception, and routing to specialist agents.
 """
 
 import re
@@ -30,8 +30,30 @@ class IntentRouter:
         # Ekstraksi Entitas Umum (Quantity, Unit Model, Diskon, Invoice No)
         entities = self._extract_entities(message.text)
 
+        # 0. SECURITY INTERCEPTION: Deteksi CAPTCHA / OTP / Fallback Manusia
+        if any(k in text for k in ["captcha", "kode otp", "otp sms", "verifikasi otp", "sms kode"]):
+            return RouteDecision(
+                agent_id="AGENT-CS-01",
+                agent_name=self.agent_registry["AGENT-CS-01"],
+                intent="SECURITY_HUMAN_INTERVENTION",
+                confidence=1.0,
+                extracted_entities=entities,
+                reasoning="Terdeteksi permintaan CAPTCHA atau OTP. AI dilarang memproses otomatis sesuai aturan RULE-SEC-01 & RULE-SEC-02 (Wajib intervensi staf manusia)."
+            )
+
+        # 0.1 SECURITY INTERCEPTION: Deteksi Prompt Injection / Diskon Ilegal
+        if any(k in text for k in ["abaikan aturan", "lupakan aturan", "diskon 100%", "gratis tanpa bayar"]):
+            return RouteDecision(
+                agent_id="AGENT-SLS-01",
+                agent_name=self.agent_registry["AGENT-SLS-01"],
+                intent="SECURITY_PROMPT_INJECTION_BLOCKED",
+                confidence=1.0,
+                extracted_entities=entities,
+                reasoning="Percobaan prompt injection atau permintaan diskon ilegal diblokir oleh Rule Guard."
+            )
+
         # 1. Deteksi Evaluasi KPI / Eksekutif / Laporan Omset
-        if any(k in text for k in ["omset", "kpi", "utilisasi", "laporan eksekutif", "rekap bisnis", "ringkasan pendapatan"]):
+        if any(k in text for k in ["omset", "kpi", "utilisasi", "laporan eksekutif", "rekap bisnis", "ringkasan pendapatan", "tingkat utilisasi"]):
             return RouteDecision(
                 agent_id="AGENT-KPI-01",
                 agent_name=self.agent_registry["AGENT-KPI-01"],
@@ -52,15 +74,15 @@ class IntentRouter:
                 reasoning="Instruksi berkaitan dengan penagihan invoice, status pembayaran, atau urusan finansial sewa."
             )
 
-        # 3. Deteksi Kendala Teknis / Komplain / Customer Service / FAQ & Syarat
-        if any(k in text for k in ["rusak", "mati", "error", "bergaris", "flickering", "komplain", "kendala", "bantuan teknis", "charger rusak", "baterai drop", "syarat", "jaminan", "ktp", "prosedur sewa", "faq"]):
+        # 3. Deteksi Kendala Teknis / Komplain / Customer Service / FAQ & Syarat / Denda
+        if any(k in text for k in ["rusak", "mati", "error", "bergaris", "flickering", "komplain", "kendala", "bantuan teknis", "charger rusak", "baterai drop", "syarat", "jaminan", "ktp", "prosedur sewa", "faq", "denda"]):
             return RouteDecision(
                 agent_id="AGENT-CS-01",
                 agent_name=self.agent_registry["AGENT-CS-01"],
                 intent="CUSTOMER_SUPPORT_OR_FAQ",
                 confidence=0.98,
                 extracted_entities=entities,
-                reasoning="Instruksi berupa pertanyaan syarat sewa/FAQ atau keluhan operasional unit laptop."
+                reasoning="Instruksi berupa pertanyaan syarat sewa/FAQ/kebijakan denda atau keluhan operasional unit laptop."
             )
 
         # 4. Deteksi Inventory / Cek Stok Fisik Gudang
@@ -74,7 +96,18 @@ class IntentRouter:
                 reasoning="Instruksi menanyakan ketersediaan fisik stok laptop di gudang."
             )
 
-        # 5. Default / Rental & Sales (Sewa, Quotation, Permintaan Unit, Diskon)
+        # 5. Deteksi Pencarian Produk / Rekomendasi
+        if any(k in text for k in ["cari laptop", "rekomendasi", "spesifikasi laptop", "tarif sewa", "berapa tarif"]):
+            return RouteDecision(
+                agent_id="AGENT-SLS-01",
+                agent_name=self.agent_registry["AGENT-SLS-01"],
+                intent="PRODUCT_CATALOG_SEARCH",
+                confidence=0.95,
+                extracted_entities=entities,
+                reasoning="Instruksi mencari spesifikasi laptop, rekomendasi unit, atau daftar tarif sewa."
+            )
+
+        # 6. Default / Rental & Sales (Sewa, Quotation, Permintaan Unit, Diskon)
         return RouteDecision(
             agent_id="AGENT-SLS-01",
             agent_name=self.agent_registry["AGENT-SLS-01"],
@@ -108,6 +141,12 @@ class IntentRouter:
             entities["unit_model"] = "Dell Latitude"
         elif "hp" in text:
             entities["unit_model"] = "HP EliteBook"
+        elif "alienware" in text:
+            entities["unit_model"] = "Alienware"
+        elif "rog" in text:
+            entities["unit_model"] = "Asus ROG"
+        elif "printer" in text:
+            entities["unit_model"] = "Printer"
         elif "i7" in text:
             entities["unit_model"] = "Laptop Core i7"
         elif "i5" in text:
