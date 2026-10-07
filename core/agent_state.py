@@ -33,12 +33,31 @@ AGENT_ROSTER: List[Dict[str, str]] = [
 ]
 
 ROOM_BY_STATUS = {
-    "OFFLINE": "bedroom",
+    "OFFLINE": "dorm",
+    "SLEEPING": "dorm",
     "IDLE": "lounge",
     "WORKING": "work",
     "WAITING_APPROVAL": "owner",
     "HUMAN_NEEDED": "owner",
     "ERROR": "er",
+}
+
+FLOOR_BY_ROOM = {
+    "work": 1,
+    "meeting": 1,
+    "owner": 1,
+    "warehouse": 1,
+    "lounge": 1,
+    "pantry": 1,
+    "game": 1,
+    "outdoor": 1,
+    "server": 1,
+    "er": 1,
+    "dorm": 2,
+    "bedroom": 2,
+    "balcony": 2,
+    "lesehan": 2,
+    "restroom": 2,
 }
 
 
@@ -56,6 +75,7 @@ class AgentStateTracker:
                 **meta,
                 "implemented": built,
                 "powered": built,
+                "sleeping": False,
                 "status": "IDLE" if built else "OFFLINE",
                 "task": None,
                 "tools": [],
@@ -76,6 +96,8 @@ class AgentStateTracker:
             return "OFFLINE"
         if ag["busy_until"] > now:
             return "WORKING"
+        if ag.get("sleeping", False):
+            return "SLEEPING"
         if ag["status"] == "ERROR" and ag["error_until"] <= now:
             ag["status"] = "IDLE"
             ag["since"] = now
@@ -88,6 +110,8 @@ class AgentStateTracker:
         agents_out = []
         for ag in self.agents.values():
             status = self._effective_status(ag, now)
+            room = ROOM_BY_STATUS.get(status, "lounge")
+            floor = FLOOR_BY_ROOM.get(room, 1)
             agents_out.append({
                 "id": ag["id"],
                 "name": ag["name"],
@@ -95,8 +119,10 @@ class AgentStateTracker:
                 "role": ag["role"],
                 "implemented": ag["implemented"],
                 "powered": ag["powered"],
+                "sleeping": ag.get("sleeping", False),
                 "status": status,
-                "room": ROOM_BY_STATUS[status],
+                "room": room,
+                "floor": floor,
                 "task": ag["task"],
                 "tools": ag["tools"],
                 "last_reply": ag["last_reply"],
@@ -104,6 +130,8 @@ class AgentStateTracker:
                 "since": ag["since"],
             })
         pending = [a for a in self.approvals if a["state"] == "PENDING"]
+        floor1_count = sum(1 for a in agents_out if a["floor"] == 1 and a["powered"])
+        floor2_count = sum(1 for a in agents_out if a["floor"] == 2 or not a["powered"])
         return {
             "server_time": now,
             "agents": agents_out,
@@ -112,6 +140,9 @@ class AgentStateTracker:
                 "online": sum(1 for a in agents_out if a["powered"]),
                 "total": len(agents_out),
                 "working": sum(1 for a in agents_out if a["status"] == "WORKING"),
+                "sleeping": sum(1 for a in agents_out if a["status"] == "SLEEPING"),
+                "floor1": floor1_count,
+                "floor2": floor2_count,
                 "pending_approvals": len(pending),
             },
         }
@@ -190,6 +221,48 @@ class AgentStateTracker:
             raise ValueError(f"{ag['name']} belum dibangun (fase berikutnya), tidak bisa diaktifkan")
         ag["powered"] = on
         ag["busy_until"] = 0.0
+        ag["sleeping"] = False
         ag["status"] = "IDLE" if on else "OFFLINE"
         ag["since"] = time.time()
         return {"agent_id": agent_id, "powered": on}
+
+    def sleep_all(self) -> Dict[str, Any]:
+        """Kirim semua agen aktif yang sedang idle ke dorm kamar tidur (Lantai 2)"""
+        count = 0
+        now = time.time()
+        for ag in self.agents.values():
+            if ag["powered"] and ag["status"] in ("IDLE", "SLEEPING"):
+                ag["sleeping"] = True
+                ag["since"] = now
+                count += 1
+        return {"status": "SUCCESS", "sleeping_count": count, "mode": "SLEEP"}
+
+    def wake_all(self) -> Dict[str, Any]:
+        """Bangunkan semua agen dari tidur kembali ke Lantai 1 (standby / IDLE)"""
+        count = 0
+        now = time.time()
+        for ag in self.agents.values():
+            if ag["powered"] and ag.get("sleeping", False):
+                ag["sleeping"] = False
+                ag["since"] = now
+                count += 1
+        return {"status": "SUCCESS", "woken_count": count, "mode": "AWAKE"}
+
+    def toggle_sleep_all(self) -> Dict[str, Any]:
+        """Toggle antara tidurkan semua agen idle vs bangunkan semua agen"""
+        any_sleeping = any(ag.get("sleeping", False) for ag in self.agents.values() if ag["powered"])
+        if any_sleeping:
+            return self.wake_all()
+        return self.sleep_all()
+
+    def toggle_agent_sleep(self, agent_id: str) -> Dict[str, Any]:
+        """Toggle tidur untuk 1 agen spesifik"""
+        ag = self.agents.get(agent_id)
+        if not ag:
+            raise KeyError(f"Agen '{agent_id}' tidak terdaftar")
+        if not ag["powered"]:
+            raise ValueError(f"{ag['name']} sedang offline")
+        ag["sleeping"] = not ag.get("sleeping", False)
+        ag["since"] = time.time()
+        return {"agent_id": agent_id, "sleeping": ag["sleeping"]}
+

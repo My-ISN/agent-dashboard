@@ -135,6 +135,14 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
                 return self.handle_approve(data)
             if path == "/api/agents/power":
                 return self._json(orchestrator.state.set_power(data.get("agent_id", ""), bool(data.get("on"))))
+            if path == "/api/agents/sleep-all":
+                return self._json(orchestrator.state.sleep_all())
+            if path == "/api/agents/wake-all":
+                return self._json(orchestrator.state.wake_all())
+            if path == "/api/agents/toggle-sleep":
+                if data.get("agent_id"):
+                    return self._json(orchestrator.state.toggle_agent_sleep(data["agent_id"]))
+                return self._json(orchestrator.state.toggle_sleep_all())
             if path == "/api/agents/resolve":
                 orchestrator.state.clear_human_needed(data.get("agent_id", ""))
                 return self._json({"status": "SUCCESS"})

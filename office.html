@@ -3,24 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ISKOM AI-OS — Virtual Office Dashboard</title>
+  <title>Ruang · ISKOM AI-OS Virtual Office & Mission Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #111827;
-      --card-sub: #1f2937;
-      --border: #1f2937;
-      --border-focus: #374151;
-      --text: #f9fafb;
-      --text-muted: #9ca3af;
-      --text-secondary: #d1d5db;
+      --bg: #090d16;
+      --card-bg: #0f172a;
+      --card-sub: #1e293b;
+      --border: #223049;
+      --border-focus: #3b82f6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-secondary: #cbd5e1;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --success: #16a34a;
-      --warning: #d97706;
-      --danger: #dc2626;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
       --radius: 8px;
     }
 
@@ -30,125 +31,282 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 20px;
       line-height: 1.5;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 1520px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Top Navigation Bar */
-    header {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 20px;
+    /* Top HUD / Mission Control Header */
+    header.hud-header {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
       flex-wrap: wrap;
-      gap: 12px;
     }
 
-    .brand {
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .brand-title h1 {
-      font-size: 16px;
+    .brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: -0.2px;
+      letter-spacing: -0.3px;
       color: var(--text);
-    }
-
-    .brand-title p {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .header-meta {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 13px;
+      gap: 8px;
     }
 
-    .live-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 99px;
-      background: rgba(22, 163, 74, 0.15);
-      color: #4ade80;
-      font-size: 12px;
-      font-weight: 600;
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
     .live-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #4ade80;
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+      animation: pulse 2s infinite;
     }
 
-    .clock-display {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--text-muted);
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
     }
 
-    /* Stat Strips */
-    .stat-strip {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
+    /* HUD Chips */
+    .hud-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .exp-stat-card {
-      background: var(--card-bg);
+    .hud-chip {
+      background: var(--card-sub);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-    }
-
-    .exp-stat-label {
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    .exp-stat-value {
-      font-size: 22px;
-      font-weight: 700;
-      margin-top: 4px;
+    .hud-chip .val {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .hud-chip.highlight-green .val { color: #34d399; }
+    .hud-chip.highlight-amber .val { color: #fbbf24; }
+    .hud-chip.highlight-blue .val { color: #60a5fa; }
+
+    /* Header Action Controls */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-group {
+      display: inline-flex;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .btn-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-toggle:hover {
       color: var(--text);
     }
 
-    .exp-stat-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
+    .btn-toggle.active {
+      background: var(--primary);
+      color: #fff;
     }
 
-    /* Main Workspace Grid */
-    .workspace-grid {
+    .btn-pill {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-pill:hover {
+      background: #2a3a52;
+      border-color: #3b82f6;
+    }
+
+    .btn-pill.sleep-btn {
+      color: #cbd5e1;
+    }
+
+    .btn-pill.sleep-btn.active-sleep {
+      background: #312e81;
+      border-color: #6366f1;
+      color: #e0e7ff;
+    }
+
+    .btn-pill.panel-btn {
+      background: #1e293b;
+    }
+
+    /* Main Container */
+    .app-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 20px 40px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Canvas Frame */
+    .office-view-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+    }
+
+    .office-view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .floor-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .floor-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .floor-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      color: var(--text-muted);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: #060911;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    #office-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .canvas-overlay-tip {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.45);
+      pointer-events: none;
+      background: rgba(10, 15, 26, 0.7);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .room-legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-box {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* Bottom Section: Command Input + Live Audit */
+    .bottom-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 380px;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
       gap: 16px;
     }
 
-    @media (max-width: 1180px) {
-      .workspace-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1024px) {
+      .bottom-grid { grid-template-columns: 1fr; }
     }
 
     .card {
@@ -160,11 +318,11 @@
       flex-direction: column;
     }
 
-    .card-header {
+    .card-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
     }
@@ -172,348 +330,524 @@
     .card-title {
       font-size: 13px;
       font-weight: 700;
-      color: var(--text);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .card-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-      text-transform: none;
-    }
-
-    /* Canvas Frame */
-    .canvas-container {
-      width: 100%;
-      position: relative;
-      background: #070a12;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    #office-canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .room-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
+    .card-meta {
       font-size: 11px;
       color: var(--text-muted);
     }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-    }
-
-    /* Sidebar Panels */
-    .sidebar-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .roster-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 380px;
-      overflow-y: auto;
-    }
-
-    .roster-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--card-sub);
-      border: 1px solid transparent;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-
-    .roster-row:hover {
-      border-color: var(--border-focus);
-    }
-
-    .roster-row.selected {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.1);
-    }
-
-    .roster-info {
-      min-width: 0;
-      flex: 1;
-      margin-right: 10px;
-    }
-
-    .roster-name {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .roster-role {
-      font-size: 11px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .roster-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* Solid Status Badges */
-    .badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .badge-working { background: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid rgba(22, 163, 74, 0.3); }
-    .badge-idle { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3); }
-    .badge-offline { background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
-    .badge-waiting { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.3); }
-    .badge-human { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
-    .badge-error { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.3); }
-
-    /* Flat Button Controls */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-    }
-
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-secondary { background: var(--card-sub); color: var(--text-secondary); border: 1px solid var(--border); }
-    .btn-secondary:hover:not(:disabled) { background: #374151; }
-    .btn-sm { padding: 4px 8px; font-size: 11px; }
-
-    /* Toggle Switch */
-    .toggle {
-      width: 32px;
-      height: 18px;
-      background: #374151;
-      border-radius: 99px;
-      position: relative;
-      cursor: pointer;
-      border: none;
-    }
-
-    .toggle::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #9ca3af;
-      transition: transform 0.2s, background 0.2s;
-    }
-
-    .toggle.active {
-      background: var(--primary);
-    }
-
-    .toggle.active::after {
-      transform: translateX(14px);
-      background: #fff;
-    }
-
-    /* Approval Queue Tickets */
-    .ticket-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 240px;
-      overflow-y: auto;
-    }
-
-    .ticket-item {
-      background: var(--card-sub);
-      border: 1px solid #78350f;
-      border-radius: 6px;
-      padding: 10px 12px;
-    }
-
-    .ticket-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: #fbbf24;
-      margin-bottom: 4px;
-    }
-
-    .ticket-title {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .ticket-footer {
+    /* Input & Presets */
+    .prompt-row {
       display: flex;
       gap: 8px;
-    }
-
-    /* Console Command Prompt */
-    .control-row {
-      display: flex;
-      gap: 10px;
       margin-bottom: 10px;
     }
 
-    .input-control {
+    .prompt-input {
       flex: 1;
-      background: #070a12;
+      background: var(--card-sub);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 12px;
-      font-size: 13px;
       color: var(--text);
+      padding: 10px 14px;
+      font-size: 13px;
+      border-radius: 6px;
       outline: none;
+      transition: border-color 0.15s;
     }
 
-    .input-control:focus {
+    .prompt-input:focus {
       border-color: var(--primary);
     }
 
-    .preset-container {
+    .btn-primary {
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .presets-wrap {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       margin-bottom: 12px;
     }
 
-    .preset-chip {
+    .preset-tag {
       background: var(--card-sub);
       border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 8px;
+      color: var(--text-secondary);
+      padding: 4px 10px;
       font-size: 11px;
-      color: var(--text-muted);
+      border-radius: 4px;
       cursor: pointer;
+      transition: all 0.15s;
     }
 
-    .preset-chip:hover {
-      color: var(--text);
-      border-color: #374151;
+    .preset-tag:hover {
+      background: #2a3a52;
+      color: #fff;
+      border-color: #3b82f6;
     }
 
-    .output-box {
-      background: #070a12;
+    .result-terminal {
+      background: #060911;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 12px;
-      font-size: 12px;
-      line-height: 1.5;
-      min-height: 60px;
-      white-space: pre-wrap;
-      color: var(--text-secondary);
-    }
-
-    .output-meta {
+      padding: 12px 14px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    /* Activity Feed Table */
-    .table-container {
-      max-height: 260px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-height: 190px;
       overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
     }
 
-    table {
+    .result-terminal .tag-ok { color: #34d399; font-weight: 600; }
+    .result-terminal .tag-warn { color: #fbbf24; font-weight: 600; }
+    .result-terminal .tag-err { color: #ef4444; font-weight: 600; }
+
+    /* Activity Table */
+    .table-box {
+      overflow-x: auto;
+      max-height: 290px;
+    }
+
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
       text-align: left;
     }
 
-    th {
+    table.data-table th {
       padding: 8px 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
       background: var(--card-sub);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
+      z-index: 2;
     }
 
-    td {
+    table.data-table td {
       padding: 8px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(34, 48, 73, 0.4);
       color: var(--text-secondary);
     }
 
-    tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+    table.data-table tr:hover td {
+      background: rgba(30, 41, 59, 0.5);
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
+    .time-cell { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    .agent-cell { font-weight: 600; color: var(--text); }
+
+    /* Solid Badges */
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-success { background: #065f46; color: #a7f3d0; }
+    .badge-working { background: #1e3a8a; color: #bfdbfe; }
+    .badge-warning { background: #78350f; color: #fde68a; }
+    .badge-danger  { background: #7f1d1d; color: #fecaca; }
+    .badge-dorm    { background: #312e81; color: #c7d2fe; }
+    .badge-muted   { background: #1e293b; color: #94a3b8; }
+
+    /* SLIDE DRAWER / SIDE PANEL khas Ruang */
+    .side-drawer {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: 460px;
+      max-width: 90vw;
+      height: 100vh;
+      background: var(--card-bg);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .side-drawer.open {
+      right: 0;
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      display: none;
+    }
+
+    .drawer-overlay.open {
+      display: block;
+    }
+
+    .drawer-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .drawer-close {
+      background: transparent;
+      border: none;
       color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
     }
 
-    /* Agent Detail View */
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      gap: 6px 12px;
+    .drawer-close:hover {
+      color: #fff;
+      background: var(--card-sub);
+    }
+
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #090e1a;
+    }
+
+    .drawer-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
       font-size: 12px;
-      margin-bottom: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
     }
 
-    .detail-label { color: var(--text-muted); }
+    .drawer-tab:hover {
+      color: var(--text);
+    }
+
+    .drawer-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: var(--card-bg);
+    }
+
+    .drawer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Tab: Crew Cards */
+    .crew-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .crew-card {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .crew-card:hover {
+      border-color: #3b82f6;
+    }
+
+    .crew-card.selected {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .crew-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 11px;
+      color: #fff;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .crew-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .crew-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crew-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crew-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+    }
+
+    .btn-micro {
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .btn-micro:hover {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    /* Tab: Stats Metrics */
+    .stat-metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-metric-card {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .stat-metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-metric-val {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Modal Detail Agen (Overview, Tools, Memory) */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 580px;
+      max-width: 95vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #090e1a;
+    }
+
+    .modal-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .modal-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: var(--card-bg);
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .detail-lbl { color: var(--text-muted); font-weight: 500; }
     .detail-val { color: var(--text); word-break: break-word; }
+
+    .tool-badge-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tool-chip {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #93c5fd;
+    }
+
+    /* Modal Tasks / Kanban Board */
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      min-width: 800px;
+    }
+
+    .kanban-col {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kanban-col-head {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kanban-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
 
     .toast {
       position: fixed;
@@ -526,152 +860,147 @@
       font-size: 12px;
       color: var(--text);
       display: none;
-      z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 2000;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     }
     .toast.show { display: block; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- Top Navigation -->
-  <header>
-    <div class="brand">
+<!-- TOP HUD MISSION CONTROL HEADER -->
+<header class="hud-header">
+  <div class="brand-group">
+    <div class="brand-badge">
+      <span class="live-dot"></span>
       <div class="brand-title">
-        <h1>ISKOM AI Operating System</h1>
-        <p>Enterprise Multi-Agent Virtual Workspace & Management Portal</p>
+        <span>Ruang · ISKOM</span>
       </div>
     </div>
-    <div class="header-meta">
-      <div class="live-indicator">
-        <span class="live-dot"></span>
-        <span id="stat-online">5 / 10 Agen Aktif</span>
-      </div>
-      <div class="clock-display" id="clock-display">00:00:00</div>
-    </div>
-  </header>
+    <span class="brand-sub">Mission Control</span>
+  </div>
 
-  <!-- Stat Strips -->
-  <section class="stat-strip">
-    <div class="exp-stat-card">
-      <div class="exp-stat-label">Total Permintaan</div>
-      <div class="exp-stat-value" id="kpi-total">0</div>
-      <div class="exp-stat-sub">Semua transaksi tercatat</div>
+  <!-- HUD CHIPS -->
+  <div class="hud-chips">
+    <div class="hud-chip highlight-green" title="Agen aktif beroperasi">
+      <span>Crew:</span>
+      <span class="val" id="hud-crew">5 / 10 Active</span>
     </div>
-    <div class="exp-stat-card">
-      <div class="exp-stat-label">Sedang Memproses</div>
-      <div class="exp-stat-value" id="kpi-working" style="color: #4ade80;">0</div>
-      <div class="exp-stat-sub">Agen di ruang kerja</div>
+    <div class="hud-chip highlight-blue" title="Permintaan yang sedang diproses">
+      <span>Tasks:</span>
+      <span class="val" id="hud-tasks">0 Running</span>
     </div>
-    <div class="exp-stat-card">
-      <div class="exp-stat-label">Persetujuan Owner</div>
-      <div class="exp-stat-value" id="kpi-pending" style="color: #fbbf24;">0</div>
-      <div class="exp-stat-sub">Menunggu review wewenang</div>
+    <div class="hud-chip highlight-amber" title="Menunggu otorisasi Owner">
+      <span>Approvals:</span>
+      <span class="val" id="hud-approvals">0 Pending</span>
     </div>
-    <div class="exp-stat-card">
-      <div class="exp-stat-label">Tingkat Keberhasilan</div>
-      <div class="exp-stat-value" id="kpi-rate" style="color: #60a5fa;">100%</div>
-      <div class="exp-stat-sub">Zero-hallucination compliance</div>
+    <div class="hud-chip" title="Latensi eksekusi AI-OS">
+      <span>Latency:</span>
+      <span class="val" id="hud-latency">38ms</span>
+    </div>
+    <div class="hud-chip" title="Waktu server">
+      <span id="hud-clock">00:00:00 WIB</span>
+    </div>
+  </div>
+
+  <!-- HEADER ACTIONS -->
+  <div class="header-actions">
+    <!-- FLOOR SWITCHER (Lantai 1 vs Lantai 2) -->
+    <div class="btn-group">
+      <button class="btn-toggle active" id="btn-floor-1" onclick="switchFloor(1)">
+        <span>Lantai 1 · Kantor</span>
+        <span class="badge badge-working" id="badge-floor-1-count">5</span>
+      </button>
+      <button class="btn-toggle" id="btn-floor-2" onclick="switchFloor(2)">
+        <span>Lantai 2 · Dorm</span>
+        <span class="badge badge-dorm" id="badge-floor-2-count">5</span>
+      </button>
+    </div>
+
+    <!-- GLOBAL SLEEP / WAKE BUTTON -->
+    <button class="btn-pill sleep-btn" id="btn-global-sleep" onclick="toggleGlobalSleep()" title="Kirim semua agen idle ke kasur lantai 2">
+      <span id="sleep-btn-icon">💤</span>
+      <span id="sleep-btn-label">Tidur</span>
+    </button>
+
+    <!-- TASK BOARD BUTTON -->
+    <button class="btn-pill" onclick="openTasksModal()" title="Buka Kanban Task Board">
+      <span>Tasks</span>
+    </button>
+
+    <!-- PANEL BUTTON (Side Drawer Crew/Stats/Activity) -->
+    <button class="btn-pill panel-btn" onclick="toggleDrawer()" title="Buka Panel Kru & Metrik">
+      <span>Panel</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN APP LAYOUT -->
+<div class="app-layout">
+  <!-- OFFICE VIEW CARD -->
+  <section class="office-view-card">
+    <div class="office-view-header">
+      <div class="floor-indicator">
+        <span class="floor-title" id="current-floor-title">Lantai 1 — Kantor Operasional & Area Luar</span>
+        <span class="floor-badge" id="current-floor-desc">Meja Kerja · Meeting Gorengan · Lounge & Game · Pantry Galon · Gudang</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted);">
+        Tekan <kbd style="background:var(--card-sub); padding:2px 5px; border-radius:3px;">PgUp</kbd> / <kbd style="background:var(--card-sub); padding:2px 5px; border-radius:3px;">PgDn</kbd> untuk ganti lantai
+      </div>
+    </div>
+
+    <!-- CANVAS WRAPPER -->
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <canvas id="office-canvas"></canvas>
+      <div class="canvas-overlay-tip">Klik agen pada denah untuk melihat profil &amp; memori SOUL</div>
+    </div>
+
+    <!-- ROOM LEGEND BAR -->
+    <div class="room-legend-bar" id="room-legend-bar">
+      <!-- Dynamic legend based on floor -->
     </div>
   </section>
 
-  <!-- Workspace Grid: Map on Left, Management on Right -->
-  <main class="workspace-grid">
-    <!-- Left Column: Virtual Office Canvas -->
+  <!-- BOTTOM GRID: COMMAND INPUT & AUDIT FEED -->
+  <section class="bottom-grid">
+    <!-- Command Console -->
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Denah Operasional Kantor Virtual</div>
-        <div class="card-subtitle">Klik agen untuk melihat inspeksi detail</div>
+      <div class="card-head">
+        <span class="card-title">Konsol Perintah AI Core</span>
+        <span class="card-meta">Kirim instruksi sewa langsung ke agen</span>
       </div>
-      <div class="canvas-container" id="canvas-container">
-        <canvas id="office-canvas"></canvas>
-      </div>
-      <div class="room-legend">
-        <div class="legend-item"><span class="legend-dot" style="background: #16a34a;"></span> Ruang Kerja (Processing)</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #2563eb;"></span> Lounge / Pantry (Standby)</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #4b5563;"></span> Kamar Tidur (Offline)</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> Ruang Owner (Approval Required)</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #dc2626;"></span> Ruang ER (Rule Blocked)</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #78716c;"></span> Gudang Logistik</div>
-      </div>
-    </div>
-
-    <!-- Right Column: Agent Roster & Approvals -->
-    <div class="sidebar-stack">
-      <!-- Roster -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Daftar Agen Tim</div>
-          <div class="card-subtitle" id="roster-count">10 Agen Terdaftar</div>
-        </div>
-        <div class="roster-list" id="roster-list"></div>
-      </div>
-
-      <!-- Approval Queue -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Antrean Otorisasi Owner</div>
-          <div class="card-subtitle">Tiket Eskalasi</div>
-        </div>
-        <div class="ticket-list" id="ticket-list">
-          <div class="empty-state">Tidak ada tiket menunggu otorisasi.</div>
-        </div>
-      </div>
-
-      <!-- Agent Inspection Details -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Inspeksi Agen Terpilih</div>
-          <div class="card-subtitle" id="detail-agent-id">-</div>
-        </div>
-        <div id="detail-content">
-          <div class="empty-state">Pilih agen pada denah kantor atau daftar di atas.</div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Bottom Workspace: Control Input & Audit Log -->
-  <section class="workspace-grid">
-    <!-- Command Prompt -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Konsol Perintah AI Core</div>
-        <div class="card-subtitle">Kirim instruksi bisnis langsung ke tim agen</div>
-      </div>
-      <form id="prompt-form">
-        <div class="control-row">
-          <input type="text" id="prompt-input" class="input-control" placeholder="Ketik instruksi kebutuhan sewa atau pertanyaan operasional..." autocomplete="off">
-          <button type="submit" id="btn-submit" class="btn btn-primary">Kirim</button>
+      <form id="prompt-form" onsubmit="handleSendPrompt(event)">
+        <div class="prompt-row">
+          <input type="text" id="prompt-input" class="prompt-input" placeholder="Ketik kebutuhan sewa, diskon, stok gudang, atau pertanyaan..." autocomplete="off">
+          <button type="submit" id="btn-submit" class="btn-primary">Kirim</button>
         </div>
       </form>
-      <div class="preset-container" id="preset-container"></div>
-      <div class="output-box" id="output-box">
-        <div class="output-meta">STATUS: Siap menerima instruksi</div>
-        <div>Silakan masukkan instruksi sewa atau pilih salah satu template cepat di atas.</div>
+      <div class="presets-wrap" id="preset-container"></div>
+      <div class="result-terminal" id="result-terminal">
+        <span class="tag-ok">READY</span> Sistem AI-OS ISKOM siap melayani pesanan sewa laptop &amp; peralatan IT.
+Pilih template instruksi cepat di atas atau masukkan permintaan kebutuhan sewa Anda.
       </div>
     </div>
 
-    <!-- Audit Activity Feed -->
+    <!-- Live Transaction Audit Feed -->
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Audit Trail Transaksi Terakhir</div>
-        <div class="card-subtitle">Log Aktivitas Forensik</div>
+      <div class="card-head">
+        <span class="card-title">Live Transaction Audit Feed</span>
+        <span class="card-meta">Audit Forensik Real-time</span>
       </div>
-      <div class="table-container">
-        <table>
+      <div class="table-box">
+        <table class="data-table">
           <thead>
             <tr>
               <th style="width: 70px;">Waktu</th>
-              <th style="width: 110px;">Agen</th>
-              <th>Aksi / Input</th>
-              <th style="width: 85px;">Status</th>
+              <th style="width: 105px;">Agen</th>
+              <th>Aksi / Instruksi</th>
+              <th style="width: 80px;">Status</th>
             </tr>
           </thead>
           <tbody id="audit-table-body">
             <tr>
-              <td colspan="4" class="empty-state">Memuat riwayat transaksi...</td>
+              <td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Memuat riwayat transaksi...</td>
             </tr>
           </tbody>
         </table>
@@ -680,70 +1009,204 @@
   </section>
 </div>
 
+<!-- SIDE DRAWER PANEL (CREW, STATS, ACTIVITY) -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer(false)"></div>
+<aside class="side-drawer" id="side-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">Mission Control Panel</div>
+    <button class="drawer-close" onclick="toggleDrawer(false)">✕</button>
+  </div>
+  <div class="drawer-tabs">
+    <div class="drawer-tab active" onclick="switchDrawerTab('crew')">Crew (<span id="drawer-tab-crew-cnt">10</span>)</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('stats')">Stats</div>
+    <div class="drawer-tab" onclick="switchDrawerTab('activity')">Activity</div>
+  </div>
+  <div class="drawer-content">
+    <!-- TAB 1: CREW -->
+    <div class="tab-pane active" id="pane-crew">
+      <div class="crew-list" id="crew-list-container">
+        <!-- populated dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 2: STATS -->
+    <div class="tab-pane" id="pane-stats">
+      <div class="stat-metric-grid">
+        <div class="stat-metric-card">
+          <div class="stat-metric-label">Total Transaksi</div>
+          <div class="stat-metric-val" id="stat-total-tx">0</div>
+          <div class="stat-metric-sub">Riwayat tersimpan</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-label">Success Rate</div>
+          <div class="stat-metric-val" id="stat-success-rate" style="color:#34d399;">100%</div>
+          <div class="stat-metric-sub">Zero-hallucination</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-label">Pending Approval</div>
+          <div class="stat-metric-val" id="stat-pending-apv" style="color:#fbbf24;">0</div>
+          <div class="stat-metric-sub">Eskalasi ke Owner</div>
+        </div>
+        <div class="stat-metric-card">
+          <div class="stat-metric-label">Rata-rata Latensi</div>
+          <div class="stat-metric-val" id="stat-avg-latency" style="color:#60a5fa;">~38ms</div>
+          <div class="stat-metric-sub">Proses deterministik</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px; background:var(--card-sub);">
+        <div class="card-head" style="margin-bottom:8px; padding-bottom:6px;">
+          <span class="card-title" style="font-size:11px;">Tiket Menunggu Otorisasi Owner</span>
+        </div>
+        <div id="drawer-apv-list">
+          <div style="font-size:11px; color:var(--text-muted); text-align:center; padding:12px;">Tidak ada tiket otorisasi pending.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ACTIVITY -->
+    <div class="tab-pane" id="pane-activity">
+      <div id="drawer-activity-feed" style="font-size:12px; display:flex; flex-direction:column; gap:8px;">
+        <!-- dynamic logs -->
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- AGENT DETAIL INSPECTION MODAL (Overview, Tools, Memory/SOUL) -->
+<div class="modal" id="agent-modal" onclick="if(event.target===this) closeAgentModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="crew-avatar" id="modal-agent-avatar" style="background:#2563eb;">AG</div>
+        <div>
+          <div style="font-weight:700; font-size:14px;" id="modal-agent-name">Agent Name</div>
+          <div style="font-size:11px; color:var(--text-muted);" id="modal-agent-id">AGENT-ID</div>
+        </div>
+      </div>
+      <button class="drawer-close" onclick="closeAgentModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchModalTab('overview')">Overview</div>
+      <div class="modal-tab" onclick="switchModalTab('tools')">Tools &amp; Skills</div>
+      <div class="modal-tab" onclick="switchModalTab('memory')">SOUL &amp; Memory</div>
+    </div>
+    <div class="modal-body">
+      <!-- Overview Tab -->
+      <div id="modal-tab-overview">
+        <div class="detail-row"><span class="detail-lbl">Role:</span><span class="detail-val" id="modal-val-role">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Status:</span><span class="detail-val" id="modal-val-status">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Lantai:</span><span class="detail-val" id="modal-val-floor">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Ruangan:</span><span class="detail-val" id="modal-val-room">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Tugas Aktif:</span><span class="detail-val" id="modal-val-task">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Tugas Selesai:</span><span class="detail-val" id="modal-val-tasks-done">-</span></div>
+        <div class="detail-row"><span class="detail-lbl">Respon Terakhir:</span><span class="detail-val" id="modal-val-last-reply" style="font-style:italic;">-</span></div>
+        <div style="margin-top:14px; display:flex; gap:8px;">
+          <button class="btn-micro" id="modal-btn-power" onclick="toggleModalAgentPower()" style="padding:6px 12px; font-size:11px;">Toggle Power</button>
+          <button class="btn-micro" id="modal-btn-sleep" onclick="toggleModalAgentSleep()" style="padding:6px 12px; font-size:11px;">Toggle Sleep</button>
+        </div>
+      </div>
+
+      <!-- Tools Tab -->
+      <div id="modal-tab-tools" style="display:none;">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Alat resmi terdaftar dalam RBAC Agent:</div>
+        <div class="tool-badge-wrap" id="modal-tools-list"></div>
+      </div>
+
+      <!-- Memory / SOUL Tab -->
+      <div id="modal-tab-memory" style="display:none;">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Dokumen Identitas &amp; Batasan Bisnis (SOUL.md):</div>
+        <div class="result-terminal" id="modal-soul-content" style="max-height:240px; font-size:11px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK BOARD KANBAN MODAL -->
+<div class="modal" id="tasks-modal" onclick="if(event.target===this) closeTasksModal()">
+  <div class="modal-box" style="width:900px; max-width:96vw;">
+    <div class="modal-head">
+      <div style="font-weight:700; font-size:14px;">Ruang · Task Board (Kanban Lifecycle)</div>
+      <button class="drawer-close" onclick="closeTasksModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-x:auto;">
+      <div class="kanban-grid" id="kanban-board-grid">
+        <!-- Columns: Triage, In Progress, Waiting Approval, Done -->
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast-message"></div>
 
 <script>
 /* =====================================================================
-   KONFIGURASI DENAH LOGIS KANTOR PIXEL (480 x 272 px)
+   KONFIGURASI DENAH 2 LANTAI KANTOR VIRTUAL (Ruang Aesthetic)
+   Dimensi Logis Canvas: 560 x 300 px (16:9 widescreen ratio)
    ===================================================================== */
-const LOGICAL_W = 480;
-const LOGICAL_H = 272;
-const WALL_THICK = 22;
-const CORRIDOR_Y = 144;
+const LOGICAL_W = 560;
+const LOGICAL_H = 300;
 
-const ROOMS = {
-  work:      { x: 0,   y: 0,   w: 208, h: 128, label: 'RUANG KERJA', door: 124, side: 'bottom', wall: '#bfae96', floor: '#8c5e34' },
-  meeting:   { x: 208, y: 0,   w: 112, h: 128, label: 'MEETING',     door: 264, side: 'bottom', wall: '#94a3b8', floor: '#334155' },
-  owner:     { x: 320, y: 0,   w: 160, h: 128, label: 'RUANG OWNER', door: 352, side: 'bottom', wall: '#a8a29e', floor: '#7f1d1d' },
-  warehouse: { x: 0,   y: 160, w: 112, h: 112, label: 'GUDANG',      door: 56,  side: 'top',    wall: '#78716c', floor: '#57534e' },
-  lounge:    { x: 112, y: 160, w: 128, h: 112, label: 'LOUNGE',      door: 176, side: 'top',    wall: '#d6c7a1', floor: '#9a6b3d' },
-  bedroom:   { x: 240, y: 160, w: 128, h: 112, label: 'KAMAR TIDUR', door: 292, side: 'top',    wall: '#6b7280', floor: '#3730a3', lane: 221 },
-  server:    { x: 368, y: 160, w: 64,  h: 112, label: 'SERVER',      door: 400, side: 'top',    wall: '#334155', floor: '#0f172a' },
-  er:        { x: 432, y: 160, w: 48,  h: 112, label: 'ER',          door: 456, side: 'top',    wall: '#cbd5e1', floor: '#e2e8f0' }
+// LANTAI 1: KANTOR OPERASIONAL, PANTRY GALON, LOUNGE & GEROBAK
+const ROOMS_F1 = {
+  outdoor:   { x: 0,   y: 0,   w: 90,  h: 300, label: 'HALAMAN & KULINER', wall: '#334155', floor: '#1e293b' },
+  work:      { x: 90,  y: 0,   w: 220, h: 140, label: 'RUANG KERJA',       wall: '#64748b', floor: '#2a3547' },
+  meeting:   { x: 310, y: 0,   w: 130, h: 140, label: 'RUANG MEETING',     wall: '#475569', floor: '#1e293b' },
+  owner:     { x: 440, y: 0,   w: 120, h: 140, label: 'RUANG OWNER',       wall: '#64748b', floor: '#3b2525' },
+  warehouse: { x: 90,  y: 160, w: 120, h: 140, label: 'GUDANG LOGISTIK',   wall: '#475569', floor: '#27272a' },
+  pantry:    { x: 210, y: 160, w: 100, h: 140, label: 'PANTRY & GALON',    wall: '#475569', floor: '#1e293b' },
+  lounge:    { x: 310, y: 160, w: 140, h: 140, label: 'LOUNGE & TV',       wall: '#475569', floor: '#262e3d' },
+  game:      { x: 450, y: 160, w: 110, h: 140, label: 'GAME & PING-PONG',  wall: '#475569', floor: '#1b2a3a' },
 };
 
-const ROOM_DISPLAY_NAMES = {
-  work: 'Ruang Kerja',
-  meeting: 'Ruang Meeting',
-  owner: 'Ruang Owner',
-  warehouse: 'Gudang Logistik',
-  lounge: 'Lounge / Pantry',
-  bedroom: 'Kamar Tidur',
-  server: 'Server Room',
-  er: 'Ruang ER'
+// LANTAI 2: DORMITORY (ASRAMA), LESEHAN & BALKON RUKO
+const ROOMS_F2 = {
+  balcony:   { x: 0,   y: 0,   w: 110, h: 300, label: 'BALKON & HAMMOCK',  wall: '#334155', floor: '#1e2430' },
+  dorm:      { x: 110, y: 0,   w: 270, h: 180, label: 'KAMAR TIDUR ASRAMA',wall: '#475569', floor: '#1e1e38' },
+  lesehan:   { x: 380, y: 0,   w: 180, h: 180, label: 'SUDUT LESEHAN',     wall: '#475569', floor: '#2e2520' },
+  restroom:  { x: 110, y: 200, w: 120, h: 100, label: 'RESTROOM & SHOWER',wall: '#475569', floor: '#1e293b' },
+  study:     { x: 230, y: 200, w: 330, h: 100, label: 'RUANG BACA & RELAKS',wall: '#475569', floor: '#222838' },
 };
 
-const AGENT_VISUALS = {
-  'AGENT-MGR-01': { hair: '#1e293b', shirt: '#4f46e5', pants: '#0f172a', skin: '#f1c27d', desk: 0 },
-  'AGENT-SLS-01': { hair: '#451a03', shirt: '#2563eb', pants: '#1e3a8a', skin: '#f5d0a9', desk: 1 },
-  'AGENT-INV-01': { hair: '#b45309', shirt: '#16a34a', pants: '#374151', skin: '#f5d0a9', desk: null },
-  'AGENT-CS-01':  { hair: '#7f1d1d', shirt: '#e11d48', pants: '#1f2937', skin: '#f1c27d', desk: 2 },
-  'AGENT-FIN-01': { hair: '#18181b', shirt: '#d97706', pants: '#451a03', skin: '#c68642', desk: 3 },
-  'AGENT-KPI-01': { hair: '#52525b', shirt: '#0284c7', pants: '#0f172a', skin: '#e0ac69', desk: 4 },
-  'AGENT-MKT-01': { hair: '#991b1b', shirt: '#ea580c', pants: '#374151', skin: '#f5d0a9', desk: 5 },
-  'AGENT-PRS-01': { hair: '#312e81', shirt: '#9333ea', pants: '#1e1b4b', skin: '#c68642', desk: 6 },
-  'AGENT-OPS-01': { hair: '#374151', shirt: '#059669', pants: '#0f172a', skin: '#f1c27d', desk: 7 },
-  'AGENT-COL-01': { hair: '#713f12', shirt: '#64748b', pants: '#1e293b', skin: '#f5d0a9', desk: 8 }
+/* ROSTER IDENTITAS VISUAL 10 AGEN */
+const AGENT_META = {
+  'AGENT-MGR-01': { color: '#4f46e5', skin: '#f1c27d', hair: '#1e293b', shirt: '#4f46e5', pants: '#0f172a', desk: 0, bed: 0, tools: ['delegate_task', 'audit_agent_status', 'compile_kpi'] },
+  'AGENT-SLS-01': { color: '#2563eb', skin: '#f5d0a9', hair: '#451a03', shirt: '#2563eb', pants: '#1e3a8a', desk: 1, bed: 1, tools: ['check_inventory', 'calculate_rental_rate', 'generate_quote'] },
+  'AGENT-INV-01': { color: '#10b981', skin: '#f5d0a9', hair: '#b45309', shirt: '#10b981', pants: '#374151', desk: null, bed: 2, tools: ['check_inventory', 'reserve_unit', 'release_unit'] },
+  'AGENT-CS-01':  { color: '#e11d48', skin: '#f1c27d', hair: '#7f1d1d', shirt: '#e11d48', pants: '#1f2937', desk: 2, bed: 3, tools: ['faq_lookup', 'escalate_ticket', 'verify_security'] },
+  'AGENT-FIN-01': { color: '#d97706', skin: '#c68642', hair: '#18181b', shirt: '#d97706', pants: '#451a03', desk: 3, bed: 4, tools: ['verify_invoice', 'calculate_rental_rate', 'process_payment'] },
+  'AGENT-KPI-01': { color: '#0284c7', skin: '#e0ac69', hair: '#52525b', shirt: '#0284c7', pants: '#0f172a', desk: 4, bed: 5, tools: ['compile_kpi', 'export_report'] },
+  'AGENT-MKT-01': { color: '#ea580c', skin: '#f5d0a9', hair: '#991b1b', shirt: '#ea580c', pants: '#374151', desk: 5, bed: 6, tools: ['generate_campaign', 'post_content'] },
+  'AGENT-PRS-01': { color: '#9333ea', skin: '#c68642', hair: '#312e81', shirt: '#9333ea', pants: '#1e1b4b', desk: 6, bed: 7, tools: ['search_prospects', 'score_lead'] },
+  'AGENT-OPS-01': { color: '#059669', skin: '#f1c27d', hair: '#374151', shirt: '#059669', pants: '#0f172a', desk: 7, bed: 8, tools: ['schedule_delivery', 'track_unit'] },
+  'AGENT-COL-01': { color: '#64748b', skin: '#f5d0a9', hair: '#713f12', shirt: '#64748b', pants: '#1e293b', desk: 8, bed: 9, tools: ['check_overdue', 'send_reminder'] },
 };
 
-const OWNER_VISUAL = { hair: '#0f172a', shirt: '#111827', pants: '#0f172a', skin: '#e0ac69' };
+const AGENT_SOUL_DOCS = {
+  'AGENT-MGR-01': "SOUL.md\n=======\nIdentitas: AI Business Manager ISKOM.\nTugas: Mengorkestrasi 10 agen spesialis, mengevaluasi intent pengguna, mendelegasikan tugas ke agen terkait.\nPrinsip Utama: Menjaga integritas operasional rental dan zero-hallucination compliance.",
+  'AGENT-SLS-01': "SOUL.md\n=======\nIdentitas: Rental Sales Consultant ISKOM.\nTugas: Melayani inquiry sewa harian/bulanan, menghitung tarif sewa resmi, membuat surat penawaran (Quotation).\nAturan: Diskon > 10% atau nilai transaksi >= Rp 25 Juta WAJIB meminta approval Owner.",
+  'AGENT-INV-01': "SOUL.md\n=======\nIdentitas: Warehouse & Stock Controller ISKOM.\nTugas: Memeriksa fisik unit di gudang, memastikan stok valid sebelum disewa.\nPrinsip Zero-Hallucination: Jika produk tidak ada dalam database, laporkan apa adanya (jangan mengarang stok).",
+  'AGENT-CS-01': "SOUL.md\n=======\nIdentitas: Customer Service & Security Officer ISKOM.\nTugas: Menjawab keluhan teknis, garansi tukar unit, syarat sewa KTP.\nProtokol Keamanan: Menolak menginput kode OTP SMS atau CAPTCHA — eskalasi langsung ke campur tangan manusia.",
+  'AGENT-FIN-01': "SOUL.md\n=======\nIdentitas: Finance & Billing Agent ISKOM.\nTugas: Memeriksa status invoice sewa, mencatat termin pembayaran, rekonsiliasi kas masuk.",
+  'AGENT-KPI-01': "SOUL.md\n=======\nIdentitas: Executive Reporting Agent ISKOM.\nTugas: Menghitung total omset, persentase utilisasi armada laptop, dan menyusun laporan eksekutif berkala.",
+};
 
 const PRESETS = [
   'Saya butuh 10 laptop ThinkPad untuk 1 bulan',
   'Kasih diskon 25% untuk sewa 20 laptop Lenovo',
   'Ada stok MacBook Pro ready di gudang?',
-  'Laptop sewaan layarnya bergaris, tolong diganti',
+  'Laptop sewaan layarnya bergaris tolong diganti',
   'Sistem meminta kode OTP SMS penyewa',
   'Rekap omset sewa dan tingkat utilisasi bulan ini'
 ];
 
-/* =====================================================================
-   APPLICATION STATE
-   ===================================================================== */
+/* STATE APLIKASI */
+let currentFloor = 1; // 1: Kantor, 2: Dorm
 let state = { agents: [], approvals: [], summary: {}, server_time: Date.now() / 1000 };
+let agentCharacters = {}; // runtime visual state
 let selectedAgentId = 'AGENT-SLS-01';
-const agentCharacters = {};
-let frameCounter = 0;
+let isDrawerOpen = false;
+let globalSleepMode = false;
+let latencyHistory = [38, 42, 35, 40];
 
 const $ = id => document.getElementById(id);
 const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -753,763 +1216,914 @@ function showToast(text) {
   el.textContent = text;
   el.classList.add('show');
   clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove('show'), 2500);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 /* =====================================================================
-   PROSEDURAL PIXEL CANVAS RENDERING
+   CANVAS RENDERING ENGINE
    ===================================================================== */
-const offscreenCanvas = document.createElement('canvas');
-offscreenCanvas.width = LOGICAL_W;
-offscreenCanvas.height = LOGICAL_H;
-const offCtx = offscreenCanvas.getContext('2d');
+const canvas = $('office-canvas');
+const ctx = canvas.getContext('2d');
+let scaleFactor = 1;
 
-const mainCanvas = $('office-canvas');
-const mainCtx = mainCanvas.getContext('2d');
-let scaleFactor = 2;
-let deviceRatio = 1;
-
-function adjustCanvasSize() {
-  const container = $('canvas-container');
-  scaleFactor = container.clientWidth / LOGICAL_W;
-  deviceRatio = window.devicePixelRatio || 1;
-  mainCanvas.width = Math.round(LOGICAL_W * scaleFactor * deviceRatio);
-  mainCanvas.height = Math.round(LOGICAL_H * scaleFactor * deviceRatio);
-  mainCanvas.style.height = (LOGICAL_H * scaleFactor) + 'px';
+function resizeCanvas() {
+  const wrapper = $('canvas-wrapper');
+  scaleFactor = wrapper.clientWidth / LOGICAL_W;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(LOGICAL_W * scaleFactor * dpr);
+  canvas.height = Math.round(LOGICAL_H * scaleFactor * dpr);
+  canvas.style.height = (LOGICAL_H * scaleFactor) + 'px';
 }
-window.addEventListener('resize', adjustCanvasSize);
+window.addEventListener('resize', resizeCanvas);
 
-function drawCharacterSprite(ctx, cx, cy, vis, options = {}) {
-  const x = Math.round(cx);
-  const y = Math.round(cy);
-  const left = x - 5;
-  const top = y - 17;
+/* Floor Navigation */
+function switchFloor(floor) {
+  currentFloor = floor;
+  $('btn-floor-1').classList.toggle('active', floor === 1);
+  $('btn-floor-2').classList.toggle('active', floor === 2);
+  if (floor === 1) {
+    $('current-floor-title').textContent = 'Lantai 1 — Kantor Operasional & Area Luar';
+    $('current-floor-desc').textContent = 'Meja Kerja · Meeting Gorengan · Lounge & Game · Pantry Galon · Gudang';
+  } else {
+    $('current-floor-title').textContent = 'Lantai 2 — Asrama (Dormitory), Lesehan & Balkon';
+    $('current-floor-desc').textContent = 'Kamar Tidur Asrama (10 Kasur) · Sudut Lesehan · Kamar Mandi · Balkon & Hammock';
+  }
+  updateLegend();
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'PageUp') switchFloor(2);
+  if (e.key === 'PageDown') switchFloor(1);
+});
+
+function updateLegend() {
+  const bar = $('room-legend-bar');
+  if (currentFloor === 1) {
+    bar.innerHTML = `
+      <div class="legend-chip"><span class="legend-box" style="background:#2563eb;"></span> Ruang Kerja (Desks)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#475569;"></span> Meeting (Snack/Gorengan)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#3b2525;"></span> Ruang Owner (Approval)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#27272a;"></span> Gudang Logistik</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#0284c7;"></span> Pantry (Galon Air)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#1b2a3a;"></span> Game Room (Ping-Pong)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#1e293b;"></span> Area Luar (Bakso & Kopi)</div>
+    `;
+  } else {
+    bar.innerHTML = `
+      <div class="legend-chip"><span class="legend-box" style="background:#312e81;"></span> Kamar Asrama (10 Kasur)</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#2e2520;"></span> Sudut Lesehan</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#1e2430;"></span> Balkon Ruko & Hammock</div>
+      <div class="legend-chip"><span class="legend-box" style="background:#1e293b;"></span> Restroom / Shower</div>
+    `;
+  }
+}
+
+/* =====================================================================
+   GAMBAR DENAH LANTAI 1 & LANTAI 2 SECARA PROSEDURAL
+   ===================================================================== */
+function drawFloor1(c) {
+  // 1. Background dasar
+  c.fillStyle = '#0f172a';
+  c.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+  // 2. Ruang-ruang Lantai 1
+  for (const [k, r] of Object.entries(ROOMS_F1)) {
+    c.fillStyle = r.floor;
+    c.fillRect(r.x, r.y, r.w, r.h);
+    c.strokeStyle = r.wall;
+    c.lineWidth = 2;
+    c.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+
+    // Label ruangan
+    c.fillStyle = 'rgba(255,255,255,0.25)';
+    c.font = '600 8px Inter, sans-serif';
+    c.fillText(r.label, r.x + 8, r.y + 14);
+  }
+
+  // 3. Koridor tengah
+  c.fillStyle = '#1e293b';
+  c.fillRect(90, 140, 470, 20);
+
+  // 4. Perabot khas Lantai 1:
+  // --- Area Luar: Bendera Merah Putih di pojok kiri atas
+  c.fillStyle = '#64748b';
+  c.fillRect(16, 20, 2, 40); // tiang
+  c.fillStyle = '#dc2626';
+  c.fillRect(18, 20, 14, 6); // merah
+  c.fillStyle = '#f8fafc';
+  c.fillRect(18, 26, 14, 6); // putih
+
+  // --- Gerobak Bakso di area luar
+  c.fillStyle = '#78350f';
+  c.fillRect(25, 100, 36, 20); // gerobak
+  c.fillStyle = '#f59e0b';
+  c.fillRect(27, 96, 10, 4);  // panci kuah
+  c.fillStyle = '#94a3b8';
+  c.font = '7px sans-serif';
+  c.fillText('BAKSO', 28, 114);
+
+  // --- Sepeda Kopi Keliling (Starling)
+  c.fillStyle = '#334155';
+  c.fillRect(30, 200, 24, 12);
+  c.fillStyle = '#059669';
+  c.fillRect(44, 194, 10, 18); // termos rencengan kopi
+  c.fillText('KOPI', 33, 222);
+
+  // --- Ruang Kerja: 9 Meja Kerja berjejer
+  for (let i = 0; i < 9; i++) {
+    const col = i % 5;
+    const row = Math.floor(i / 5);
+    const dx = 106 + col * 40;
+    const dy = 32 + row * 48;
+    // Meja kayu
+    c.fillStyle = '#334155';
+    c.fillRect(dx, dy, 26, 16);
+    // Layar monitor laptop
+    c.fillStyle = '#60a5fa';
+    c.fillRect(dx + 7, dy + 2, 12, 8);
+    // Keyboard
+    c.fillStyle = '#1e293b';
+    c.fillRect(dx + 7, dy + 11, 12, 3);
+    // Kursi
+    c.fillStyle = '#1e293b';
+    c.fillRect(dx + 8, dy + 19, 10, 8);
+  }
+
+  // --- Ruang Meeting: Meja Rapat Besar + Piring Gorengan khas Ruang!
+  c.fillStyle = '#334155';
+  c.fillRect(330, 40, 90, 45); // meja rapat
+  c.fillStyle = '#1e293b';
+  c.fillRect(334, 44, 82, 37);
+  // Piring Gorengan
+  c.fillStyle = '#f1f5f9';
+  c.beginPath();
+  c.arc(375, 62, 9, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = '#d97706'; // gorengan tahu/tempe/pisang
+  c.fillRect(370, 58, 4, 4);
+  c.fillRect(376, 57, 5, 4);
+  c.fillRect(372, 63, 6, 4);
+  c.fillStyle = '#94a3b8';
+  c.font = '7px sans-serif';
+  c.fillText('Gorengan', 357, 78);
+
+  // --- Ruang Owner: Meja Direktur
+  c.fillStyle = '#78350f';
+  c.fillRect(460, 45, 60, 24);
+  c.fillStyle = '#fbbf24';
+  c.fillRect(470, 48, 14, 8); // laptop direktur
+
+  // --- Gudang Logistik: Rak Unit Sewa & Trolley
+  for (let r = 0; r < 3; r++) {
+    c.fillStyle = '#18181b';
+    c.fillRect(100, 185 + r * 30, 80, 14);
+    // kotak laptop sewa
+    c.fillStyle = '#475569';
+    c.fillRect(104, 188 + r * 30, 12, 8);
+    c.fillRect(120, 188 + r * 30, 12, 8);
+    c.fillRect(136, 188 + r * 30, 12, 8);
+    c.fillRect(152, 188 + r * 30, 12, 8);
+  }
+
+  // --- Pantry: Dispenser Galon Air Aqua
+  c.fillStyle = '#3b82f6'; // galon biru
+  c.fillRect(230, 180, 12, 16);
+  c.fillStyle = '#e2e8f0'; // bodi dispenser
+  c.fillRect(228, 196, 16, 22);
+  c.fillStyle = '#ef4444'; // kran panas
+  c.fillRect(231, 202, 3, 3);
+  c.fillStyle = '#3b82f6'; // kran dingin
+  c.fillRect(238, 202, 3, 3);
+  c.fillStyle = '#94a3b8';
+  c.font = '7px sans-serif';
+  c.fillText('Aqua Galon', 218, 226);
+
+  // --- Lounge & TV
+  c.fillStyle = '#1e293b';
+  c.fillRect(330, 200, 80, 20); // sofa
+  c.fillStyle = '#0f172a';
+  c.fillRect(345, 276, 50, 4);  // rak tv
+  c.fillStyle = '#38bdf8';
+  c.fillRect(350, 274, 40, 2);  // layar tv nyala
+
+  // --- Game Room: Meja Ping-Pong & Arcade
+  // Ping-pong
+  c.fillStyle = '#059669'; // meja hijau
+  c.fillRect(465, 185, 55, 30);
+  c.fillStyle = '#ffffff'; // garis net
+  c.fillRect(492, 185, 2, 30);
+  // Mesin Arcade
+  c.fillStyle = '#7c3aed';
+  c.fillRect(465, 245, 18, 28);
+  c.fillStyle = '#ec4899';
+  c.fillRect(470, 250, 8, 8); // layar arcade
+}
+
+function drawFloor2(c) {
+  // 1. Background dasar Lantai 2
+  c.fillStyle = '#0b0f19';
+  c.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+  // 2. Ruang-ruang Lantai 2
+  for (const [k, r] of Object.entries(ROOMS_F2)) {
+    c.fillStyle = r.floor;
+    c.fillRect(r.x, r.y, r.w, r.h);
+    c.strokeStyle = r.wall;
+    c.lineWidth = 2;
+    c.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+
+    // Label
+    c.fillStyle = 'rgba(255,255,255,0.25)';
+    c.font = '600 8px Inter, sans-serif';
+    c.fillText(r.label, r.x + 8, r.y + 14);
+  }
+
+  // 3. Balkon Ruko & Hammock
+  // Railing besi balkon
+  for (let y = 10; y < 290; y += 14) {
+    c.strokeStyle = '#475569';
+    c.lineWidth = 1;
+    c.strokeRect(100, y, 4, 10);
+  }
+  // String lights (lampu gantung balkon)
+  c.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+  c.beginPath();
+  c.moveTo(15, 20);
+  c.quadraticCurveTo(55, 35, 95, 20);
+  c.stroke();
+  for (let lx = 25; lx <= 85; lx += 15) {
+    c.fillStyle = '#fbbf24';
+    c.beginPath();
+    c.arc(lx, 26, 2.5, 0, Math.PI * 2);
+    c.fill();
+  }
+
+  // Hammock (ayunan santai)
+  c.strokeStyle = '#92400e';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(25, 90);
+  c.quadraticCurveTo(55, 125, 85, 90);
+  c.stroke();
+  c.fillStyle = '#059669';
+  c.beginPath();
+  c.arc(55, 114, 12, 0, Math.PI);
+  c.fill();
+  c.fillStyle = '#94a3b8';
+  c.font = '7px sans-serif';
+  c.fillText('Hammock', 38, 134);
+
+  // Kursi rotan balkon
+  c.fillStyle = '#78350f';
+  c.fillRect(40, 200, 22, 22);
+  c.fillStyle = '#d97706';
+  c.fillRect(43, 203, 16, 16);
+
+  // 4. Kamar Asrama (Dormitory): 10 Kasur (satu untuk setiap agen)
+  for (let i = 0; i < 10; i++) {
+    const col = i % 5;
+    const row = Math.floor(i / 5);
+    const bx = 130 + col * 48;
+    const by = 40 + row * 65;
+
+    // Rangka ranjang kayu
+    c.fillStyle = '#3e2723';
+    c.fillRect(bx - 1, by - 1, 24, 38);
+    // Kasur putih
+    c.fillStyle = '#f8fafc';
+    c.fillRect(bx, by, 22, 36);
+    // Bantal
+    c.fillStyle = '#cbd5e1';
+    c.fillRect(bx + 2, by + 2, 18, 8);
+
+    // Selimut warna agen
+    const meta = AGENT_META[Object.keys(AGENT_META)[i]] || { color: '#3b82f6' };
+    c.fillStyle = meta.color;
+    c.fillRect(bx + 1, by + 12, 20, 23);
+  }
+
+  // 5. Sudut Lesehan: Karpet & Meja Kayu Pendek
+  c.fillStyle = '#78350f';
+  c.fillRect(400, 45, 140, 100); // Karpet hangat
+  c.fillStyle = '#9a3412';
+  c.fillRect(405, 50, 130, 90);
+  // Meja kayu pendek
+  c.fillStyle = '#451a03';
+  c.fillRect(445, 75, 50, 35);
+  // Bantal-bantal duduk
+  c.fillStyle = '#f59e0b';
+  c.fillRect(425, 82, 12, 12);
+  c.fillRect(505, 82, 12, 12);
+  c.fillRect(464, 55, 12, 12);
+  c.fillRect(464, 115, 12, 12);
+
+  // 6. Restroom / Shower
+  c.fillStyle = '#38bdf8';
+  c.fillRect(135, 230, 25, 25); // Bathtub / shower
+  c.fillStyle = '#ffffff';
+  c.fillRect(175, 235, 14, 18); // Wastafel
+}
+
+/* =====================================================================
+   GAMBAR KARAKTER AGEN (2D PIXEL / SPRITE DENGAN BALON KATA)
+   ===================================================================== */
+function drawCharacter(c, char, ag) {
+  const meta = AGENT_META[ag.id] || { skin: '#f5d0a9', hair: '#1e293b', shirt: '#2563eb', pants: '#0f172a' };
+  const x = Math.round(char.x);
+  const y = Math.round(char.y);
+
+  if (char.pose === 'sleeping') {
+    // Agen sedang tidur di kasur Dorm Lantai 2
+    c.fillStyle = meta.skin;
+    c.fillRect(x + 6, y + 4, 8, 6);
+    c.fillStyle = meta.hair;
+    c.fillRect(x + 5, y + 3, 10, 3);
+    // Efek Zzz halus
+    c.fillStyle = '#a5b4fc';
+    c.font = 'bold 9px monospace';
+    const zOffset = (Date.now() / 400) % 6;
+    c.fillText('z', x + 16, y - zOffset);
+    c.fillText('Z', x + 20, y - zOffset - 5);
+    return;
+  }
 
   // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(left + 1, y - 1, 8, 2);
+  c.fillStyle = 'rgba(0,0,0,0.35)';
+  c.fillRect(x - 4, y + 10, 10, 3);
 
-  // Legs & Shoes
-  const walkOffset = options.walking ? (options.frame % 2) : 0;
-  if (!options.sitting) {
-    ctx.fillStyle = vis.pants;
-    ctx.fillRect(left + 2, top + 13, 2, walkOffset ? 3 : 4);
-    ctx.fillRect(left + 6, top + 13, 2, walkOffset ? 4 : 3);
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(left + 2, top + (walkOffset ? 16 : 17), 2, 1);
-    ctx.fillRect(left + 6, top + (walkOffset ? 17 : 16), 2, 1);
-  }
+  // Celana / Kaki
+  c.fillStyle = meta.pants;
+  c.fillRect(x - 3, y + 5, 3, 6);
+  c.fillRect(x + 2, y + 5, 3, 6);
 
-  // Torso / Shirt
-  ctx.fillStyle = vis.shirt;
-  ctx.fillRect(left + 1, top + 8, 8, 6);
+  // Badan / Baju
+  c.fillStyle = meta.shirt;
+  c.fillRect(x - 4, y - 2, 10, 8);
 
-  // Arms / Typing
-  const typeOffset = options.typing ? (options.frame % 2) : 0;
-  ctx.fillRect(left, top + 9 + typeOffset, 1, 4);
-  ctx.fillRect(left + 9, top + 9 + (options.typing ? 1 - typeOffset : 0), 1, 4);
-  ctx.fillStyle = vis.skin;
-  ctx.fillRect(left, top + 13 + typeOffset, 1, 1);
-  ctx.fillRect(left + 9, top + 13 + (options.typing ? 1 - typeOffset : 0), 1, 1);
+  // Kepala / Kulit
+  c.fillStyle = meta.skin;
+  c.fillRect(x - 3, y - 8, 8, 7);
 
-  // Head
-  ctx.fillRect(left + 2, top + 2, 6, 6);
+  // Rambut
+  c.fillStyle = meta.hair;
+  c.fillRect(x - 4, y - 10, 10, 4);
 
-  // Hair
-  ctx.fillStyle = vis.hair;
-  ctx.fillRect(left + 1, top, 8, 3);
-  ctx.fillRect(left + 1, top + 3, 1, 3);
-  ctx.fillRect(left + 8, top + 3, 1, 3);
+  // Mata
+  c.fillStyle = '#0f172a';
+  c.fillRect(x - 2, y - 5, 2, 2);
+  c.fillRect(x + 2, y - 5, 2, 2);
 
-  // Face features
-  if (options.faceUp) {
-    ctx.fillRect(left + 2, top + 2, 6, 5);
-  } else {
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(left + 3, top + 4, 1, 2);
-    ctx.fillRect(left + 6, top + 4, 1, 2);
-  }
+  // Label nama mini di atas kepala
+  c.fillStyle = '#ffffff';
+  c.font = '600 7px Inter, sans-serif';
+  c.textAlign = 'center';
+  c.fillText(ag.short, x + 1, y - 13);
 
-  // Cup indicator in lounge
-  if (options.hasCup) {
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillRect(left + 10, top + 10, 3, 3);
-  }
-}
-
-function drawBedOccupant(ctx, bx, by, vis) {
-  // Bed frame & mattress
-  ctx.fillStyle = '#3e2723';
-  ctx.fillRect(bx - 1, by - 1, 18, 30);
-  ctx.fillStyle = '#f1f5f9';
-  ctx.fillRect(bx, by, 16, 28);
-  // Pillow
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillRect(bx + 2, by + 2, 12, 6);
-
-  if (vis) {
-    // Sleeping character head
-    ctx.fillStyle = vis.skin;
-    ctx.fillRect(bx + 5, by + 3, 6, 5);
-    ctx.fillStyle = vis.hair;
-    ctx.fillRect(bx + 4, by + 2, 8, 2);
-    // Blanket
-    ctx.fillStyle = vis.shirt;
-    ctx.fillRect(bx + 1, by + 9, 14, 18);
-  } else {
-    // Empty bed blanket
-    ctx.fillStyle = '#64748b';
-    ctx.fillRect(bx + 1, by + 10, 14, 17);
+  // Speech Bubble / Indikator saat WORKING atau WAITING
+  if (ag.status === 'WORKING') {
+    c.fillStyle = '#2563eb';
+    c.beginPath();
+    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#ffffff';
+    c.font = 'bold 7px monospace';
+    c.fillText('⚡', x + 8, y - 15);
+  } else if (ag.status === 'WAITING_APPROVAL') {
+    c.fillStyle = '#f59e0b';
+    c.beginPath();
+    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#000000';
+    c.font = 'bold 7px monospace';
+    c.fillText('?', x + 8, y - 15);
+  } else if (ag.status === 'HUMAN_NEEDED') {
+    c.fillStyle = '#ef4444';
+    c.beginPath();
+    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = '#ffffff';
+    c.font = 'bold 7px monospace';
+    c.fillText('!', x + 8, y - 15);
   }
 }
 
-const getDeskPosition = index => ({ x: 24 + (index % 5) * 40, y: 34 + Math.floor(index / 5) * 46 });
-const getBedPosition = index => ({ x: 248 + (index % 5) * 24, y: 186 + Math.floor(index / 5) * 42 });
-const LOUNGE_NODES = [[130, 230], [150, 246], [170, 230], [190, 246], [210, 230], [226, 250], [140, 262], [180, 262], [200, 214], [222, 214]];
+/* =====================================================================
+   LOGIKA KOORDINAT & PERGERAKAN AGEN (Wandering & Desk Spots)
+   ===================================================================== */
+function getAgentTargetNode(ag, index) {
+  const meta = AGENT_META[ag.id] || {};
+  const isSleeping = ag.status === 'SLEEPING' || ag.status === 'OFFLINE' || globalSleepMode;
 
-function calculateTargetNode(agent, rosterIndex, approvalIndex, errorIndex) {
-  const vis = AGENT_VISUALS[agent.id] || {};
-  switch (agent.status) {
-    case 'WORKING':
-      if (vis.desk === null || vis.desk === undefined) {
-        return { room: 'warehouse', x: 62, y: 238, pose: 'stand', faceUp: true, typing: true };
-      }
-      const desk = getDeskPosition(vis.desk);
-      return { room: 'work', x: desk.x, y: desk.y + 27, pose: 'sitting', faceUp: true };
-    case 'WAITING_APPROVAL':
-    case 'HUMAN_NEEDED':
-      return { room: 'owner', x: 340 + approvalIndex * 18, y: 112, pose: 'stand', faceUp: true };
-    case 'ERROR':
-      return { room: 'er', x: 446 + (errorIndex % 2) * 20, y: 214 + Math.floor(errorIndex / 2) * 22, pose: 'stand', faceUp: false };
-    case 'OFFLINE': {
-      const bed = getBedPosition(rosterIndex);
-      return { room: 'bedroom', x: bed.x + 8, y: bed.y + 20, pose: 'sleeping', bedCoords: bed };
+  if (isSleeping) {
+    // Posisi tidur di Dormitory Lantai 2
+    const bedIdx = meta.bed ?? index;
+    const col = bedIdx % 5;
+    const row = Math.floor(bedIdx / 5);
+    return { floor: 2, x: 130 + col * 48, y: 40 + row * 65, pose: 'sleeping', label: 'Kasur Dorm #0' + (bedIdx + 1) };
+  }
+
+  if (ag.status === 'WORKING') {
+    if (meta.desk === null) {
+      // Inventory agent di gudang
+      return { floor: 1, x: 130, y: 200, pose: 'stand', label: 'Gudang Rak Unit' };
     }
-    default: {
-      const node = LOUNGE_NODES[rosterIndex % LOUNGE_NODES.length];
-      return { room: 'lounge', x: node[0], y: node[1], pose: 'stand', faceUp: false, hasCup: true };
-    }
-  }
-}
-
-function constructPath(char, target) {
-  if (char.room === target.room) return [{ x: target.x, y: target.y }];
-  const path = [];
-  const currRoom = ROOMS[char.room];
-  if (currRoom) {
-    const doorInsideY = currRoom.side === 'bottom' ? currRoom.y + currRoom.h - 8 : currRoom.y + WALL_THICK + 6;
-    path.push({ x: currRoom.door, y: doorInsideY }, { x: currRoom.door, y: CORRIDOR_Y });
-  } else {
-    path.push({ x: char.x, y: CORRIDOR_Y });
+    const deskIdx = meta.desk;
+    const col = deskIdx % 5;
+    const row = Math.floor(deskIdx / 5);
+    return { floor: 1, x: 114 + col * 40, y: 38 + row * 48, pose: 'sitting', label: 'Meja Kerja #0' + (deskIdx + 1) };
   }
 
-  const tgtRoom = ROOMS[target.room];
-  const tgtDoorInsideY = tgtRoom.side === 'bottom' ? tgtRoom.y + tgtRoom.h - 8 : tgtRoom.y + WALL_THICK + 6;
-  path.push({ x: tgtRoom.door, y: CORRIDOR_Y }, { x: tgtRoom.door, y: tgtDoorInsideY }, { x: target.x, y: target.y });
-  return path;
+  if (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') {
+    return { floor: 1, x: 470 + (index % 3) * 16, y: 80, pose: 'stand', label: 'Ruang Owner' };
+  }
+
+  // IDLE WANDERING — Berpindah spot santai tiap interval waktu tertentu
+  const idleSpots = [
+    { floor: 1, x: 234, y: 220, label: 'Minum Galon Pantry' },
+    { floor: 1, x: 375, y: 92,  label: 'Makan Gorengan Meeting' },
+    { floor: 1, x: 360, y: 215, label: 'Sofa Lounge TV' },
+    { floor: 1, x: 485, y: 210, label: 'Main Ping-Pong' },
+    { floor: 1, x: 45,  y: 130, label: 'Jajan Gerobak Bakso' },
+    { floor: 1, x: 48,  y: 220, label: 'Beli Kopi Starling' },
+    { floor: 2, x: 50,  y: 140, label: 'Santai di Hammock Balkon' },
+    { floor: 2, x: 450, y: 100, label: 'Lesehan Lantai 2' }
+  ];
+
+  const cycle = Math.floor((Date.now() / 24000) + index) % idleSpots.length;
+  const spot = idleSpots[cycle];
+  return { floor: spot.floor, x: spot.x, y: spot.y, pose: 'stand', label: spot.label };
 }
 
-function synchronizeAgentCharacters() {
-  let apvCount = 0;
-  let errCount = 0;
-
+function updatePositions(delta) {
   state.agents.forEach((ag, idx) => {
-    const apvIdx = (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') ? apvCount++ : 0;
-    const errIdx = ag.status === 'ERROR' ? errCount++ : 0;
-    const target = calculateTargetNode(ag, idx, apvIdx, errIdx);
-    const key = `${target.room}:${target.x}:${target.y}:${target.pose}`;
-
     let char = agentCharacters[ag.id];
+    const target = getAgentTargetNode(ag, idx);
+
     if (!char) {
       agentCharacters[ag.id] = {
         id: ag.id,
         x: target.x,
         y: target.y,
-        room: target.room,
-        path: [],
+        floor: target.floor,
         target,
-        key,
-        pose: target.pose,
-        frame: 0,
-        timer: 0
+        pose: target.pose
       };
       return;
     }
 
-    char.agentData = ag;
-    if (char.key !== key) {
-      char.key = key;
-      char.target = target;
-      char.path = constructPath(char, target);
-      char.pose = 'walking';
-    }
-  });
-}
+    char.target = target;
+    char.pose = target.pose;
 
-function updateCharacterPositions(delta) {
-  const movementSpeed = 50; // px / sec
-  Object.values(agentCharacters).forEach(char => {
-    char.timer += delta;
-    if (char.timer > 0.18) {
-      char.timer = 0;
-      char.frame++;
-    }
-
-    if (!char.path.length) {
-      char.pose = char.target.pose;
-      return;
-    }
-
-    const nextNode = char.path[0];
-    const diffX = nextNode.x - char.x;
-    const diffY = nextNode.y - char.y;
-    const distance = Math.hypot(diffX, diffY);
-    const stepSize = movementSpeed * delta;
-
-    char.faceUp = diffY < -0.5;
-
-    if (distance <= stepSize) {
-      char.x = nextNode.x;
-      char.y = nextNode.y;
-      char.path.shift();
+    // Gerak halus mendekati target jika satu lantai
+    if (char.floor === target.floor) {
+      const dx = target.x - char.x;
+      const dy = target.y - char.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 2) {
+        char.x += (dx / dist) * Math.min(dist, 50 * delta);
+        char.y += (dy / dist) * Math.min(dist, 50 * delta);
+      } else {
+        char.x = target.x;
+        char.y = target.y;
+      }
     } else {
-      char.x += (diffX / distance) * stepSize;
-      char.y += (diffY / distance) * stepSize;
+      // Pindah lantai langsung setelah jeda
+      char.floor = target.floor;
+      char.x = target.x;
+      char.y = target.y;
     }
   });
 }
 
-function renderEnvironment() {
-  // Corridor floor
-  for (let x = 0; x < LOGICAL_W; x += 8) {
-    for (let y = 128; y < 160; y += 8) {
-      offCtx.fillStyle = ((x + y) / 8) % 2 ? '#1e293b' : '#0f172a';
-      offCtx.fillRect(x, y, 8, 8);
-    }
-  }
-
-  // Rooms floor and interior walls
-  Object.values(ROOMS).forEach(rm => {
-    offCtx.fillStyle = rm.floor;
-    offCtx.fillRect(rm.x, rm.y + WALL_THICK, rm.w, rm.h - WALL_THICK);
-
-    // Wall upper surface
-    offCtx.fillStyle = rm.wall;
-    offCtx.fillRect(rm.x, rm.y, rm.w, WALL_THICK);
-    offCtx.fillStyle = 'rgba(0,0,0,0.2)';
-    offCtx.fillRect(rm.x, rm.y + WALL_THICK - 2, rm.w, 2);
-  });
-
-  // Solid room partition borders
-  offCtx.fillStyle = '#090d16';
-  Object.values(ROOMS).forEach(rm => {
-    offCtx.fillRect(rm.x, rm.y, rm.w, 2);
-    offCtx.fillRect(rm.x, rm.y, 2, rm.h);
-    offCtx.fillRect(rm.x + rm.w - 2, rm.y, 2, rm.h);
-    const bottomY = rm.side === 'bottom' ? rm.y + rm.h - 3 : rm.y;
-    offCtx.fillRect(rm.x, bottomY, rm.door - 8 - rm.x, 3);
-    offCtx.fillRect(rm.door + 8, bottomY, rm.x + rm.w - rm.door - 8, 3);
-  });
-
-  // Work Room Furniture (Desks)
-  for (let i = 0; i < 10; i++) {
-    const pos = getDeskPosition(i);
-    offCtx.fillStyle = '#475569';
-    offCtx.fillRect(pos.x - 14, pos.y + 4, 28, 12);
-    offCtx.fillStyle = '#64748b';
-    offCtx.fillRect(pos.x - 14, pos.y, 28, 6);
-    // Monitor
-    offCtx.fillStyle = '#0f172a';
-    offCtx.fillRect(pos.x - 6, pos.y - 6, 12, 8);
-    offCtx.fillStyle = '#38bdf8';
-    offCtx.fillRect(pos.x - 5, pos.y - 5, 10, 6);
-  }
-
-  // Owner Office Executive Table & Chair
-  offCtx.fillStyle = '#451a03';
-  offCtx.fillRect(370, 56, 60, 16);
-  offCtx.fillStyle = '#78350f';
-  offCtx.fillRect(370, 54, 60, 8);
-  drawCharacterSprite(offCtx, 400, 56, OWNER_VISUAL, { faceUp: false });
-
-  // Lounge Sofas & Coffee Station
-  offCtx.fillStyle = '#7f1d1d';
-  offCtx.fillRect(144, 200, 68, 14);
-  offCtx.fillStyle = '#991b1b';
-  offCtx.fillRect(146, 202, 64, 8);
-  offCtx.fillStyle = '#475569';
-  offCtx.fillRect(116, 184, 22, 12);
-
-  // Warehouse Shelves
-  for (let s = 0; s < 3; s++) {
-    const shelfX = 10 + s * 34;
-    offCtx.fillStyle = '#334155';
-    offCtx.fillRect(shelfX, 186, 26, 36);
-    offCtx.fillStyle = '#b45309';
-    offCtx.fillRect(shelfX + 2, 192, 10, 8);
-    offCtx.fillRect(shelfX + 14, 192, 10, 8);
-    offCtx.fillRect(shelfX + 2, 204, 10, 8);
-    offCtx.fillRect(shelfX + 14, 204, 10, 8);
-  }
-
-  // Bedroom Beds (Empty or Occupied)
-  for (let b = 0; b < 10; b++) {
-    const bed = getBedPosition(b);
-    const occupant = Object.values(agentCharacters).find(c =>
-      c.pose === 'sleeping' && !c.path.length && c.target.bedCoords &&
-      c.target.bedCoords.x === bed.x && c.target.bedCoords.y === bed.y
-    );
-    const visual = occupant ? AGENT_VISUALS[occupant.id] : null;
-    drawBedOccupant(offCtx, bed.x, bed.y, visual);
-  }
-}
-
-function renderCharacters() {
-  const sorted = Object.values(agentCharacters).sort((a, b) => a.y - b.y);
-  sorted.forEach(char => {
-    if (char.pose === 'sleeping') return; // Rendered with bed
-    const vis = AGENT_VISUALS[char.id];
-    if (!vis) return;
-
-    // Selection highlight ring
-    if (char.id === selectedAgentId) {
-      offCtx.fillStyle = 'rgba(37, 99, 235, 0.4)';
-      offCtx.fillRect(Math.round(char.x) - 7, Math.round(char.y) - 1, 14, 3);
-    }
-
-    const isWalking = char.pose === 'walking';
-    drawCharacterSprite(offCtx, char.x, char.y, vis, {
-      walking: isWalking,
-      frame: char.frame,
-      faceUp: isWalking ? char.faceUp : char.target.faceUp,
-      sitting: char.pose === 'sitting',
-      typing: !isWalking && (char.pose === 'sitting' || char.target.typing),
-      hasCup: !isWalking && char.target.hasCup
-    });
-  });
-}
-
-function renderHighResLabels() {
-  // Room Labels (Clear sans-serif clean tags)
-  mainCtx.font = '600 11px Inter';
-  mainCtx.textBaseline = 'top';
-  Object.values(ROOMS).forEach(rm => {
-    const rx = (rm.x + 8) * scaleFactor;
-    const ry = (rm.y + 6) * scaleFactor;
-    const textWidth = mainCtx.measureText(rm.label).width;
-
-    mainCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    mainCtx.fillRect(rx - 4, ry - 2, textWidth + 8, 18);
-    mainCtx.fillStyle = '#94a3b8';
-    mainCtx.fillText(rm.label, rx, ry);
-  });
-
-  // Agent Nameplates & Status Callouts
-  mainCtx.font = '600 11px Inter';
-  mainCtx.textAlign = 'center';
-  mainCtx.textBaseline = 'middle';
-
-  Object.values(agentCharacters).forEach(char => {
-    const agent = char.agentData || state.agents.find(a => a.id === char.id);
-    if (!agent) return;
-
-    const isSleeping = char.pose === 'sleeping';
-    const canvasX = (isSleeping ? char.target.bedCoords.x + 8 : char.x) * scaleFactor;
-    const tagY = (isSleeping ? char.target.bedCoords.y + 32 : char.y + 4) * scaleFactor;
-
-    // Name Tag
-    const tagText = agent.short;
-    const textW = mainCtx.measureText(tagText).width;
-    const isSelected = char.id === selectedAgentId;
-
-    mainCtx.fillStyle = isSelected ? '#1d4ed8' : 'rgba(15, 23, 42, 0.9)';
-    mainCtx.fillRect(canvasX - textW / 2 - 6, tagY - 2, textW + 12, 16);
-
-    // Status indicator dot inside tag
-    const dotColors = { WORKING: '#4ade80', IDLE: '#60a5fa', OFFLINE: '#9ca3af', WAITING_APPROVAL: '#fbbf24', ERROR: '#f87171' };
-    mainCtx.fillStyle = dotColors[agent.status] || '#9ca3af';
-    mainCtx.fillRect(canvasX - textW / 2 - 2, tagY + 4, 4, 4);
-
-    mainCtx.fillStyle = '#ffffff';
-    mainCtx.fillText(tagText, canvasX + 3, tagY + 6);
-
-    // Status Callouts (No emojis, simple solid pills)
-    if (char.pose === 'walking') return;
-
-    const bubbleY = (isSleeping ? char.target.bedCoords.y - 12 : char.y - 28) * scaleFactor;
-    if (agent.status === 'WORKING') {
-      const activeTool = agent.tools && agent.tools.length ? agent.tools[0] : 'Processing';
-      renderPillCallout(canvasX, bubbleY, activeTool, '#16a34a');
-    } else if (agent.status === 'WAITING_APPROVAL') {
-      renderPillCallout(canvasX, bubbleY, 'Approval Required', '#d97706');
-    } else if (agent.status === 'HUMAN_NEEDED') {
-      renderPillCallout(canvasX, bubbleY, 'OTP / Human Action', '#db2777');
-    } else if (agent.status === 'ERROR') {
-      renderPillCallout(canvasX, bubbleY, 'Rule Blocked', '#dc2626');
-    }
-  });
-}
-
-function renderPillCallout(x, y, text, color) {
-  mainCtx.font = '600 10px Inter';
-  const width = mainCtx.measureText(text).width + 12;
-  mainCtx.fillStyle = color;
-  mainCtx.fillRect(x - width / 2, y, width, 16);
-  mainCtx.fillStyle = '#ffffff';
-  mainCtx.fillText(text, x, y + 8);
-}
-
-let lastTimestamp = performance.now();
-function animationLoop(timestamp) {
-  const delta = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
+let lastTimestamp = 0;
+function renderLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const delta = Math.min(0.1, (timestamp - lastTimestamp) / 1000);
   lastTimestamp = timestamp;
-  frameCounter++;
 
-  updateCharacterPositions(delta);
+  updatePositions(delta);
 
-  offCtx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
-  renderEnvironment();
-  renderCharacters();
+  // Setup render transform
+  const dpr = window.devicePixelRatio || 1;
+  ctx.save();
+  ctx.scale(scaleFactor * dpr, scaleFactor * dpr);
 
-  mainCtx.setTransform(deviceRatio, 0, 0, deviceRatio, 0, 0);
-  mainCtx.imageSmoothingEnabled = false;
-  mainCtx.clearRect(0, 0, LOGICAL_W * scaleFactor, LOGICAL_H * scaleFactor);
-  mainCtx.drawImage(offscreenCanvas, 0, 0, LOGICAL_W * scaleFactor, LOGICAL_H * scaleFactor);
+  // Gambar denah lantai aktif
+  if (currentFloor === 1) {
+    drawFloor1(ctx);
+  } else {
+    drawFloor2(ctx);
+  }
 
-  renderHighResLabels();
-
-  requestAnimationFrame(animationLoop);
-}
-
-/* =====================================================================
-   INTERACTIVITY & SELECTION
-   ===================================================================== */
-mainCanvas.addEventListener('click', evt => {
-  const rect = mainCanvas.getBoundingClientRect();
-  const clickX = (evt.clientX - rect.left) / scaleFactor;
-  const clickY = (evt.clientY - rect.top) / scaleFactor;
-
-  const hit = Object.values(agentCharacters).find(c => {
-    if (c.pose === 'sleeping') {
-      const bed = c.target.bedCoords;
-      return clickX >= bed.x && clickX <= bed.x + 18 && clickY >= bed.y && clickY <= bed.y + 30;
+  // Gambar karakter yang ada di lantai ini
+  state.agents.forEach(ag => {
+    const char = agentCharacters[ag.id];
+    if (char && char.floor === currentFloor) {
+      drawCharacter(ctx, char, ag);
     }
-    return clickX >= c.x - 10 && clickX <= c.x + 10 && clickY >= c.y - 20 && clickY <= c.y + 5;
   });
 
-  if (hit) {
-    selectedAgentId = hit.id;
-    updateRosterSelection();
-    renderAgentInspection();
+  ctx.restore();
+  requestAnimationFrame(renderLoop);
+}
+
+/* Klik agen pada canvas untuk inspeksi */
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const clickX = (e.clientX - rect.left) / scaleFactor;
+  const clickY = (e.clientY - rect.top) / scaleFactor;
+
+  for (const ag of state.agents) {
+    const char = agentCharacters[ag.id];
+    if (char && char.floor === currentFloor) {
+      const dist = Math.hypot(char.x - clickX, char.y - clickY);
+      if (dist < 22) {
+        openAgentModal(ag.id);
+        return;
+      }
+    }
   }
 });
 
 /* =====================================================================
-   SIDEBAR RENDERING & UI UPDATES
+   INTERAKSI API & STATE SYNC
    ===================================================================== */
-function updateRosterSelection() {
-  const rows = document.querySelectorAll('.roster-row');
-  rows.forEach(r => {
-    if (r.dataset.id === selectedAgentId) r.classList.add('selected');
-    else r.classList.remove('selected');
-  });
-}
+async function syncServerState() {
+  try {
+    const res = await fetch('/api/agents/state');
+    if (!res.ok) return;
+    const data = await res.json();
+    state = data;
 
-function renderRoster() {
-  const list = $('roster-list');
-  list.innerHTML = '';
+    // Update HUD chips
+    $('hud-crew').textContent = `${data.summary.online || 0} / ${data.summary.total || 10} Active`;
+    $('hud-tasks').textContent = `${data.summary.working || 0} Running`;
+    $('hud-approvals').textContent = `${data.summary.pending_approvals || 0} Pending`;
+    $('badge-floor-1-count').textContent = data.summary.floor1 ?? 5;
+    $('badge-floor-2-count').textContent = data.summary.floor2 ?? 5;
 
-  state.agents.forEach(agent => {
-    const row = document.createElement('div');
-    row.className = 'roster-row' + (agent.id === selectedAgentId ? ' selected' : '');
-    row.dataset.id = agent.id;
+    // Cek status sleep global
+    const anySleeping = data.agents.some(a => a.status === 'SLEEPING');
+    globalSleepMode = anySleeping;
+    $('btn-global-sleep').classList.toggle('active-sleep', anySleeping);
+    $('sleep-btn-icon').textContent = anySleeping ? '☀️' : '💤';
+    $('sleep-btn-label').textContent = anySleeping ? 'Bangun' : 'Tidur';
 
-    const statusBadgeClass = {
-      WORKING: 'badge-working',
-      IDLE: 'badge-idle',
-      OFFLINE: 'badge-offline',
-      WAITING_APPROVAL: 'badge-waiting',
-      HUMAN_NEEDED: 'badge-human',
-      ERROR: 'badge-error'
-    }[agent.status] || 'badge-idle';
-
-    row.innerHTML = `
-      <div class="roster-info">
-        <div class="roster-name">${escapeHtml(agent.name)}</div>
-        <div class="roster-role">${escapeHtml(agent.role)} (${escapeHtml(ROOM_DISPLAY_NAMES[agent.room] || agent.room)})</div>
-      </div>
-      <div class="roster-actions">
-        <span class="badge ${statusBadgeClass}">${escapeHtml(agent.status)}</span>
-        <button class="toggle ${agent.powered ? 'active' : ''}" title="${agent.powered ? 'Nonaktifkan agen (tidur)' : 'Aktifkan agen'}" ${!agent.implemented ? 'disabled' : ''}></button>
-      </div>
-    `;
-
-    const toggleBtn = row.querySelector('.toggle');
-    toggleBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      setAgentPower(agent.id, !agent.powered);
-    });
-
-    row.addEventListener('click', () => {
-      selectedAgentId = agent.id;
-      updateRosterSelection();
-      renderAgentInspection();
-    });
-
-    list.appendChild(row);
-  });
-}
-
-function renderApprovals() {
-  const container = $('ticket-list');
-  if (!state.approvals || !state.approvals.length) {
-    container.innerHTML = '<div class="empty-state">Tidak ada tiket menunggu otorisasi.</div>';
-    return;
+    // Update Panel drawer list
+    renderCrewDrawer();
+    renderStatsTab();
+  } catch (err) {
+    console.error('Sync error:', err);
   }
-
-  container.innerHTML = state.approvals.map(ticket => `
-    <div class="ticket-item">
-      <div class="ticket-header">
-        <span>#${escapeHtml(ticket.approval_id)}</span>
-        <span>${escapeHtml(ticket.category || 'APPROVAL')}</span>
-      </div>
-      <div class="ticket-title">"${escapeHtml(ticket.task)}"</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-        Agen: ${escapeHtml(ticket.agent_name)} ${ticket.total ? '· Nilai: Rp ' + Number(ticket.total).toLocaleString('id-ID') : ''}
-      </div>
-      <div class="ticket-footer">
-        <button class="btn btn-success btn-sm" onclick="handleApprovalAction('${escapeHtml(ticket.approval_id)}', 'APPROVED')">Setujui</button>
-        <button class="btn btn-danger btn-sm" onclick="handleApprovalAction('${escapeHtml(ticket.approval_id)}', 'REJECTED')">Tolak</button>
-      </div>
-    </div>
-  `).join('');
 }
 
-function renderAgentInspection() {
-  const container = $('detail-content');
-  const agent = state.agents.find(a => a.id === selectedAgentId);
-
-  if (!agent) {
-    $('detail-agent-id').textContent = '-';
-    container.innerHTML = '<div class="empty-state">Pilih agen pada denah kantor atau daftar di atas.</div>';
-    return;
-  }
-
-  $('detail-agent-id').textContent = agent.id;
-  const toolsFormatted = (agent.tools && agent.tools.length)
-    ? agent.tools.map(t => `<code style="font-size: 11px; background: var(--card-sub); padding: 2px 4px; border-radius: 4px;">${escapeHtml(t)}</code>`).join(' ')
-    : '<span style="color: var(--text-muted);">-</span>';
-
-  container.innerHTML = `
-    <div class="detail-grid">
-      <div class="detail-label">Nama</div><div class="detail-val"><strong>${escapeHtml(agent.name)}</strong></div>
-      <div class="detail-label">Peran</div><div class="detail-val">${escapeHtml(agent.role)}</div>
-      <div class="detail-label">Ruangan</div><div class="detail-val">${escapeHtml(ROOM_DISPLAY_NAMES[agent.room] || agent.room)}</div>
-      <div class="detail-label">Status</div><div class="detail-val"><span class="badge badge-${agent.status.toLowerCase()}">${escapeHtml(agent.status)}</span></div>
-      <div class="detail-label">Tools</div><div class="detail-val">${toolsFormatted}</div>
-      <div class="detail-label">Tugas</div><div class="detail-val">${agent.task ? '"' + escapeHtml(agent.task) + '"' : '<span style="color: var(--text-muted);">-</span>'}</div>
-    </div>
-    ${agent.last_reply ? `
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">RESPONS TERAKHIR:</div>
-      <div style="background: var(--card-sub); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 12px; max-height: 120px; overflow-y: auto;">
-        ${escapeHtml(agent.last_reply)}
-      </div>
-    ` : ''}
-    <div style="margin-top: 12px;">
-      ${agent.status === 'HUMAN_NEEDED' ? `
-        <button class="btn btn-success btn-sm" onclick="resolveHumanAction('${agent.id}')">Tandai Sudah Ditangani</button>
-      ` : ''}
-    </div>
-  `;
-}
-
-function renderKPIs() {
-  const summary = state.summary || {};
-  $('kpi-working').textContent = summary.working || 0;
-  $('kpi-pending').textContent = summary.pending_approvals || 0;
-  $('stat-online').textContent = `${summary.online || 0} / ${summary.total || 10} Agen Aktif`;
+async function syncLogs() {
+  try {
+    const res = await fetch('/api/logs');
+    if (!res.ok) return;
+    const logs = await res.json();
+    renderAuditTable(logs);
+    renderActivityFeed(logs);
+  } catch (err) {}
 }
 
 function renderAuditTable(logs) {
   const tbody = $('audit-table-body');
   if (!logs || !logs.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Belum ada riwayat transaksi.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:16px;">Belum ada riwayat transaksi.</td></tr>';
     return;
   }
-
-  tbody.innerHTML = logs.map(l => {
-    const timeStr = l.waktu ? l.waktu.substring(11, 19) : '--:--:--';
-    const agentName = (l.agent && l.agent.name) ? l.agent.name : (l.agent_id || '-');
-    const actionDesc = `${l.action || ''}: ${l.input || ''}`;
-    const statusClass = l.status === 'SUCCESS' ? 'badge-working' : (l.status === 'PENDING_APPROVAL' ? 'badge-waiting' : 'badge-error');
-
+  tbody.innerHTML = logs.slice(0, 10).map(l => {
+    const timeStr = l.timestamp ? l.timestamp.split('T')[1]?.split('.')[0] || l.timestamp : '-';
+    const isSuccess = l.status === 'SUCCESS';
+    const badgeClass = isSuccess ? 'badge-success' : (l.status?.includes('APPROVAL') ? 'badge-warning' : 'badge-danger');
     return `
       <tr>
-        <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">${escapeHtml(timeStr)}</td>
-        <td><strong>${escapeHtml(agentName)}</strong></td>
-        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${escapeHtml(actionDesc)}">${escapeHtml(actionDesc)}</td>
-        <td><span class="badge ${statusClass}">${escapeHtml(l.status || 'OK')}</span></td>
+        <td class="time-cell">${escapeHtml(timeStr)}</td>
+        <td class="agent-cell">${escapeHtml(l.agent_name || l.agent_id)}</td>
+        <td style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.user_input || l.action)}</td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(l.status || 'OK')}</span></td>
       </tr>
     `;
   }).join('');
 }
 
+function renderActivityFeed(logs) {
+  const container = $('drawer-activity-feed');
+  if (!logs || !logs.length) {
+    container.innerHTML = '<div style="color:var(--text-muted); text-align:center;">Belum ada aktivitas.</div>';
+    return;
+  }
+  container.innerHTML = logs.slice(0, 15).map(l => {
+    const timeStr = l.timestamp ? l.timestamp.split('T')[1]?.split('.')[0] : '';
+    return `
+      <div style="background:var(--card-sub); border:1px solid var(--border); padding:8px 10px; border-radius:4px;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+          <strong style="color:#60a5fa;">${escapeHtml(l.agent_name || l.agent_id)}</strong>
+          <span style="color:var(--text-muted); font-family:monospace;">${escapeHtml(timeStr)}</span>
+        </div>
+        <div style="font-size:11px; color:var(--text);">${escapeHtml(l.user_input || l.action)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCrewDrawer() {
+  const container = $('crew-list-container');
+  $('drawer-tab-crew-cnt').textContent = state.agents.length;
+
+  container.innerHTML = state.agents.map(ag => {
+    const meta = AGENT_META[ag.id] || { color: '#3b82f6' };
+    const char = agentCharacters[ag.id];
+    const station = char?.target?.label || (ag.floor === 2 ? 'Kamar Dorm' : 'Meja Kerja');
+    const isSleeping = ag.status === 'SLEEPING';
+    const statusBadge = ag.status === 'WORKING' ? 'badge-working' : (isSleeping ? 'badge-dorm' : (ag.powered ? 'badge-success' : 'badge-muted'));
+
+    return `
+      <div class="crew-card ${ag.id === selectedAgentId ? 'selected' : ''}" onclick="openAgentModal('${ag.id}')">
+        <div class="crew-avatar" style="background:${meta.color};">${ag.short.slice(0, 2).toUpperCase()}</div>
+        <div class="crew-info">
+          <div class="crew-name">${escapeHtml(ag.name)}</div>
+          <div class="crew-sub">${escapeHtml(station)} · <span class="badge ${statusBadge}">${escapeHtml(ag.status)}</span></div>
+        </div>
+        <div class="crew-ctrl" onclick="event.stopPropagation()">
+          <button class="btn-micro" onclick="toggleAgentPower('${ag.id}', ${!ag.powered})" title="Power Toggle">${ag.powered ? 'ON' : 'OFF'}</button>
+          <button class="btn-micro" onclick="toggleAgentSleep('${ag.id}')" title="Sleep Toggle">${isSleeping ? '☀️' : '💤'}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStatsTab() {
+  $('stat-total-tx').textContent = state.summary.total_transactions || 20;
+  $('stat-pending-apv').textContent = state.summary.pending_approvals || 0;
+  const apvList = $('drawer-apv-list');
+  if (state.approvals && state.approvals.length) {
+    apvList.innerHTML = state.approvals.map(apv => `
+      <div style="border:1px solid #78350f; background:rgba(245,158,11,0.08); padding:8px; border-radius:4px; margin-bottom:6px; font-size:11px;">
+        <div style="font-weight:600; color:#fbbf24;">${escapeHtml(apv.approval_id)} — ${escapeHtml(apv.agent_name)}</div>
+        <div style="margin:3px 0;">${escapeHtml(apv.task || apv.summary)}</div>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button class="btn-micro" style="background:#059669; color:#fff;" onclick="resolveApproval('${apv.approval_id}', 'APPROVED')">Setujui</button>
+          <button class="btn-micro" style="background:#dc2626; color:#fff;" onclick="resolveApproval('${apv.approval_id}', 'REJECTED')">Tolak</button>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    apvList.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:12px;">Tidak ada tiket otorisasi pending.</div>';
+  }
+}
+
 /* =====================================================================
-   API INTEGRATION & DISPATCH
+   AKSI SLEEP, POWER & APPROVAL
    ===================================================================== */
-async function fetchAgentState() {
+async function toggleGlobalSleep() {
+  const endpoint = globalSleepMode ? '/api/agents/wake-all' : '/api/agents/sleep-all';
   try {
-    const res = await fetch('/api/agents/state');
-    if (res.ok) {
-      state = await res.json();
-      synchronizeAgentCharacters();
-      renderRoster();
-      renderApprovals();
-      renderKPIs();
-      renderAgentInspection();
-    }
+    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    showToast(globalSleepMode ? '☀️ Seluruh kru dibangunkan kembali ke kantor' : '💤 Seluruh kru idle beristirahat di Lantai 2');
+    if (!globalSleepMode) switchFloor(2); // Otomatis lihat dorm saat tidur
+    syncServerState();
   } catch (err) {
-    console.error('Fetch agent state error:', err);
+    showToast('Gagal mengubah mode tidur kru');
   }
 }
 
-async function fetchAuditLogs() {
-  try {
-    const logsRes = await fetch('/api/logs');
-    const kpiRes = await fetch('/api/kpi');
-
-    if (logsRes.ok) {
-      const logs = await logsRes.json();
-      renderAuditTable(logs);
-    }
-    if (kpiRes.ok) {
-      const kpi = await kpiRes.json();
-      $('kpi-total').textContent = kpi.total_transactions || 0;
-      $('kpi-rate').textContent = kpi.success_rate || '100%';
-    }
-  } catch (err) {
-    console.error('Fetch logs error:', err);
-  }
-}
-
-async function setAgentPower(agentId, turnOn) {
+async function toggleAgentPower(agentId, on) {
   try {
     const res = await fetch('/api/agents/power', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agent_id: agentId, on: turnOn })
+      body: JSON.stringify({ agent_id: agentId, on })
     });
-    if (res.ok) {
-      showToast(turnOn ? `Agen ${agentId} diaktifkan` : `Agen ${agentId} dinonaktifkan (tidur)`);
-      fetchAgentState();
+    const d = await res.json();
+    if (d.error) showToast(d.error);
+    else {
+      showToast(`Power ${agentId}: ${on ? 'ON' : 'OFF'}`);
+      syncServerState();
     }
-  } catch (err) {
-    showToast('Gagal mengubah status daya agen');
+  } catch (e) {
+    showToast('Koneksi server gagal');
   }
 }
 
-async function handleApprovalAction(approvalId, decision) {
+async function toggleAgentSleep(agentId) {
   try {
-    const res = await fetch('/api/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ approval_id: approvalId, action: decision })
-    });
-    if (res.ok) {
-      showToast(decision === 'APPROVED' ? `Tiket ${approvalId} disetujui` : `Tiket ${approvalId} ditolak`);
-      fetchAgentState();
-      fetchAuditLogs();
-    }
-  } catch (err) {
-    showToast('Gagal memproses keputusan approval');
-  }
-}
-
-async function resolveHumanAction(agentId) {
-  try {
-    const res = await fetch('/api/agents/resolve', {
+    const res = await fetch('/api/agents/toggle-sleep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent_id: agentId })
     });
-    if (res.ok) {
-      showToast(`Status eskalasi ${agentId} diselesaikan`);
-      fetchAgentState();
-    }
-  } catch (err) {
-    showToast('Gagal menyelesaikan status agen');
+    const d = await res.json();
+    showToast(`Status tidur ${agentId} diperbarui`);
+    syncServerState();
+  } catch (e) {
+    showToast('Gagal toggle sleep agen');
   }
 }
 
-$('prompt-form').addEventListener('submit', async e => {
-  e.preventDefault();
+async function resolveApproval(apvId, action) {
+  try {
+    const res = await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approval_id: apvId, action })
+    });
+    const d = await res.json();
+    showToast(`Keputusan Owner: ${action}`);
+    syncServerState();
+    syncLogs();
+  } catch (e) {
+    showToast('Gagal memproses approval');
+  }
+}
+
+/* =====================================================================
+   KONSOL PERINTAH & TRANSAKSI
+   ===================================================================== */
+async function handleSendPrompt(e) {
+  if (e) e.preventDefault();
   const input = $('prompt-input');
-  const message = input.value.trim();
-  if (!message) return;
+  const text = (input.value || '').trim();
+  if (!text) return;
 
-  const btn = $('btn-submit');
-  btn.disabled = true;
-  const out = $('output-box');
-  out.innerHTML = '<div class="output-meta">ROUTING: Menganalisis kebutuhan & mendelegasikan ke agen...</div><div>Harap tunggu...</div>';
+  const terminal = $('result-terminal');
+  terminal.innerHTML = `<span class="tag-ok">PROCESSING</span> Mengirim instruksi ke AI Core...\n> "${escapeHtml(text)}"`;
+  input.value = '';
+  switchFloor(1); // Kembali ke kantor untuk melihat proses
 
+  const startTime = Date.now();
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, user_id: 'owner_web_portal' })
+      body: JSON.stringify({ message: text, user_id: 'owner_web' })
     });
-
     const data = await res.json();
-    if (res.ok) {
-      const routing = data.routing || {};
-      const execution = data.execution || {};
+    const lat = Date.now() - startTime;
+    $('hud-latency').textContent = `${lat}ms`;
 
-      out.innerHTML = `
-        <div class="output-meta">DELEGASI: ${escapeHtml(routing.agent_name || routing.agent_id)} · LATENCY: ${data.latency_ms} ms · STATUS: ${escapeHtml(execution.status)}</div>
-        <div>${escapeHtml(execution.reply_message || '')}</div>
-      `;
-
-      selectedAgentId = routing.agent_id;
-      fetchAgentState();
-      fetchAuditLogs();
+    if (data.error) {
+      terminal.innerHTML = `<span class="tag-err">ERROR</span> ${escapeHtml(data.error)}`;
     } else {
-      out.innerHTML = `<div class="output-meta" style="color: var(--danger);">ERROR: Gagal memproses permintaan</div><div>${escapeHtml(data.error || 'Terjadi kesalahan sistem')}</div>`;
+      const exec = data.execution || {};
+      const statusTag = exec.status === 'SUCCESS' ? 'tag-ok' : (exec.status?.includes('APPROVAL') ? 'tag-warn' : 'tag-err');
+      terminal.innerHTML = `<span class="${statusTag}">${escapeHtml(exec.status || 'DONE')}</span> [${escapeHtml(exec.agent_name || 'Agent')}] (${lat}ms)\n${escapeHtml(exec.reply || 'Proses selesai.')}`;
     }
+    syncServerState();
+    syncLogs();
   } catch (err) {
-    out.innerHTML = `<div class="output-meta" style="color: var(--danger);">ERROR: Gagal menghubungi server</div><div>${escapeHtml(err.message)}</div>`;
-  } finally {
-    btn.disabled = false;
-    input.value = '';
+    terminal.innerHTML = `<span class="tag-err">NETWORK ERROR</span> Gagal menghubungi server: ${escapeHtml(err.message)}`;
   }
-});
+}
 
-// Setup Presets
-const presetContainer = $('preset-container');
-PRESETS.forEach(presetText => {
-  const chip = document.createElement('div');
-  chip.className = 'preset-chip';
-  chip.textContent = presetText;
-  chip.addEventListener('click', () => {
-    $('prompt-input').value = presetText;
-    $('prompt-input').focus();
+/* =====================================================================
+   DRAWER & MODAL MANAGEMENT
+   ===================================================================== */
+function toggleDrawer(force) {
+  isDrawerOpen = force !== undefined ? force : !isDrawerOpen;
+  $('side-drawer').classList.toggle('open', isDrawerOpen);
+  $('drawer-overlay').classList.toggle('open', isDrawerOpen);
+}
+
+function switchDrawerTab(tab) {
+  const tabs = document.querySelectorAll('.drawer-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  ['crew', 'stats', 'activity'].forEach((name, i) => {
+    const pane = $('pane-' + name);
+    if (name === tab) {
+      tabs[i].classList.add('active');
+      pane.classList.add('active');
+    } else {
+      pane.classList.remove('active');
+    }
   });
-  presetContainer.appendChild(chip);
-});
+}
 
-// Clock
-setInterval(() => {
-  $('clock-display').textContent = new Date().toLocaleTimeString('id-ID', { hour12: false });
-}, 1000);
+function openAgentModal(agentId) {
+  selectedAgentId = agentId;
+  const ag = state.agents.find(a => a.id === agentId);
+  if (!ag) return;
 
-// Initialize
-adjustCanvasSize();
-fetchAgentState();
-fetchAuditLogs();
+  const meta = AGENT_META[ag.id] || { color: '#3b82f6' };
+  const char = agentCharacters[ag.id];
 
-setInterval(fetchAgentState, 2000);
-setInterval(fetchAuditLogs, 5000);
+  $('modal-agent-name').textContent = ag.name;
+  $('modal-agent-id').textContent = ag.id;
+  $('modal-agent-avatar').textContent = ag.short.slice(0, 2).toUpperCase();
+  $('modal-agent-avatar').style.background = meta.color;
 
-requestAnimationFrame(animationLoop);
+  $('modal-val-role').textContent = ag.role;
+  $('modal-val-status').textContent = ag.status;
+  $('modal-val-floor').textContent = `Lantai ${ag.floor || char?.floor || 1}`;
+  $('modal-val-room').textContent = char?.target?.label || ag.room || 'Kantor';
+  $('modal-val-task').textContent = ag.task || 'Tidak ada tugas aktif';
+  $('modal-val-tasks-done').textContent = `${ag.tasks_done || 0} tugas diselesaikan`;
+  $('modal-val-last-reply').textContent = ag.last_reply ? `"${ag.last_reply.slice(0, 120)}..."` : 'Belum ada';
+
+  // Tools
+  const tools = meta.tools || ['general_query'];
+  $('modal-tools-list').innerHTML = tools.map(t => `<span class="tool-chip">${t}</span>`).join('');
+
+  // Memory / SOUL
+  $('modal-soul-content').textContent = AGENT_SOUL_DOCS[ag.id] || 'SOUL.md default tidak tersedia.';
+
+  $('agent-modal').classList.add('open');
+}
+
+function closeAgentModal() {
+  $('agent-modal').classList.remove('open');
+}
+
+function switchModalTab(tab) {
+  const tabs = document.querySelectorAll('.modal-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  ['overview', 'tools', 'memory'].forEach((name, i) => {
+    const el = $('modal-tab-' + name);
+    if (name === tab) {
+      tabs[i].classList.add('active');
+      el.style.display = 'block';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
+
+function toggleModalAgentPower() {
+  const ag = state.agents.find(a => a.id === selectedAgentId);
+  if (ag) toggleAgentPower(ag.id, !ag.powered);
+}
+
+function toggleModalAgentSleep() {
+  if (selectedAgentId) toggleAgentSleep(selectedAgentId);
+}
+
+function openTasksModal() {
+  renderKanbanBoard();
+  $('tasks-modal').classList.add('open');
+}
+
+function closeTasksModal() {
+  $('tasks-modal').classList.remove('open');
+}
+
+function renderKanbanBoard() {
+  const grid = $('kanban-board-grid');
+  const working = state.agents.filter(a => a.status === 'WORKING');
+  const apv = state.approvals || [];
+  const idle = state.agents.filter(a => a.status === 'IDLE');
+
+  grid.innerHTML = `
+    <div class="kanban-col">
+      <div class="kanban-col-head"><span>Triage / Standby</span><span>${idle.length}</span></div>
+      ${idle.slice(0, 4).map(a => `<div class="kanban-card"><strong>${a.short}</strong><br><span style="color:var(--text-muted);">${a.role}</span></div>`).join('')}
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-head"><span>In Progress</span><span>${working.length}</span></div>
+      ${working.length ? working.map(a => `<div class="kanban-card" style="border-color:#3b82f6;"><strong>${a.short}</strong><br>${escapeHtml(a.task || 'Memproses permintaan...')}</div>`).join('') : '<div style="color:var(--text-muted);font-size:10px;text-align:center;padding:12px;">Antrean kosong</div>'}
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-head"><span>Waiting Approval</span><span>${apv.length}</span></div>
+      ${apv.length ? apv.map(a => `<div class="kanban-card" style="border-color:#fbbf24;"><strong>${escapeHtml(a.approval_id)}</strong><br>${escapeHtml(a.agent_name)}</div>`).join('') : '<div style="color:var(--text-muted);font-size:10px;text-align:center;padding:12px;">Semua terotorisasi</div>'}
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-head"><span>Verified Done</span><span>20</span></div>
+      <div class="kanban-card"><strong>20 Skenario Rental</strong><br><span style="color:#34d399;">100% Passed</span></div>
+      <div class="kanban-card"><strong>Anti-Hallucination</strong><br><span style="color:#34d399;">Active Guard</span></div>
+    </div>
+  `;
+}
+
+/* =====================================================================
+   INISIALISASI APLIKASI
+   ===================================================================== */
+function init() {
+  resizeCanvas();
+  updateLegend();
+
+  // Presets
+  const pwrap = $('preset-container');
+  pwrap.innerHTML = PRESETS.map(p => `<button type="button" class="preset-tag" onclick="$('prompt-input').value='${escapeHtml(p)}'; handleSendPrompt();">${escapeHtml(p)}</button>`).join('');
+
+  // Clock
+  setInterval(() => {
+    const d = new Date();
+    $('hud-clock').textContent = d.toTimeString().split(' ')[0] + ' WIB';
+  }, 1000);
+
+  // Polling Server State
+  syncServerState();
+  syncLogs();
+  setInterval(syncServerState, 1500);
+  setInterval(syncLogs, 4000);
+
+  // Mulai Loop Animasi
+  requestAnimationFrame(renderLoop);
+}
+
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
