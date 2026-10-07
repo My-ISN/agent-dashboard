@@ -57,9 +57,13 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
     """Handler HTTP: static file + REST API AI-OS"""
 
     def log_message(self, fmt, *args):
-        # Redam log polling agar konsol tidak banjir
-        if "/api/agents/state" in (args[0] if args else ""):
-            return
+        # Redam log polling dan favicon agar konsol tidak banjir
+        try:
+            first_arg = str(args[0]) if args else ""
+            if "/api/agents/state" in first_arg or "favicon.ico" in first_arg:
+                return
+        except Exception:
+            pass
         super().log_message(fmt, *args)
 
     def end_headers(self):
@@ -91,6 +95,10 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
 
+        if path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
         if path in ("/", "/index.html", "/office"):
             self.path = "/office.html"
             return super().do_GET()
@@ -135,14 +143,6 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
                 return self.handle_approve(data)
             if path == "/api/agents/power":
                 return self._json(orchestrator.state.set_power(data.get("agent_id", ""), bool(data.get("on"))))
-            if path == "/api/agents/sleep-all":
-                return self._json(orchestrator.state.sleep_all())
-            if path == "/api/agents/wake-all":
-                return self._json(orchestrator.state.wake_all())
-            if path == "/api/agents/toggle-sleep":
-                if data.get("agent_id"):
-                    return self._json(orchestrator.state.toggle_agent_sleep(data["agent_id"]))
-                return self._json(orchestrator.state.toggle_sleep_all())
             if path == "/api/agents/resolve":
                 orchestrator.state.clear_human_needed(data.get("agent_id", ""))
                 return self._json({"status": "SUCCESS"})

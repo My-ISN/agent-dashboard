@@ -3,2127 +3,1968 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruang · ISKOM AI-OS Virtual Office & Mission Control</title>
+  <title>Ruang · ISKOM AI Virtual Office</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Three.js + OrbitControls for Authentic 3D Virtual Office View -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
   <style>
+    /* ==========================================================================
+       RUANG DESIGN SYSTEM (Directly adapted from yugienugraha/ruang)
+       A clean, retro-modern, anti-slop aesthetic: dark slate, brass amber, mint.
+       ========================================================================== */
     :root {
-      --bg: #090d16;
-      --card-bg: #0f172a;
-      --card-sub: #1e293b;
-      --border: #223049;
-      --border-focus: #3b82f6;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-secondary: #cbd5e1;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --purple: #8b5cf6;
-      --radius: 8px;
+      --c-101311: #101311;
+      --c-121613: #121613;
+      --c-151a16: #151a16;
+      --c-1a211c: #1a211c;
+      --c-171c18: #171c18;
+      --c-20423d: #20423d;
+      --c-243027: #243027;
+      --c-2c352e: #2c352e;
+      --c-313831: #313831;
+      --c-3a463c: #3a463c;
+      --c-eeeae3: #eeeae3;
+      --c-b9c3b9: #b9c3b9;
+      --c-9ea79e: #9ea79e;
+      --c-778078: #778078;
+      --c-f2b16b: #f2b16b; /* Accent Amber */
+      --c-79d6bd: #79d6bd;
+      --c-4fb986: #4fb986; /* Green */
+      --c-d9695a: #d9695a; /* Red / Bad */
+      --c-5b9bd5: #5b9bd5; /* Blue / Info */
+      --c-d59a4f: #d59a4f; /* Warn */
+
+      --surface: var(--c-151a16);
+      --surface-2: var(--c-1a211c);
+      --surface-3: var(--c-121613);
+      --border: var(--c-313831);
+      --border-strong: var(--c-3a463c);
+      --text: var(--c-eeeae3);
+      --text-muted: var(--c-9ea79e);
+      --text-dim: var(--c-778078);
+      --accent: var(--c-f2b16b);
+      --active-bg: var(--c-20423d);
+      --active-border: var(--c-79d6bd);
+      --active-text: #d9fff2;
+
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      color-scheme: dark;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
+      background: var(--c-101311);
       color: var(--text);
       min-height: 100vh;
-      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
       overflow-x: hidden;
+      line-height: 1.45;
     }
 
-    /* Top HUD / Mission Control Header */
-    header.hud-header {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(8px);
+    /* Monospaced accents for engineering clarity */
+    .brand, .sidebar-note, header, .eyebrow, small, strong, .badge, dd, dt,
+    .room-tabs button, .room-label span, .meeting-table, .pixel-station-name,
+    .hud-chip, .refresh-button, code, pre, .mono {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* --------------------------------------------------------------------------
+       APP HEADER & HUD (GAME HUD STYLE)
+       -------------------------------------------------------------------------- */
+    .app-header {
+      background: var(--c-121613);
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
       padding: 10px 20px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
-      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
-    .brand-group {
+    .brand-wrap {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
-    .brand-badge {
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-
-    .brand-title {
+      justify-content: center;
       font-size: 15px;
+      border-radius: 4px;
+    }
+    .brand-text h1 {
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.01em;
       color: var(--text);
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
-    .brand-sub {
+    .brand-text h1 span {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--accent);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .brand-text p {
       font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
+      color: var(--text-dim);
     }
 
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.9); }
-    }
-
-    /* HUD Chips */
-    .hud-chips {
+    /* Game HUD chips */
+    .office-hud {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-
     .hud-chip {
-      background: var(--card-sub);
+      background: var(--surface-2);
       border: 1px solid var(--border);
+      border-radius: 4px;
       padding: 4px 10px;
-      border-radius: 6px;
       font-size: 11px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      color: var(--text-secondary);
-      font-family: 'JetBrains Mono', monospace;
+      gap: 8px;
+      color: var(--text-muted);
+      cursor: default;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
-
-    .hud-chip .val {
-      color: #fff;
+    .hud-chip b {
+      color: var(--text);
       font-weight: 600;
     }
+    .hud-chip.warn b { color: var(--accent); }
+    .hud-chip.bad b { color: var(--c-d9695a); }
+    .hud-chip.good b { color: var(--c-4fb986); }
+    .hud-chip.clickable {
+      cursor: pointer;
+    }
+    .hud-chip.clickable:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
 
-    .hud-chip.highlight-green .val { color: #34d399; }
-    .hud-chip.highlight-amber .val { color: #fbbf24; }
-    .hud-chip.highlight-blue .val { color: #60a5fa; }
-
-    /* Header Action Controls */
-    .header-actions {
+    /* Stage Tools / Controls */
+    .office-stage-tools {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
-    .btn-group {
+    .view-toggle {
       display: inline-flex;
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      background: var(--surface-3);
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
       padding: 2px;
     }
-
-    .btn-toggle {
+    .view-toggle button {
       background: transparent;
-      border: none;
+      border: 0;
       color: var(--text-muted);
-      padding: 5px 12px;
-      font-size: 12px;
+      font: 11px 'JetBrains Mono', monospace;
       font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .view-toggle button.active {
+      background: var(--accent);
+      color: var(--c-101311);
+    }
+    .panel-toggle, .refresh-button {
+      background: transparent;
+      border: 1px solid var(--border-strong);
       border-radius: 4px;
+      color: var(--b9c3b9);
       cursor: pointer;
+      font: 11px 'JetBrains Mono', monospace;
+      padding: 5px 10px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       transition: all 0.15s;
     }
-
-    .btn-toggle:hover {
+    .panel-toggle:hover, .refresh-button:hover {
+      border-color: var(--accent);
       color: var(--text);
     }
-
-    .btn-toggle.active {
-      background: var(--primary);
-      color: #fff;
+    .panel-toggle.active {
+      background: var(--surface-2);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
-    .btn-pill {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-
-    .btn-pill:hover {
-      background: #2a3a52;
-      border-color: #3b82f6;
-    }
-
-    .btn-pill.sleep-btn {
-      color: #cbd5e1;
-    }
-
-    .btn-pill.sleep-btn.active-sleep {
-      background: #312e81;
-      border-color: #6366f1;
-      color: #e0e7ff;
-    }
-
-    .btn-pill.panel-btn {
-      background: #1e293b;
-    }
-
-    /* Main Container */
-    .app-layout {
+    /* --------------------------------------------------------------------------
+       MAIN STAGE CONTAINER
+       -------------------------------------------------------------------------- */
+    .main-layout {
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 16px 20px 40px;
-      max-width: 1600px;
-      margin: 0 auto;
-    }
-
-    /* Canvas Frame */
-    .office-view-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
+      flex: 1;
+      height: calc(100vh - 57px);
+      overflow: hidden;
       position: relative;
     }
 
-    .office-view-header {
+    .office-stage {
+      flex: 1;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-      gap: 8px;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px 20px 80px;
+      background: var(--c-101311);
+      position: relative;
     }
 
-    .floor-indicator {
+    /* --------------------------------------------------------------------------
+       AUTHENTIC RUANG PIXEL CHARACTER (Pure CSS Anatomy)
+       -------------------------------------------------------------------------- */
+    .pixel-character {
+      --hair: #24394b;
+      --skin: #e9b57d;
+      --shirt: #6bd4c0;
+      --pants: #263b55;
+      display: inline-block;
+      height: 58px;
+      position: relative;
+      width: 52px;
+      z-index: 2;
+      flex-shrink: 0;
+      image-rendering: pixelated;
+    }
+    .character-head, .character-hair, .character-torso, .character-arm, .character-leg {
+      image-rendering: pixelated;
+      position: absolute;
+    }
+    .character-head {
+      background: var(--skin);
+      box-shadow: inset 4px 0 #d79666;
+      height: 20px;
+      left: 15px;
+      top: 9px;
+      width: 22px;
+    }
+    .character-head i, .character-head b {
+      background: #17201e;
+      display: block;
+      height: 3px;
+      position: absolute;
+      top: 9px;
+      width: 3px;
+    }
+    .character-head i { left: 5px; }
+    .character-head b { right: 5px; }
+    .character-hair {
+      background: var(--hair);
+      box-shadow: 4px 4px var(--hair), 8px 0 var(--hair), 12px 0 var(--hair),
+                  16px 0 var(--hair), 20px 4px var(--hair), 24px 8px var(--hair);
+      height: 5px;
+      left: 12px;
+      top: 5px;
+      width: 5px;
+    }
+    .character-torso {
+      background: var(--shirt);
+      box-shadow: inset 4px 0 rgb(0 0 0 / .16);
+      height: 18px;
+      left: 13px;
+      top: 29px;
+      width: 26px;
+    }
+    .character-arm {
+      background: var(--skin);
+      height: 15px;
+      top: 31px;
+      width: 6px;
+    }
+    .character-arm.left { left: 7px; }
+    .character-arm.right { right: 7px; }
+    .character-leg {
+      background: var(--pants);
+      bottom: 0;
+      height: 13px;
+      width: 9px;
+    }
+    .character-leg.left { left: 16px; }
+    .character-leg.right { right: 27px; }
+
+    /* Character animations */
+    @keyframes mc-breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes mc-work {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes mc-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    @keyframes mc-talk {
+      50% { transform: translateY(-2px); }
+    }
+    @keyframes mc-screen {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes mc-pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    @keyframes mc-sleep {
+      0% { transform: translateY(0) scale(0.9); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(-16px) scale(1.3); opacity: 0; }
+    }
+
+    .state-idle .pixel-character { animation: mc-breathe 3.2s ease-in-out infinite; }
+    .state-working .pixel-character { animation: mc-work 0.8s steps(2) infinite; }
+    .state-waiting_approval .pixel-character,
+    .state-human_needed .pixel-character { animation: mc-bob 1s steps(2) infinite; }
+    .state-offline .pixel-character {
+      opacity: 0.65;
+      filter: grayscale(0.85);
+    }
+
+    /* --------------------------------------------------------------------------
+       OFFICE STATION (Agent Widget in Room)
+       -------------------------------------------------------------------------- */
+    .pixel-station {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 8px 6px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      min-width: 120px;
+      max-width: 150px;
+    }
+    .pixel-station:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+    .pixel-station:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .pixel-station-name {
+      background: var(--c-101311);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      line-height: 1.35;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 110px;
+      z-index: 3;
+    }
+
+    /* Speech Bubble over agent */
+    .speech {
+      background: #fff7e8;
+      border: 2px solid #17201e;
+      border-radius: 4px;
+      color: #1b2420;
+      font: 9px 'JetBrains Mono', monospace;
+      line-height: 1.3;
+      max-width: 140px;
+      padding: 3px 6px;
+      position: absolute;
+      top: -30px;
+      text-align: center;
+      animation: mc-bob 2.4s ease-in-out infinite;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 10;
+      pointer-events: none;
+    }
+    .speech::after {
+      border: 5px solid transparent;
+      border-top-color: #17201e;
+      bottom: -10px;
+      content: '';
+      left: calc(50% - 5px);
+      position: absolute;
+    }
+    .sleep-bubble {
+      position: absolute;
+      top: -18px;
+      right: 15px;
+      color: var(--accent);
+      font: 12px 'JetBrains Mono', monospace;
+      font-weight: 700;
+      animation: mc-sleep 2s infinite ease-out;
+      pointer-events: none;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 1px 6px;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+    .badge.good { background: #1a3325; color: #73e6a6; border: 1px solid #28543b; }
+    .badge.warn { background: #3b2a14; color: #f7ca88; border: 1px solid #5a3e1b; }
+    .badge.bad { background: #3d1b18; color: #ff9d8f; border: 1px solid #632a24; }
+    .badge.info { background: #142738; color: #8ec3eb; border: 1px solid #1f3d59; }
+    .badge.muted { background: var(--surface-3); color: var(--text-dim); border: 1px solid var(--border); }
+    .badge.pulsing { animation: mc-pulse-badge 1.5s infinite; }
+
+    /* --------------------------------------------------------------------------
+       ROOM CONTAINERS & DENAH LAYOUT (Ruang 2D)
+       -------------------------------------------------------------------------- */
+    .room-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .room-tabs button {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font: 12px 'JetBrains Mono', monospace;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .room-tabs button.active {
+      background: var(--surface-2);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .room-tabs button .room-count {
+      background: var(--surface-3);
+      border-radius: 9px;
+      padding: 1px 6px;
+      font-size: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .floors-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .room-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      position: relative;
+    }
+    .room-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .room-title {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
-    .floor-title {
+    .room-title h3 {
       font-size: 14px;
       font-weight: 700;
-      letter-spacing: -0.2px;
-    }
-
-    .floor-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      color: var(--text-muted);
-    }
-
-    .canvas-wrapper {
-      position: relative;
-      width: 100%;
-      background: #060911;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-
-    #office-canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .canvas-overlay-tip {
-      position: absolute;
-      bottom: 12px;
-      left: 14px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.45);
-      pointer-events: none;
-      background: rgba(10, 15, 26, 0.7);
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .room-legend-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .legend-chip {
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 6px;
     }
-
-    .legend-box {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
+    .room-title p {
+      font-size: 11px;
+      color: var(--text-dim);
     }
 
-    /* Bottom Section: Command Input + Live Audit */
-    .bottom-grid {
+    /* Workspace: Hot Desks + Meeting Table */
+    .workspace-subzones {
       display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      gap: 16px;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
     }
-
     @media (max-width: 1024px) {
-      .bottom-grid { grid-template-columns: 1fr; }
+      .workspace-subzones { grid-template-columns: 1fr; }
     }
 
-    .card {
-      background: var(--card-bg);
+    .desks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 16px 12px;
+    }
+    .desk-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      min-height: 140px;
+      position: relative;
+    }
+
+    /* Computer Workstation Furniture */
+    .ws-desk {
+      background: #473227;
+      border: 3px solid #17201e;
+      border-radius: 2px;
+      height: 20px;
+      width: 76px;
+      position: relative;
+      margin-top: -12px;
+      z-index: 4;
+      display: flex;
+      justify-content: center;
+    }
+    .ws-desk i {
+      background: #2b423f;
+      border: 2px solid #17201e;
+      border-radius: 2px;
+      height: 22px;
+      position: absolute;
+      top: -24px;
+      width: 30px;
+      display: block;
+    }
+    .ws-desk.occupied i {
+      background: #6bd4c0;
+      box-shadow: 0 0 8px #6bd4c088;
+      animation: mc-screen 1.6s steps(3) infinite;
+    }
+
+    /* Meeting Table */
+    .meeting-zone {
+      background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 6px;
       padding: 16px;
       display: flex;
       flex-direction: column;
-    }
-
-    .card-head {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
     }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .card-meta {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    /* Input & Presets */
-    .prompt-row {
+    .meeting-table {
+      background: #5c4436;
+      border: 3px solid #17201e;
+      border-radius: 8px;
+      height: 52px;
+      width: 140px;
       display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
+      align-items: center;
+      justify-content: center;
+      color: #dfcfbf;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin: 10px 0;
     }
 
-    .prompt-input {
-      flex: 1;
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 13px;
-      border-radius: 6px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .prompt-input:focus {
-      border-color: var(--primary);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      padding: 10px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .presets-wrap {
+    /* Lounge Props (sofa, TV, coffee table, plant) */
+    .lounge-zone {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 12px;
+      gap: 20px;
+      align-items: flex-end;
+      padding: 10px 0;
+    }
+    .lounge-props {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    .pixel-tv {
+      background: #17201e;
+      border: 3px solid #2a3d38;
+      width: 68px;
+      height: 44px;
+      border-radius: 3px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pixel-tv::after {
+      content: 'ISKOM';
+      font: 8px 'JetBrains Mono', monospace;
+      color: var(--accent);
+      opacity: 0.8;
+    }
+    .lounge-sofa {
+      background: #28443e;
+      border: 3px solid #17201e;
+      border-radius: 6px 6px 2px 2px;
+      height: 42px;
+      width: 110px;
+    }
+    .coffee-table {
+      background: #5c4436;
+      border: 3px solid #17201e;
+      height: 24px;
+      width: 56px;
+      border-radius: 3px;
+    }
+    .pixel-plant {
+      background: #397349;
+      border: 3px solid #17201e;
+      border-radius: 50% 50% 4px 4px;
+      height: 42px;
+      width: 32px;
+      position: relative;
+    }
+    .pixel-plant::before {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 3px;
+      width: 20px;
+      height: 8px;
+      background: #734832;
+      border: 2px solid #17201e;
     }
 
-    .preset-tag {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 4px 10px;
-      font-size: 11px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s;
+    /* Dorm Beds (Lantai 2: Agen Tidur) */
+    .dorm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 16px 12px;
     }
-
-    .preset-tag:hover {
-      background: #2a3a52;
-      color: #fff;
-      border-color: #3b82f6;
-    }
-
-    .result-terminal {
-      background: #060911;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text-secondary);
-      max-height: 190px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.6;
-    }
-
-    .result-terminal .tag-ok { color: #34d399; font-weight: 600; }
-    .result-terminal .tag-warn { color: #fbbf24; font-weight: 600; }
-    .result-terminal .tag-err { color: #ef4444; font-weight: 600; }
-
-    /* Activity Table */
-    .table-box {
-      overflow-x: auto;
-      max-height: 290px;
-    }
-
-    table.data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      text-align: left;
-    }
-
-    table.data-table th {
-      padding: 8px 10px;
-      background: var(--card-sub);
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-
-    table.data-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid rgba(34, 48, 73, 0.4);
-      color: var(--text-secondary);
-    }
-
-    table.data-table tr:hover td {
-      background: rgba(30, 41, 59, 0.5);
-    }
-
-    .time-cell { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
-    .agent-cell { font-weight: 600; color: var(--text); }
-
-    /* Solid Badges */
-    .badge {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .badge-success { background: #065f46; color: #a7f3d0; }
-    .badge-working { background: #1e3a8a; color: #bfdbfe; }
-    .badge-warning { background: #78350f; color: #fde68a; }
-    .badge-danger  { background: #7f1d1d; color: #fecaca; }
-    .badge-dorm    { background: #312e81; color: #c7d2fe; }
-    .badge-muted   { background: #1e293b; color: #94a3b8; }
-
-    /* SLIDE DRAWER / SIDE PANEL khas Ruang */
-    .side-drawer {
-      position: fixed;
-      top: 0;
-      right: -480px;
-      width: 460px;
-      max-width: 90vw;
-      height: 100vh;
-      background: var(--card-bg);
-      border-left: 1px solid var(--border);
-      z-index: 1000;
-      transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    .dorm-cell {
       display: flex;
       flex-direction: column;
-      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .side-drawer.open {
-      right: 0;
-    }
-
-    .drawer-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-      z-index: 999;
-      display: none;
-    }
-
-    .drawer-overlay.open {
-      display: block;
-    }
-
-    .drawer-header {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: flex-end;
+      min-height: 140px;
+      position: relative;
+    }
+    .pixel-bed {
+      background: #233446;
+      border: 3px solid #17201e;
+      border-radius: 4px;
+      height: 38px;
+      width: 78px;
+      position: relative;
+      margin-top: -16px;
+      z-index: 4;
+    }
+    .pixel-bed .pillow {
+      background: #d4e0eb;
+      border: 2px solid #17201e;
+      border-radius: 2px;
+      height: 10px;
+      width: 22px;
+      position: absolute;
+      top: 3px;
+      left: 5px;
+    }
+    .pixel-bed .blanket {
+      background: #3c5878;
+      height: 24px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 2px solid #17201e;
     }
 
-    .drawer-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -0.2px;
+    /* Owner & Escalation Desk (VIP Hub) */
+    .owner-desk-zone {
+      background: rgba(242, 177, 107, 0.04);
+      border: 1px solid rgba(242, 177, 107, 0.25);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
     }
-
-    .drawer-close {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 18px;
-      cursor: pointer;
+    .owner-plate {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .owner-gold-badge {
+      background: var(--accent);
+      color: #17201e;
+      font: 700 11px 'JetBrains Mono', monospace;
       padding: 4px 8px;
       border-radius: 4px;
     }
-
-    .drawer-close:hover {
-      color: #fff;
-      background: var(--card-sub);
-    }
-
-    .drawer-tabs {
+    .approval-cards-list {
       display: flex;
-      border-bottom: 1px solid var(--border);
-      background: #090e1a;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .approval-ticket {
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+    }
+    .btn-approve {
+      background: #1b4d32;
+      border: 1px solid #2d8053;
+      color: #92eec2;
+      padding: 3px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font: 600 10px 'JetBrains Mono', monospace;
+    }
+    .btn-approve:hover { background: #246944; }
+    .btn-reject {
+      background: #4d201c;
+      border: 1px solid #7a322c;
+      color: #f7a8a1;
+      padding: 3px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font: 600 10px 'JetBrains Mono', monospace;
+    }
+    .btn-reject:hover { background: #692c26; }
+
+    /* --------------------------------------------------------------------------
+       AUTHENTIC THREE.JS 3D VIEWPORT CONTAINER
+       -------------------------------------------------------------------------- */
+    #office3d-canvas-wrap {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      background: #0d1210;
+      display: none;
+    }
+    #office3d-canvas-wrap.active {
+      display: block;
+    }
+    .canvas-hud-hint {
+      position: absolute;
+      bottom: 80px;
+      left: 20px;
+      background: rgba(18, 26, 24, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font: 11px 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      z-index: 15;
+      pointer-events: none;
     }
 
-    .drawer-tab {
+    /* --------------------------------------------------------------------------
+       COMMAND & CHAT BAR (BOTTOM LIVE DOCK)
+       -------------------------------------------------------------------------- */
+    .command-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 22, 19, 0.94);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border-strong);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 45;
+    }
+    .command-input-wrap {
       flex: 1;
-      padding: 10px;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      background: var(--c-101311);
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      padding: 0 12px;
+    }
+    .command-input-wrap:focus-within {
+      border-color: var(--accent);
+    }
+    .command-prefix {
+      color: var(--accent);
+      font: 600 13px 'JetBrains Mono', monospace;
+      margin-right: 8px;
+    }
+    .command-input {
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      font: 13px 'JetBrains Mono', monospace;
+      flex: 1;
+      height: 38px;
+      outline: none;
+    }
+    .btn-send {
+      background: var(--accent);
+      border: 0;
+      color: #17201e;
+      font: 600 12px 'JetBrains Mono', monospace;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-send:hover {
+      background: #f7ca88;
+    }
+    .quick-triggers {
+      display: flex;
+      gap: 6px;
+    }
+    .trigger-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
       color: var(--text-muted);
       cursor: pointer;
-      border-bottom: 2px solid transparent;
+      font: 11px 'JetBrains Mono', monospace;
+      padding: 6px 10px;
+      white-space: nowrap;
       transition: all 0.15s;
     }
-
-    .drawer-tab:hover {
+    .trigger-btn:hover {
+      border-color: var(--accent);
       color: var(--text);
     }
 
-    .drawer-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      background: var(--card-bg);
-    }
-
-    .drawer-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 20px;
-    }
-
-    .tab-pane {
-      display: none;
-    }
-
-    .tab-pane.active {
-      display: block;
-    }
-
-    /* Tab: Crew Cards */
-    .crew-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .crew-card {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .crew-card:hover {
-      border-color: #3b82f6;
-    }
-
-    .crew-card.selected {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.1);
-    }
-
-    .crew-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
+    /* --------------------------------------------------------------------------
+       STATION DETAIL MODAL (Accurate Ruang Inspection Modal)
+       -------------------------------------------------------------------------- */
+    .office-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 11px;
-      color: #fff;
-      margin-right: 10px;
+      z-index: 100;
+      padding: 20px;
+    }
+    .office-detail {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      max-width: 620px;
+      width: 100%;
+      padding: 24px;
+      position: relative;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .detail-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .detail-avatar {
+      background: var(--c-121613);
+      border: 2px solid var(--border-strong);
+      border-radius: 4px;
+      width: 72px;
+      height: 72px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 4px;
       flex-shrink: 0;
     }
-
-    .crew-info {
+    .detail-avatar .pixel-character {
+      transform: scale(1.1);
+      transform-origin: bottom center;
+    }
+    .detail-head-info {
       flex: 1;
-      min-width: 0;
     }
-
-    .crew-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .crew-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .crew-ctrl {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: 8px;
-    }
-
-    .btn-micro {
-      padding: 3px 8px;
+    .detail-head-info .eyebrow {
       font-size: 10px;
-      font-weight: 600;
-      border-radius: 4px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+    .detail-head-info h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 2px 0 6px;
+    }
+    .office-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
       border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-secondary);
+      border-radius: 4px;
+      color: var(--text-muted);
+      padding: 4px 10px;
       cursor: pointer;
+      font: 11px 'JetBrains Mono', monospace;
+    }
+    .office-close:hover {
+      border-color: var(--accent);
+      color: var(--text);
     }
 
-    .btn-micro:hover {
-      background: #2563eb;
-      color: #fff;
-      border-color: #2563eb;
+    .detail-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .detail-tabs button {
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font: 12px 'JetBrains Mono', monospace;
+      padding: 6px 12px;
+      transition: all 0.15s;
+    }
+    .detail-tabs button.active {
+      border-bottom-color: var(--accent);
+      color: var(--text);
+      font-weight: 600;
     }
 
-    /* Tab: Stats Metrics */
-    .stat-metric-grid {
+    .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 16px;
+      font-size: 12px;
     }
-
-    .stat-metric-card {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px 14px;
-    }
-
-    .stat-metric-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
+    .detail-grid dt {
+      color: var(--text-dim);
+      font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.05em;
     }
-
-    .stat-metric-val {
-      font-size: 20px;
-      font-weight: 700;
-      margin-top: 4px;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .stat-metric-sub {
-      font-size: 11px;
-      color: var(--text-muted);
+    .detail-grid dd {
+      color: var(--text);
+      font-weight: 500;
       margin-top: 2px;
     }
 
-    /* Modal Detail Agen (Overview, Tools, Memory) */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      z-index: 1100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal.open {
+    .detail-actions {
       display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
     }
-
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      width: 580px;
-      max-width: 95vw;
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    }
-
-    .modal-head {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      background: #090e1a;
-    }
-
-    .modal-tab {
+    .btn-action {
       flex: 1;
-      padding: 10px;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .modal-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      background: var(--card-bg);
-    }
-
-    .modal-body {
-      padding: 18px 20px;
-      overflow-y: auto;
-      font-size: 13px;
-    }
-
-    .detail-row {
-      display: grid;
-      grid-template-columns: 110px 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-
-    .detail-lbl { color: var(--text-muted); font-weight: 500; }
-    .detail-val { color: var(--text); word-break: break-word; }
-
-    .tool-badge-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .tool-chip {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      padding: 3px 8px;
+      padding: 8px 12px;
       border-radius: 4px;
-      font-size: 11px;
-      font-family: 'JetBrains Mono', monospace;
-      color: #93c5fd;
+      cursor: pointer;
+      font: 600 12px 'JetBrains Mono', monospace;
+      text-align: center;
+      transition: all 0.15s;
     }
-
-    /* Modal Tasks / Kanban Board */
-    .kanban-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      min-width: 800px;
+    .btn-action.sleep {
+      background: #202d3d;
+      border: 1px solid #364d69;
+      color: #9ac2ef;
     }
+    .btn-action.sleep:hover { background: #2c3e54; }
+    .btn-action.wake {
+      background: #1e3828;
+      border: 1px solid #2d573d;
+      color: #92eec2;
+    }
+    .btn-action.wake:hover { background: #284a34; }
 
-    .kanban-col {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px;
+    /* --------------------------------------------------------------------------
+       SIDE DRAWER (Task Board & Live Audit Logs)
+       -------------------------------------------------------------------------- */
+    .drawer-panel {
+      position: fixed;
+      top: 57px;
+      right: -480px;
+      width: 480px;
+      bottom: 58px;
+      background: var(--surface-2);
+      border-left: 1px solid var(--border-strong);
+      z-index: 48;
+      transition: right 0.25s ease-in-out;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
     }
-
-    .kanban-col-head {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      justify-content: space-between;
-      padding-bottom: 6px;
+    .drawer-panel.open {
+      right: 0;
+    }
+    .drawer-head {
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-
-    .kanban-card {
-      background: var(--card-bg);
+    .drawer-head h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .log-entry {
+      background: var(--surface-3);
       border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 8px 10px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
       font-size: 11px;
     }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: var(--text);
-      display: none;
-      z-index: 2000;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    .log-entry-head {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-dim);
+      margin-bottom: 4px;
     }
-    .toast.show { display: block; }
+    .log-entry-text {
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--c-101311); }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
   </style>
 </head>
 <body>
 
-<!-- TOP HUD MISSION CONTROL HEADER -->
-<header class="hud-header">
-  <div class="brand-group">
-    <div class="brand-badge">
-      <span class="live-dot"></span>
-      <div class="brand-title">
-        <span>Ruang · ISKOM</span>
+  <!-- ========================================================================
+       TOP HEADER & GAME HUD (From yugienugraha/ruang)
+       ======================================================================== -->
+  <header class="app-header">
+    <div class="brand-wrap">
+      <div class="brand-icon">🏢</div>
+      <div class="brand-text">
+        <h1>Ruang · ISKOM <span>AI-OS v2.4</span></h1>
+        <p>Virtual Office Mission Control · 10 Autonomous Agents</p>
       </div>
     </div>
-    <span class="brand-sub">Mission Control</span>
+
+    <!-- HUD Statistics -->
+    <div class="office-hud">
+      <div class="hud-chip" id="hud-crew" title="Status seluruh agen ISKOM">
+        <span>Crew Active</span> <b id="stat-crew-count">--/--</b>
+      </div>
+      <div class="hud-chip" id="hud-working" title="Agen sedang memproses tugas di meja kerja">
+        <span>Working</span> <b id="stat-working-count">0</b>
+      </div>
+      <div class="hud-chip clickable" id="hud-approvals" onclick="openApprovalDesk()" title="Klik untuk membuka antrean meja Owner">
+        <span>Approvals</span> <b id="stat-approvals-count">0 pending</b>
+      </div>
+      <div class="hud-chip good" id="hud-kpi" title="Tingkat keberhasilan transaksi">
+        <span>Success</span> <b id="stat-success-rate">100.0%</b>
+      </div>
+    </div>
+
+    <!-- View & Drawer Toggles -->
+    <div class="office-stage-tools">
+      <div class="view-toggle" role="group" aria-label="Office View Mode">
+        <button type="button" id="btn-view-2d" class="active" onclick="switchView('2d')">2D</button>
+        <button type="button" id="btn-view-3d" onclick="switchView('3d')">3D</button>
+      </div>
+      <button type="button" class="panel-toggle" id="btn-toggle-logs" onclick="toggleDrawer('logs')">📋 Logs</button>
+      <button type="button" class="refresh-button" onclick="refreshState()" title="Sinkronkan status sekarang">↻ Sync</button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN OFFICE STAGE
+       ======================================================================== -->
+  <div class="main-layout">
+    <main class="office-stage">
+
+      <!-- Floor Nav Tabs -->
+      <div class="room-tabs" role="tablist">
+        <button type="button" class="active" id="tab-floor-1" onclick="showFloor(1)">
+          🏢 Lantai 1 · Kantor & Lounge <span class="room-count" id="count-floor-1">0</span>
+        </button>
+        <button type="button" id="tab-floor-2" onclick="showFloor(2)">
+          🛏️ Lantai 2 · Dorm (Kamar Tidur) <span class="room-count" id="count-floor-2">0</span>
+        </button>
+        <button type="button" id="tab-floor-all" onclick="showFloor('all')">
+          🌐 Tampilkan Semua Lantai
+        </button>
+      </div>
+
+      <!-- 2D Virtual Office Rooms -->
+      <div class="floors-container" id="floors-container">
+
+        <!-- LANTAI 1: WORKSPACE & LOUNGE -->
+        <section class="room-section" id="section-floor-1">
+          <div class="room-header">
+            <div class="room-title">
+              <h3><span>🏢</span> LANTAI 1 · WORKSPACE & LOUNGE</h3>
+              <p>Hot Desks komputer untuk agen bekerja & sofa lounge untuk agen istirahat santai</p>
+            </div>
+            <span class="badge info">ZONA AKTIF</span>
+          </div>
+
+          <div class="workspace-subzones">
+            <!-- HOT DESKS AREA -->
+            <div>
+              <p class="eyebrow" style="font-size:10px; color:var(--text-dim); margin-bottom:12px;">MEJA KERJA (HOT DESKS)</p>
+              <div class="desks-grid" id="workspace-desks">
+                <!-- Stasiun meja kerja dinamis di-render via JS -->
+              </div>
+            </div>
+
+            <!-- LOUNGE & MEETING -->
+            <div>
+              <p class="eyebrow" style="font-size:10px; color:var(--text-dim); margin-bottom:12px;">LOUNGE & MEETING TABLE</p>
+              <div class="meeting-zone">
+                <div class="lounge-props">
+                  <div class="pixel-tv"></div>
+                  <div class="lounge-sofa"></div>
+                  <div class="coffee-table"></div>
+                  <div class="pixel-plant"></div>
+                </div>
+                <div class="meeting-table">MEETING TABLE</div>
+                <div id="lounge-agents" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px; width:100%;">
+                  <!-- Agen idle duduk di lounge -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- OWNER / APPROVAL DESK (ESCALATION HUB) -->
+          <div class="owner-desk-zone" id="owner-desk-section">
+            <div class="owner-plate">
+              <span class="owner-gold-badge">MEJA OWNER / APPROVAL HUB</span>
+              <p style="font-size:12px; color:var(--text-muted);">
+                Eskalasi diskon sewa > 10%, nilai transaksi &ge; Rp 25 Juta, dan intervensi keamanan (OTP/CAPTCHA)
+              </p>
+            </div>
+            <div id="approval-tickets-wrap" class="approval-cards-list">
+              <span style="font-size:11px; color:var(--text-dim);">Tidak ada tiket approval yang menunggu.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- LANTAI 2: DORM BEDROOM (TEMPAT AGEN TIDUR / OFFLINE) -->
+        <section class="room-section" id="section-floor-2">
+          <div class="room-header">
+            <div class="room-title">
+              <h3><span>🛏️</span> LANTAI 2 · DORMITORY (KAMAR TIDUR)</h3>
+              <p>Ranjang tidur untuk agen yang sedang offline / diistirahatkan (Tidur Nyenyak)</p>
+            </div>
+            <span class="badge muted">QUIET REST ZONE</span>
+          </div>
+
+          <div class="dorm-grid" id="dorm-beds">
+            <!-- Ranjang tidur dinamis di-render via JS -->
+          </div>
+        </section>
+
+      </div>
+
+      <!-- 3D THREE.JS CANVAS OVERLAY CONTAINER -->
+      <div id="office3d-canvas-wrap">
+        <div class="canvas-hud-hint">
+          🎮 3D Camera: Drag kiri untuk rotasi · Drag kanan untuk geser · Scroll untuk zoom · Klik agen untuk inspeksi
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT DRAWER (LOGS & ACTIVITY) -->
+    <aside class="drawer-panel" id="drawer-panel">
+      <div class="drawer-head">
+        <h3 id="drawer-title">Audit Trail & Real-time Logs</h3>
+        <button type="button" class="office-close" onclick="closeDrawer()" style="position:static;">Tutup</button>
+      </div>
+      <div class="drawer-body" id="drawer-body">
+        <div style="font-size:12px; color:var(--text-dim); text-align:center; padding:20px;">Memuat riwayat log...</div>
+      </div>
+    </aside>
   </div>
 
-  <!-- HUD CHIPS -->
-  <div class="hud-chips">
-    <div class="hud-chip highlight-green" title="Agen aktif beroperasi">
-      <span>Crew:</span>
-      <span class="val" id="hud-crew">5 / 10 Active</span>
-    </div>
-    <div class="hud-chip highlight-blue" title="Permintaan yang sedang diproses">
-      <span>Tasks:</span>
-      <span class="val" id="hud-tasks">0 Running</span>
-    </div>
-    <div class="hud-chip highlight-amber" title="Menunggu otorisasi Owner">
-      <span>Approvals:</span>
-      <span class="val" id="hud-approvals">0 Pending</span>
-    </div>
-    <div class="hud-chip" title="Latensi eksekusi AI-OS">
-      <span>Latency:</span>
-      <span class="val" id="hud-latency">38ms</span>
-    </div>
-    <div class="hud-chip" title="Waktu server">
-      <span id="hud-clock">00:00:00 WIB</span>
-    </div>
-  </div>
-
-  <!-- HEADER ACTIONS -->
-  <div class="header-actions">
-    <!-- FLOOR SWITCHER (Lantai 1 vs Lantai 2) -->
-    <div class="btn-group">
-      <button class="btn-toggle active" id="btn-floor-1" onclick="switchFloor(1)">
-        <span>Lantai 1 · Kantor</span>
-        <span class="badge badge-working" id="badge-floor-1-count">5</span>
-      </button>
-      <button class="btn-toggle" id="btn-floor-2" onclick="switchFloor(2)">
-        <span>Lantai 2 · Dorm</span>
-        <span class="badge badge-dorm" id="badge-floor-2-count">5</span>
-      </button>
+  <!-- ========================================================================
+       COMMAND & CHAT BAR (BOTTOM LIVE DOCK)
+       ======================================================================== -->
+  <footer class="command-dock">
+    <div class="quick-triggers">
+      <button type="button" class="trigger-btn" onclick="quickPrompt('Saya ingin sewa 5 laptop ThinkPad T480 harian')">💻 Sewa 5 Unit</button>
+      <button type="button" class="trigger-btn" onclick="quickPrompt('Minta diskon 20% untuk sewa 10 laptop Lenovo')">⚠️ Diskon 20% (Approval)</button>
+      <button type="button" class="trigger-btn" onclick="quickPrompt('Sistem meminta input kode OTP SMS dari penyewa')">🛡️ Test OTP</button>
+      <button type="button" class="trigger-btn" onclick="quickPrompt('Berapa rekap KPI dan utilisasi unit bulan ini?')">📊 Cek KPI</button>
     </div>
 
-    <!-- GLOBAL SLEEP / WAKE BUTTON -->
-    <button class="btn-pill sleep-btn" id="btn-global-sleep" onclick="toggleGlobalSleep()" title="Kirim semua agen idle ke kasur lantai 2">
-      <span id="sleep-btn-icon">💤</span>
-      <span id="sleep-btn-label">Tidur</span>
-    </button>
+    <form class="command-input-wrap" onsubmit="handleChatSubmit(event)" style="margin:0;">
+      <span class="command-prefix">&gt;</span>
+      <input type="text" id="chat-input" class="command-input" placeholder="Ketik perintah atau chat ke tim AI ISKOM..." autocomplete="off">
+      <button type="submit" class="btn-send" id="btn-send">Kirim Perintah</button>
+    </form>
+  </footer>
 
-    <!-- TASK BOARD BUTTON -->
-    <button class="btn-pill" onclick="openTasksModal()" title="Buka Kanban Task Board">
-      <span>Tasks</span>
-    </button>
+  <!-- ========================================================================
+       STATION DETAIL MODAL (Accurate Ruang Inspector)
+       ======================================================================== -->
+  <div class="office-backdrop" id="agent-modal" style="display:none;" onclick="if(event.target===this) closeModal()">
+    <section class="office-detail" role="dialog" aria-modal="true">
+      <button type="button" class="office-close" onclick="closeModal()">Tutup ✕</button>
 
-    <!-- PANEL BUTTON (Side Drawer Crew/Stats/Activity) -->
-    <button class="btn-pill panel-btn" onclick="toggleDrawer()" title="Buka Panel Kru & Metrik">
-      <span>Panel</span>
-    </button>
-  </div>
-</header>
-
-<!-- MAIN APP LAYOUT -->
-<div class="app-layout">
-  <!-- OFFICE VIEW CARD -->
-  <section class="office-view-card">
-    <div class="office-view-header">
-      <div class="floor-indicator">
-        <span class="floor-title" id="current-floor-title">Lantai 1 — Kantor Operasional & Area Luar</span>
-        <span class="floor-badge" id="current-floor-desc">Meja Kerja · Meeting Gorengan · Lounge & Game · Pantry Galon · Gudang</span>
-      </div>
-      <div style="font-size: 11px; color: var(--text-muted);">
-        Tekan <kbd style="background:var(--card-sub); padding:2px 5px; border-radius:3px;">PgUp</kbd> / <kbd style="background:var(--card-sub); padding:2px 5px; border-radius:3px;">PgDn</kbd> untuk ganti lantai
-      </div>
-    </div>
-
-    <!-- CANVAS WRAPPER -->
-    <div class="canvas-wrapper" id="canvas-wrapper">
-      <canvas id="office-canvas"></canvas>
-      <div class="canvas-overlay-tip">Klik agen pada denah untuk melihat profil &amp; memori SOUL</div>
-    </div>
-
-    <!-- ROOM LEGEND BAR -->
-    <div class="room-legend-bar" id="room-legend-bar">
-      <!-- Dynamic legend based on floor -->
-    </div>
-  </section>
-
-  <!-- BOTTOM GRID: COMMAND INPUT & AUDIT FEED -->
-  <section class="bottom-grid">
-    <!-- Command Console -->
-    <div class="card">
-      <div class="card-head">
-        <span class="card-title">Konsol Perintah AI Core</span>
-        <span class="card-meta">Kirim instruksi sewa langsung ke agen</span>
-      </div>
-      <form id="prompt-form" onsubmit="handleSendPrompt(event)">
-        <div class="prompt-row">
-          <input type="text" id="prompt-input" class="prompt-input" placeholder="Ketik kebutuhan sewa, diskon, stok gudang, atau pertanyaan..." autocomplete="off">
-          <button type="submit" id="btn-submit" class="btn-primary">Kirim</button>
+      <div class="detail-head">
+        <div class="detail-avatar" id="modal-avatar">
+          <!-- Pixel character dirender di sini -->
         </div>
-      </form>
-      <div class="presets-wrap" id="preset-container"></div>
-      <div class="result-terminal" id="result-terminal">
-        <span class="tag-ok">READY</span> Sistem AI-OS ISKOM siap melayani pesanan sewa laptop &amp; peralatan IT.
-Pilih template instruksi cepat di atas atau masukkan permintaan kebutuhan sewa Anda.
-      </div>
-    </div>
-
-    <!-- Live Transaction Audit Feed -->
-    <div class="card">
-      <div class="card-head">
-        <span class="card-title">Live Transaction Audit Feed</span>
-        <span class="card-meta">Audit Forensik Real-time</span>
-      </div>
-      <div class="table-box">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width: 70px;">Waktu</th>
-              <th style="width: 105px;">Agen</th>
-              <th>Aksi / Instruksi</th>
-              <th style="width: 80px;">Status</th>
-            </tr>
-          </thead>
-          <tbody id="audit-table-body">
-            <tr>
-              <td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Memuat riwayat transaksi...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- SIDE DRAWER PANEL (CREW, STATS, ACTIVITY) -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer(false)"></div>
-<aside class="side-drawer" id="side-drawer">
-  <div class="drawer-header">
-    <div class="drawer-title">Mission Control Panel</div>
-    <button class="drawer-close" onclick="toggleDrawer(false)">✕</button>
-  </div>
-  <div class="drawer-tabs">
-    <div class="drawer-tab active" onclick="switchDrawerTab('crew')">Crew (<span id="drawer-tab-crew-cnt">10</span>)</div>
-    <div class="drawer-tab" onclick="switchDrawerTab('stats')">Stats</div>
-    <div class="drawer-tab" onclick="switchDrawerTab('activity')">Activity</div>
-  </div>
-  <div class="drawer-content">
-    <!-- TAB 1: CREW -->
-    <div class="tab-pane active" id="pane-crew">
-      <div class="crew-list" id="crew-list-container">
-        <!-- populated dynamically -->
-      </div>
-    </div>
-
-    <!-- TAB 2: STATS -->
-    <div class="tab-pane" id="pane-stats">
-      <div class="stat-metric-grid">
-        <div class="stat-metric-card">
-          <div class="stat-metric-label">Total Transaksi</div>
-          <div class="stat-metric-val" id="stat-total-tx">0</div>
-          <div class="stat-metric-sub">Riwayat tersimpan</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-label">Success Rate</div>
-          <div class="stat-metric-val" id="stat-success-rate" style="color:#34d399;">100%</div>
-          <div class="stat-metric-sub">Zero-hallucination</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-label">Pending Approval</div>
-          <div class="stat-metric-val" id="stat-pending-apv" style="color:#fbbf24;">0</div>
-          <div class="stat-metric-sub">Eskalasi ke Owner</div>
-        </div>
-        <div class="stat-metric-card">
-          <div class="stat-metric-label">Rata-rata Latensi</div>
-          <div class="stat-metric-val" id="stat-avg-latency" style="color:#60a5fa;">~38ms</div>
-          <div class="stat-metric-sub">Proses deterministik</div>
+        <div class="detail-head-info">
+          <p class="eyebrow">STATION DETAIL · AGENT INSPECTION</p>
+          <h2 id="modal-agent-name">Nama Agen</h2>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="badge good" id="modal-agent-badge">IDLE</span>
+            <span style="font-size:11px; color:var(--text-dim);" id="modal-agent-id">AGENT-ID</span>
+          </div>
         </div>
       </div>
-      <div class="card" style="margin-top:12px; background:var(--card-sub);">
-        <div class="card-head" style="margin-bottom:8px; padding-bottom:6px;">
-          <span class="card-title" style="font-size:11px;">Tiket Menunggu Otorisasi Owner</span>
-        </div>
-        <div id="drawer-apv-list">
-          <div style="font-size:11px; color:var(--text-muted); text-align:center; padding:12px;">Tidak ada tiket otorisasi pending.</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- TAB 3: ACTIVITY -->
-    <div class="tab-pane" id="pane-activity">
-      <div id="drawer-activity-feed" style="font-size:12px; display:flex; flex-direction:column; gap:8px;">
-        <!-- dynamic logs -->
+      <div class="detail-tabs">
+        <button type="button" class="active" onclick="switchModalTab('overview')">Ringkasan</button>
+        <button type="button" onclick="switchModalTab('sop')">Tools & SOP</button>
+        <button type="button" onclick="switchModalTab('activity')">Aktivitas Terakhir</button>
       </div>
-    </div>
-  </div>
-</aside>
 
-<!-- AGENT DETAIL INSPECTION MODAL (Overview, Tools, Memory/SOUL) -->
-<div class="modal" id="agent-modal" onclick="if(event.target===this) closeAgentModal()">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div class="crew-avatar" id="modal-agent-avatar" style="background:#2563eb;">AG</div>
-        <div>
-          <div style="font-weight:700; font-size:14px;" id="modal-agent-name">Agent Name</div>
-          <div style="font-size:11px; color:var(--text-muted);" id="modal-agent-id">AGENT-ID</div>
-        </div>
-      </div>
-      <button class="drawer-close" onclick="closeAgentModal()">✕</button>
-    </div>
-    <div class="modal-tabs">
-      <div class="modal-tab active" onclick="switchModalTab('overview')">Overview</div>
-      <div class="modal-tab" onclick="switchModalTab('tools')">Tools &amp; Skills</div>
-      <div class="modal-tab" onclick="switchModalTab('memory')">SOUL &amp; Memory</div>
-    </div>
-    <div class="modal-body">
-      <!-- Overview Tab -->
       <div id="modal-tab-overview">
-        <div class="detail-row"><span class="detail-lbl">Role:</span><span class="detail-val" id="modal-val-role">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Status:</span><span class="detail-val" id="modal-val-status">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Lantai:</span><span class="detail-val" id="modal-val-floor">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Ruangan:</span><span class="detail-val" id="modal-val-room">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Tugas Aktif:</span><span class="detail-val" id="modal-val-task">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Tugas Selesai:</span><span class="detail-val" id="modal-val-tasks-done">-</span></div>
-        <div class="detail-row"><span class="detail-lbl">Respon Terakhir:</span><span class="detail-val" id="modal-val-last-reply" style="font-style:italic;">-</span></div>
-        <div style="margin-top:14px; display:flex; gap:8px;">
-          <button class="btn-micro" id="modal-btn-power" onclick="toggleModalAgentPower()" style="padding:6px 12px; font-size:11px;">Toggle Power</button>
-          <button class="btn-micro" id="modal-btn-sleep" onclick="toggleModalAgentSleep()" style="padding:6px 12px; font-size:11px;">Toggle Sleep</button>
+        <dl class="detail-grid">
+          <div><dt>Peran / Role</dt><dd id="modal-role">-</dd></div>
+          <div><dt>Ruangan Saat Ini</dt><dd id="modal-room">-</dd></div>
+          <div><dt>Tugas Terakhir</dt><dd id="modal-task">-</dd></div>
+          <div><dt>Total Tugas Selesai</dt><dd id="modal-done">0</dd></div>
+        </dl>
+      </div>
+
+      <div id="modal-tab-sop" style="display:none;">
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:12px; font-size:12px;">
+          <p style="color:var(--accent); font-weight:600; margin-bottom:6px;">Wewenang & Batasan (SOP):</p>
+          <ul id="modal-sop-list" style="padding-left:18px; line-height:1.6; color:var(--text-muted);">
+            <li>Diskon maksimal 10% tanpa approval Owner.</li>
+            <li>Dilarang berhalusinasi unit fiktif.</li>
+            <li>Dilarang menangani OTP/CAPTCHA secara otonom.</li>
+          </ul>
         </div>
       </div>
 
-      <!-- Tools Tab -->
-      <div id="modal-tab-tools" style="display:none;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Alat resmi terdaftar dalam RBAC Agent:</div>
-        <div class="tool-badge-wrap" id="modal-tools-list"></div>
+      <div id="modal-tab-activity" style="display:none;">
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:12px; font-size:12px; color:var(--text-muted);">
+          <dt style="color:var(--text-dim); font-size:10px; margin-bottom:4px;">RESPON TERAKHIR:</dt>
+          <dd id="modal-last-reply" style="color:var(--text); white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:11px;">Belum ada tugas dijalankan.</dd>
+        </div>
       </div>
 
-      <!-- Memory / SOUL Tab -->
-      <div id="modal-tab-memory" style="display:none;">
-        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Dokumen Identitas &amp; Batasan Bisnis (SOUL.md):</div>
-        <div class="result-terminal" id="modal-soul-content" style="max-height:240px; font-size:11px;"></div>
+      <div class="detail-actions">
+        <button type="button" class="btn-action sleep" id="btn-agent-power" onclick="toggleAgentPower()">💤 Istirahatkan / Tidur</button>
+        <button type="button" class="btn-action wake" onclick="triggerAgentChat()">💬 Kirim Perintah Langsung</button>
       </div>
-    </div>
+    </section>
   </div>
-</div>
 
-<!-- TASK BOARD KANBAN MODAL -->
-<div class="modal" id="tasks-modal" onclick="if(event.target===this) closeTasksModal()">
-  <div class="modal-box" style="width:900px; max-width:96vw;">
-    <div class="modal-head">
-      <div style="font-weight:700; font-size:14px;">Ruang · Task Board (Kanban Lifecycle)</div>
-      <button class="drawer-close" onclick="closeTasksModal()">✕</button>
-    </div>
-    <div class="modal-body" style="overflow-x:auto;">
-      <div class="kanban-grid" id="kanban-board-grid">
-        <!-- Columns: Triage, In Progress, Waiting Approval, Done -->
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- ========================================================================
+       JAVASCRIPT CONTROLLER (Logic, State Polling, & Three.js 3D Engine)
+       ======================================================================== -->
+  <script>
+    // FNV-1a Hash Algorithm & Color Palette (Exact match with yugienugraha/ruang)
+    const HAIR_COLORS = ['#1d293c', '#b54b45', '#6a4d8d', '#3b2a20', '#c9a24a', '#2f4f3a', '#8b5a2b', '#11151c'];
+    const SKIN_COLORS = ['#e9b57d', '#c98e5a', '#f1c9a0', '#a8714a', '#dca06e'];
+    const SHIRT_COLORS = ['#e6b34e', '#70bdcb', '#93ca67', '#e76f51', '#8f7ae6', '#f4a3b4', '#4f9c7a', '#d9534f', '#5a8dee', '#c7a17a'];
+    const PANTS_COLORS = ['#36475d', '#374052', '#344349', '#4a3b2f', '#2f3a44', '#3d2f4a'];
 
-<div class="toast" id="toast-message"></div>
-
-<script>
-/* =====================================================================
-   KONFIGURASI DENAH 2 LANTAI KANTOR VIRTUAL (Ruang Aesthetic)
-   Dimensi Logis Canvas: 560 x 300 px (16:9 widescreen ratio)
-   ===================================================================== */
-const LOGICAL_W = 560;
-const LOGICAL_H = 300;
-
-// LANTAI 1: KANTOR OPERASIONAL, PANTRY GALON, LOUNGE & GEROBAK
-const ROOMS_F1 = {
-  outdoor:   { x: 0,   y: 0,   w: 90,  h: 300, label: 'HALAMAN & KULINER', wall: '#334155', floor: '#1e293b' },
-  work:      { x: 90,  y: 0,   w: 220, h: 140, label: 'RUANG KERJA',       wall: '#64748b', floor: '#2a3547' },
-  meeting:   { x: 310, y: 0,   w: 130, h: 140, label: 'RUANG MEETING',     wall: '#475569', floor: '#1e293b' },
-  owner:     { x: 440, y: 0,   w: 120, h: 140, label: 'RUANG OWNER',       wall: '#64748b', floor: '#3b2525' },
-  warehouse: { x: 90,  y: 160, w: 120, h: 140, label: 'GUDANG LOGISTIK',   wall: '#475569', floor: '#27272a' },
-  pantry:    { x: 210, y: 160, w: 100, h: 140, label: 'PANTRY & GALON',    wall: '#475569', floor: '#1e293b' },
-  lounge:    { x: 310, y: 160, w: 140, h: 140, label: 'LOUNGE & TV',       wall: '#475569', floor: '#262e3d' },
-  game:      { x: 450, y: 160, w: 110, h: 140, label: 'GAME & PING-PONG',  wall: '#475569', floor: '#1b2a3a' },
-};
-
-// LANTAI 2: DORMITORY (ASRAMA), LESEHAN & BALKON RUKO
-const ROOMS_F2 = {
-  balcony:   { x: 0,   y: 0,   w: 110, h: 300, label: 'BALKON & HAMMOCK',  wall: '#334155', floor: '#1e2430' },
-  dorm:      { x: 110, y: 0,   w: 270, h: 180, label: 'KAMAR TIDUR ASRAMA',wall: '#475569', floor: '#1e1e38' },
-  lesehan:   { x: 380, y: 0,   w: 180, h: 180, label: 'SUDUT LESEHAN',     wall: '#475569', floor: '#2e2520' },
-  restroom:  { x: 110, y: 200, w: 120, h: 100, label: 'RESTROOM & SHOWER',wall: '#475569', floor: '#1e293b' },
-  study:     { x: 230, y: 200, w: 330, h: 100, label: 'RUANG BACA & RELAKS',wall: '#475569', floor: '#222838' },
-};
-
-/* ROSTER IDENTITAS VISUAL 10 AGEN */
-const AGENT_META = {
-  'AGENT-MGR-01': { color: '#4f46e5', skin: '#f1c27d', hair: '#1e293b', shirt: '#4f46e5', pants: '#0f172a', desk: 0, bed: 0, tools: ['delegate_task', 'audit_agent_status', 'compile_kpi'] },
-  'AGENT-SLS-01': { color: '#2563eb', skin: '#f5d0a9', hair: '#451a03', shirt: '#2563eb', pants: '#1e3a8a', desk: 1, bed: 1, tools: ['check_inventory', 'calculate_rental_rate', 'generate_quote'] },
-  'AGENT-INV-01': { color: '#10b981', skin: '#f5d0a9', hair: '#b45309', shirt: '#10b981', pants: '#374151', desk: null, bed: 2, tools: ['check_inventory', 'reserve_unit', 'release_unit'] },
-  'AGENT-CS-01':  { color: '#e11d48', skin: '#f1c27d', hair: '#7f1d1d', shirt: '#e11d48', pants: '#1f2937', desk: 2, bed: 3, tools: ['faq_lookup', 'escalate_ticket', 'verify_security'] },
-  'AGENT-FIN-01': { color: '#d97706', skin: '#c68642', hair: '#18181b', shirt: '#d97706', pants: '#451a03', desk: 3, bed: 4, tools: ['verify_invoice', 'calculate_rental_rate', 'process_payment'] },
-  'AGENT-KPI-01': { color: '#0284c7', skin: '#e0ac69', hair: '#52525b', shirt: '#0284c7', pants: '#0f172a', desk: 4, bed: 5, tools: ['compile_kpi', 'export_report'] },
-  'AGENT-MKT-01': { color: '#ea580c', skin: '#f5d0a9', hair: '#991b1b', shirt: '#ea580c', pants: '#374151', desk: 5, bed: 6, tools: ['generate_campaign', 'post_content'] },
-  'AGENT-PRS-01': { color: '#9333ea', skin: '#c68642', hair: '#312e81', shirt: '#9333ea', pants: '#1e1b4b', desk: 6, bed: 7, tools: ['search_prospects', 'score_lead'] },
-  'AGENT-OPS-01': { color: '#059669', skin: '#f1c27d', hair: '#374151', shirt: '#059669', pants: '#0f172a', desk: 7, bed: 8, tools: ['schedule_delivery', 'track_unit'] },
-  'AGENT-COL-01': { color: '#64748b', skin: '#f5d0a9', hair: '#713f12', shirt: '#64748b', pants: '#1e293b', desk: 8, bed: 9, tools: ['check_overdue', 'send_reminder'] },
-};
-
-const AGENT_SOUL_DOCS = {
-  'AGENT-MGR-01': "SOUL.md\n=======\nIdentitas: AI Business Manager ISKOM.\nTugas: Mengorkestrasi 10 agen spesialis, mengevaluasi intent pengguna, mendelegasikan tugas ke agen terkait.\nPrinsip Utama: Menjaga integritas operasional rental dan zero-hallucination compliance.",
-  'AGENT-SLS-01': "SOUL.md\n=======\nIdentitas: Rental Sales Consultant ISKOM.\nTugas: Melayani inquiry sewa harian/bulanan, menghitung tarif sewa resmi, membuat surat penawaran (Quotation).\nAturan: Diskon > 10% atau nilai transaksi >= Rp 25 Juta WAJIB meminta approval Owner.",
-  'AGENT-INV-01': "SOUL.md\n=======\nIdentitas: Warehouse & Stock Controller ISKOM.\nTugas: Memeriksa fisik unit di gudang, memastikan stok valid sebelum disewa.\nPrinsip Zero-Hallucination: Jika produk tidak ada dalam database, laporkan apa adanya (jangan mengarang stok).",
-  'AGENT-CS-01': "SOUL.md\n=======\nIdentitas: Customer Service & Security Officer ISKOM.\nTugas: Menjawab keluhan teknis, garansi tukar unit, syarat sewa KTP.\nProtokol Keamanan: Menolak menginput kode OTP SMS atau CAPTCHA — eskalasi langsung ke campur tangan manusia.",
-  'AGENT-FIN-01': "SOUL.md\n=======\nIdentitas: Finance & Billing Agent ISKOM.\nTugas: Memeriksa status invoice sewa, mencatat termin pembayaran, rekonsiliasi kas masuk.",
-  'AGENT-KPI-01': "SOUL.md\n=======\nIdentitas: Executive Reporting Agent ISKOM.\nTugas: Menghitung total omset, persentase utilisasi armada laptop, dan menyusun laporan eksekutif berkala.",
-};
-
-const PRESETS = [
-  'Saya butuh 10 laptop ThinkPad untuk 1 bulan',
-  'Kasih diskon 25% untuk sewa 20 laptop Lenovo',
-  'Ada stok MacBook Pro ready di gudang?',
-  'Laptop sewaan layarnya bergaris tolong diganti',
-  'Sistem meminta kode OTP SMS penyewa',
-  'Rekap omset sewa dan tingkat utilisasi bulan ini'
-];
-
-/* STATE APLIKASI */
-let currentFloor = 1; // 1: Kantor, 2: Dorm
-let state = { agents: [], approvals: [], summary: {}, server_time: Date.now() / 1000 };
-let agentCharacters = {}; // runtime visual state
-let selectedAgentId = 'AGENT-SLS-01';
-let isDrawerOpen = false;
-let globalSleepMode = false;
-let latencyHistory = [38, 42, 35, 40];
-
-const $ = id => document.getElementById(id);
-const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-function showToast(text) {
-  const el = $('toast-message');
-  el.textContent = text;
-  el.classList.add('show');
-  clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove('show'), 2600);
-}
-
-/* =====================================================================
-   CANVAS RENDERING ENGINE
-   ===================================================================== */
-const canvas = $('office-canvas');
-const ctx = canvas.getContext('2d');
-let scaleFactor = 1;
-
-function resizeCanvas() {
-  const wrapper = $('canvas-wrapper');
-  scaleFactor = wrapper.clientWidth / LOGICAL_W;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.round(LOGICAL_W * scaleFactor * dpr);
-  canvas.height = Math.round(LOGICAL_H * scaleFactor * dpr);
-  canvas.style.height = (LOGICAL_H * scaleFactor) + 'px';
-}
-window.addEventListener('resize', resizeCanvas);
-
-/* Floor Navigation */
-function switchFloor(floor) {
-  currentFloor = floor;
-  $('btn-floor-1').classList.toggle('active', floor === 1);
-  $('btn-floor-2').classList.toggle('active', floor === 2);
-  if (floor === 1) {
-    $('current-floor-title').textContent = 'Lantai 1 — Kantor Operasional & Area Luar';
-    $('current-floor-desc').textContent = 'Meja Kerja · Meeting Gorengan · Lounge & Game · Pantry Galon · Gudang';
-  } else {
-    $('current-floor-title').textContent = 'Lantai 2 — Asrama (Dormitory), Lesehan & Balkon';
-    $('current-floor-desc').textContent = 'Kamar Tidur Asrama (10 Kasur) · Sudut Lesehan · Kamar Mandi · Balkon & Hammock';
-  }
-  updateLegend();
-}
-
-window.addEventListener('keydown', e => {
-  if (e.key === 'PageUp') switchFloor(2);
-  if (e.key === 'PageDown') switchFloor(1);
-});
-
-function updateLegend() {
-  const bar = $('room-legend-bar');
-  if (currentFloor === 1) {
-    bar.innerHTML = `
-      <div class="legend-chip"><span class="legend-box" style="background:#2563eb;"></span> Ruang Kerja (Desks)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#475569;"></span> Meeting (Snack/Gorengan)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#3b2525;"></span> Ruang Owner (Approval)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#27272a;"></span> Gudang Logistik</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#0284c7;"></span> Pantry (Galon Air)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#1b2a3a;"></span> Game Room (Ping-Pong)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#1e293b;"></span> Area Luar (Bakso & Kopi)</div>
-    `;
-  } else {
-    bar.innerHTML = `
-      <div class="legend-chip"><span class="legend-box" style="background:#312e81;"></span> Kamar Asrama (10 Kasur)</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#2e2520;"></span> Sudut Lesehan</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#1e2430;"></span> Balkon Ruko & Hammock</div>
-      <div class="legend-chip"><span class="legend-box" style="background:#1e293b;"></span> Restroom / Shower</div>
-    `;
-  }
-}
-
-/* =====================================================================
-   GAMBAR DENAH LANTAI 1 & LANTAI 2 SECARA PROSEDURAL
-   ===================================================================== */
-function drawFloor1(c) {
-  // 1. Background dasar
-  c.fillStyle = '#0f172a';
-  c.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
-
-  // 2. Ruang-ruang Lantai 1
-  for (const [k, r] of Object.entries(ROOMS_F1)) {
-    c.fillStyle = r.floor;
-    c.fillRect(r.x, r.y, r.w, r.h);
-    c.strokeStyle = r.wall;
-    c.lineWidth = 2;
-    c.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
-
-    // Label ruangan
-    c.fillStyle = 'rgba(255,255,255,0.25)';
-    c.font = '600 8px Inter, sans-serif';
-    c.fillText(r.label, r.x + 8, r.y + 14);
-  }
-
-  // 3. Koridor tengah
-  c.fillStyle = '#1e293b';
-  c.fillRect(90, 140, 470, 20);
-
-  // 4. Perabot khas Lantai 1:
-  // --- Area Luar: Bendera Merah Putih di pojok kiri atas
-  c.fillStyle = '#64748b';
-  c.fillRect(16, 20, 2, 40); // tiang
-  c.fillStyle = '#dc2626';
-  c.fillRect(18, 20, 14, 6); // merah
-  c.fillStyle = '#f8fafc';
-  c.fillRect(18, 26, 14, 6); // putih
-
-  // --- Gerobak Bakso di area luar
-  c.fillStyle = '#78350f';
-  c.fillRect(25, 100, 36, 20); // gerobak
-  c.fillStyle = '#f59e0b';
-  c.fillRect(27, 96, 10, 4);  // panci kuah
-  c.fillStyle = '#94a3b8';
-  c.font = '7px sans-serif';
-  c.fillText('BAKSO', 28, 114);
-
-  // --- Sepeda Kopi Keliling (Starling)
-  c.fillStyle = '#334155';
-  c.fillRect(30, 200, 24, 12);
-  c.fillStyle = '#059669';
-  c.fillRect(44, 194, 10, 18); // termos rencengan kopi
-  c.fillText('KOPI', 33, 222);
-
-  // --- Ruang Kerja: 9 Meja Kerja berjejer
-  for (let i = 0; i < 9; i++) {
-    const col = i % 5;
-    const row = Math.floor(i / 5);
-    const dx = 106 + col * 40;
-    const dy = 32 + row * 48;
-    // Meja kayu
-    c.fillStyle = '#334155';
-    c.fillRect(dx, dy, 26, 16);
-    // Layar monitor laptop
-    c.fillStyle = '#60a5fa';
-    c.fillRect(dx + 7, dy + 2, 12, 8);
-    // Keyboard
-    c.fillStyle = '#1e293b';
-    c.fillRect(dx + 7, dy + 11, 12, 3);
-    // Kursi
-    c.fillStyle = '#1e293b';
-    c.fillRect(dx + 8, dy + 19, 10, 8);
-  }
-
-  // --- Ruang Meeting: Meja Rapat Besar + Piring Gorengan khas Ruang!
-  c.fillStyle = '#334155';
-  c.fillRect(330, 40, 90, 45); // meja rapat
-  c.fillStyle = '#1e293b';
-  c.fillRect(334, 44, 82, 37);
-  // Piring Gorengan
-  c.fillStyle = '#f1f5f9';
-  c.beginPath();
-  c.arc(375, 62, 9, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = '#d97706'; // gorengan tahu/tempe/pisang
-  c.fillRect(370, 58, 4, 4);
-  c.fillRect(376, 57, 5, 4);
-  c.fillRect(372, 63, 6, 4);
-  c.fillStyle = '#94a3b8';
-  c.font = '7px sans-serif';
-  c.fillText('Gorengan', 357, 78);
-
-  // --- Ruang Owner: Meja Direktur
-  c.fillStyle = '#78350f';
-  c.fillRect(460, 45, 60, 24);
-  c.fillStyle = '#fbbf24';
-  c.fillRect(470, 48, 14, 8); // laptop direktur
-
-  // --- Gudang Logistik: Rak Unit Sewa & Trolley
-  for (let r = 0; r < 3; r++) {
-    c.fillStyle = '#18181b';
-    c.fillRect(100, 185 + r * 30, 80, 14);
-    // kotak laptop sewa
-    c.fillStyle = '#475569';
-    c.fillRect(104, 188 + r * 30, 12, 8);
-    c.fillRect(120, 188 + r * 30, 12, 8);
-    c.fillRect(136, 188 + r * 30, 12, 8);
-    c.fillRect(152, 188 + r * 30, 12, 8);
-  }
-
-  // --- Pantry: Dispenser Galon Air Aqua
-  c.fillStyle = '#3b82f6'; // galon biru
-  c.fillRect(230, 180, 12, 16);
-  c.fillStyle = '#e2e8f0'; // bodi dispenser
-  c.fillRect(228, 196, 16, 22);
-  c.fillStyle = '#ef4444'; // kran panas
-  c.fillRect(231, 202, 3, 3);
-  c.fillStyle = '#3b82f6'; // kran dingin
-  c.fillRect(238, 202, 3, 3);
-  c.fillStyle = '#94a3b8';
-  c.font = '7px sans-serif';
-  c.fillText('Aqua Galon', 218, 226);
-
-  // --- Lounge & TV
-  c.fillStyle = '#1e293b';
-  c.fillRect(330, 200, 80, 20); // sofa
-  c.fillStyle = '#0f172a';
-  c.fillRect(345, 276, 50, 4);  // rak tv
-  c.fillStyle = '#38bdf8';
-  c.fillRect(350, 274, 40, 2);  // layar tv nyala
-
-  // --- Game Room: Meja Ping-Pong & Arcade
-  // Ping-pong
-  c.fillStyle = '#059669'; // meja hijau
-  c.fillRect(465, 185, 55, 30);
-  c.fillStyle = '#ffffff'; // garis net
-  c.fillRect(492, 185, 2, 30);
-  // Mesin Arcade
-  c.fillStyle = '#7c3aed';
-  c.fillRect(465, 245, 18, 28);
-  c.fillStyle = '#ec4899';
-  c.fillRect(470, 250, 8, 8); // layar arcade
-}
-
-function drawFloor2(c) {
-  // 1. Background dasar Lantai 2
-  c.fillStyle = '#0b0f19';
-  c.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
-
-  // 2. Ruang-ruang Lantai 2
-  for (const [k, r] of Object.entries(ROOMS_F2)) {
-    c.fillStyle = r.floor;
-    c.fillRect(r.x, r.y, r.w, r.h);
-    c.strokeStyle = r.wall;
-    c.lineWidth = 2;
-    c.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
-
-    // Label
-    c.fillStyle = 'rgba(255,255,255,0.25)';
-    c.font = '600 8px Inter, sans-serif';
-    c.fillText(r.label, r.x + 8, r.y + 14);
-  }
-
-  // 3. Balkon Ruko & Hammock
-  // Railing besi balkon
-  for (let y = 10; y < 290; y += 14) {
-    c.strokeStyle = '#475569';
-    c.lineWidth = 1;
-    c.strokeRect(100, y, 4, 10);
-  }
-  // String lights (lampu gantung balkon)
-  c.strokeStyle = 'rgba(251, 191, 36, 0.4)';
-  c.beginPath();
-  c.moveTo(15, 20);
-  c.quadraticCurveTo(55, 35, 95, 20);
-  c.stroke();
-  for (let lx = 25; lx <= 85; lx += 15) {
-    c.fillStyle = '#fbbf24';
-    c.beginPath();
-    c.arc(lx, 26, 2.5, 0, Math.PI * 2);
-    c.fill();
-  }
-
-  // Hammock (ayunan santai)
-  c.strokeStyle = '#92400e';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(25, 90);
-  c.quadraticCurveTo(55, 125, 85, 90);
-  c.stroke();
-  c.fillStyle = '#059669';
-  c.beginPath();
-  c.arc(55, 114, 12, 0, Math.PI);
-  c.fill();
-  c.fillStyle = '#94a3b8';
-  c.font = '7px sans-serif';
-  c.fillText('Hammock', 38, 134);
-
-  // Kursi rotan balkon
-  c.fillStyle = '#78350f';
-  c.fillRect(40, 200, 22, 22);
-  c.fillStyle = '#d97706';
-  c.fillRect(43, 203, 16, 16);
-
-  // 4. Kamar Asrama (Dormitory): 10 Kasur (satu untuk setiap agen)
-  for (let i = 0; i < 10; i++) {
-    const col = i % 5;
-    const row = Math.floor(i / 5);
-    const bx = 130 + col * 48;
-    const by = 40 + row * 65;
-
-    // Rangka ranjang kayu
-    c.fillStyle = '#3e2723';
-    c.fillRect(bx - 1, by - 1, 24, 38);
-    // Kasur putih
-    c.fillStyle = '#f8fafc';
-    c.fillRect(bx, by, 22, 36);
-    // Bantal
-    c.fillStyle = '#cbd5e1';
-    c.fillRect(bx + 2, by + 2, 18, 8);
-
-    // Selimut warna agen
-    const meta = AGENT_META[Object.keys(AGENT_META)[i]] || { color: '#3b82f6' };
-    c.fillStyle = meta.color;
-    c.fillRect(bx + 1, by + 12, 20, 23);
-  }
-
-  // 5. Sudut Lesehan: Karpet & Meja Kayu Pendek
-  c.fillStyle = '#78350f';
-  c.fillRect(400, 45, 140, 100); // Karpet hangat
-  c.fillStyle = '#9a3412';
-  c.fillRect(405, 50, 130, 90);
-  // Meja kayu pendek
-  c.fillStyle = '#451a03';
-  c.fillRect(445, 75, 50, 35);
-  // Bantal-bantal duduk
-  c.fillStyle = '#f59e0b';
-  c.fillRect(425, 82, 12, 12);
-  c.fillRect(505, 82, 12, 12);
-  c.fillRect(464, 55, 12, 12);
-  c.fillRect(464, 115, 12, 12);
-
-  // 6. Restroom / Shower
-  c.fillStyle = '#38bdf8';
-  c.fillRect(135, 230, 25, 25); // Bathtub / shower
-  c.fillStyle = '#ffffff';
-  c.fillRect(175, 235, 14, 18); // Wastafel
-}
-
-/* =====================================================================
-   GAMBAR KARAKTER AGEN (2D PIXEL / SPRITE DENGAN BALON KATA)
-   ===================================================================== */
-function drawCharacter(c, char, ag) {
-  const meta = AGENT_META[ag.id] || { skin: '#f5d0a9', hair: '#1e293b', shirt: '#2563eb', pants: '#0f172a' };
-  const x = Math.round(char.x);
-  const y = Math.round(char.y);
-
-  if (char.pose === 'sleeping') {
-    // Agen sedang tidur di kasur Dorm Lantai 2
-    c.fillStyle = meta.skin;
-    c.fillRect(x + 6, y + 4, 8, 6);
-    c.fillStyle = meta.hair;
-    c.fillRect(x + 5, y + 3, 10, 3);
-    // Efek Zzz halus
-    c.fillStyle = '#a5b4fc';
-    c.font = 'bold 9px monospace';
-    const zOffset = (Date.now() / 400) % 6;
-    c.fillText('z', x + 16, y - zOffset);
-    c.fillText('Z', x + 20, y - zOffset - 5);
-    return;
-  }
-
-  // Shadow
-  c.fillStyle = 'rgba(0,0,0,0.35)';
-  c.fillRect(x - 4, y + 10, 10, 3);
-
-  // Celana / Kaki
-  c.fillStyle = meta.pants;
-  c.fillRect(x - 3, y + 5, 3, 6);
-  c.fillRect(x + 2, y + 5, 3, 6);
-
-  // Badan / Baju
-  c.fillStyle = meta.shirt;
-  c.fillRect(x - 4, y - 2, 10, 8);
-
-  // Kepala / Kulit
-  c.fillStyle = meta.skin;
-  c.fillRect(x - 3, y - 8, 8, 7);
-
-  // Rambut
-  c.fillStyle = meta.hair;
-  c.fillRect(x - 4, y - 10, 10, 4);
-
-  // Mata
-  c.fillStyle = '#0f172a';
-  c.fillRect(x - 2, y - 5, 2, 2);
-  c.fillRect(x + 2, y - 5, 2, 2);
-
-  // Label nama mini di atas kepala
-  c.fillStyle = '#ffffff';
-  c.font = '600 7px Inter, sans-serif';
-  c.textAlign = 'center';
-  c.fillText(ag.short, x + 1, y - 13);
-
-  // Speech Bubble / Indikator saat WORKING atau WAITING
-  if (ag.status === 'WORKING') {
-    c.fillStyle = '#2563eb';
-    c.beginPath();
-    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = '#ffffff';
-    c.font = 'bold 7px monospace';
-    c.fillText('⚡', x + 8, y - 15);
-  } else if (ag.status === 'WAITING_APPROVAL') {
-    c.fillStyle = '#f59e0b';
-    c.beginPath();
-    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = '#000000';
-    c.font = 'bold 7px monospace';
-    c.fillText('?', x + 8, y - 15);
-  } else if (ag.status === 'HUMAN_NEEDED') {
-    c.fillStyle = '#ef4444';
-    c.beginPath();
-    c.arc(x + 8, y - 18, 4, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = '#ffffff';
-    c.font = 'bold 7px monospace';
-    c.fillText('!', x + 8, y - 15);
-  }
-}
-
-/* =====================================================================
-   LOGIKA KOORDINAT & PERGERAKAN AGEN (Wandering & Desk Spots)
-   ===================================================================== */
-function getAgentTargetNode(ag, index) {
-  const meta = AGENT_META[ag.id] || {};
-  const isSleeping = ag.status === 'SLEEPING' || ag.status === 'OFFLINE' || globalSleepMode;
-
-  if (isSleeping) {
-    // Posisi tidur di Dormitory Lantai 2
-    const bedIdx = meta.bed ?? index;
-    const col = bedIdx % 5;
-    const row = Math.floor(bedIdx / 5);
-    return { floor: 2, x: 130 + col * 48, y: 40 + row * 65, pose: 'sleeping', label: 'Kasur Dorm #0' + (bedIdx + 1) };
-  }
-
-  if (ag.status === 'WORKING') {
-    if (meta.desk === null) {
-      // Inventory agent di gudang
-      return { floor: 1, x: 130, y: 200, pose: 'stand', label: 'Gudang Rak Unit' };
+    function hashName(name) {
+      let hash = 2166136261;
+      for (let i = 0; i < name.length; i++) {
+        hash ^= name.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
     }
-    const deskIdx = meta.desk;
-    const col = deskIdx % 5;
-    const row = Math.floor(deskIdx / 5);
-    return { floor: 1, x: 114 + col * 40, y: 38 + row * 48, pose: 'sitting', label: 'Meja Kerja #0' + (deskIdx + 1) };
-  }
 
-  if (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') {
-    return { floor: 1, x: 470 + (index % 3) * 16, y: 80, pose: 'stand', label: 'Ruang Owner' };
-  }
-
-  // IDLE WANDERING — Berpindah spot santai tiap interval waktu tertentu
-  const idleSpots = [
-    { floor: 1, x: 234, y: 220, label: 'Minum Galon Pantry' },
-    { floor: 1, x: 375, y: 92,  label: 'Makan Gorengan Meeting' },
-    { floor: 1, x: 360, y: 215, label: 'Sofa Lounge TV' },
-    { floor: 1, x: 485, y: 210, label: 'Main Ping-Pong' },
-    { floor: 1, x: 45,  y: 130, label: 'Jajan Gerobak Bakso' },
-    { floor: 1, x: 48,  y: 220, label: 'Beli Kopi Starling' },
-    { floor: 2, x: 50,  y: 140, label: 'Santai di Hammock Balkon' },
-    { floor: 2, x: 450, y: 100, label: 'Lesehan Lantai 2' }
-  ];
-
-  const cycle = Math.floor((Date.now() / 24000) + index) % idleSpots.length;
-  const spot = idleSpots[cycle];
-  return { floor: spot.floor, x: spot.x, y: spot.y, pose: 'stand', label: spot.label };
-}
-
-function updatePositions(delta) {
-  state.agents.forEach((ag, idx) => {
-    let char = agentCharacters[ag.id];
-    const target = getAgentTargetNode(ag, idx);
-
-    if (!char) {
-      agentCharacters[ag.id] = {
-        id: ag.id,
-        x: target.x,
-        y: target.y,
-        floor: target.floor,
-        target,
-        pose: target.pose
+    function getAgentLook(agentId) {
+      const hash = hashName(agentId);
+      return {
+        hair: HAIR_COLORS[hash % HAIR_COLORS.length],
+        skin: SKIN_COLORS[(hash >>> 4) % SKIN_COLORS.length],
+        shirt: SHIRT_COLORS[(hash >>> 8) % SHIRT_COLORS.length],
+        pants: PANTS_COLORS[(hash >>> 12) % PANTS_COLORS.length]
       };
-      return;
     }
 
-    char.target = target;
-    char.pose = target.pose;
+    function createPixelCharacterHTML(agentId) {
+      const look = getAgentLook(agentId);
+      return `
+        <span class="pixel-character" style="--hair:${look.hair}; --skin:${look.skin}; --shirt:${look.shirt}; --pants:${look.pants};" aria-hidden="true">
+          <span class="character-hair"></span>
+          <span class="character-head"><i></i><b></b></span>
+          <span class="character-torso"></span>
+          <span class="character-arm left"></span>
+          <span class="character-arm right"></span>
+          <span class="character-leg left"></span>
+          <span class="character-leg right"></span>
+        </span>
+      `;
+    }
 
-    // Gerak halus mendekati target jika satu lantai
-    if (char.floor === target.floor) {
-      const dx = target.x - char.x;
-      const dy = target.y - char.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 2) {
-        char.x += (dx / dist) * Math.min(dist, 50 * delta);
-        char.y += (dy / dist) * Math.min(dist, 50 * delta);
+    // App State
+    let stateCache = null;
+    let selectedAgent = null;
+    let currentView = '2d';
+    let currentFloor = 1;
+
+    // Three.js State
+    let scene3d, camera3d, renderer3d, controls3d;
+    let agent3dMeshes = {};
+    let threeInitialized = false;
+
+    // Badge mapper
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'WORKING':
+          return { text: 'WORKING', tone: 'warn pulsing' };
+        case 'IDLE':
+          return { text: 'IDLE', tone: 'good' };
+        case 'WAITING_APPROVAL':
+          return { text: 'WAITING APV', tone: 'warn pulsing' };
+        case 'HUMAN_NEEDED':
+          return { text: 'HUMAN NEEDED', tone: 'bad pulsing' };
+        case 'ERROR':
+          return { text: 'ERROR', tone: 'bad' };
+        case 'OFFLINE':
+        default:
+          return { text: 'TIDUR 💤', tone: 'muted' };
+      }
+    }
+
+    // Fetch live state from backend
+    async function refreshState() {
+      try {
+        const res = await fetch('/api/agents/state');
+        if (!res.ok) throw new Error('Failed to fetch state');
+        const data = await res.json();
+        stateCache = data;
+        render2DOffice(data);
+        updateHUD(data);
+        if (currentView === '3d') update3DOffice(data);
+        if (selectedAgent) {
+          const fresh = data.agents.find(a => a.id === selectedAgent.id);
+          if (fresh) updateModalData(fresh);
+        }
+      } catch (err) {
+        console.warn('Sync warning:', err);
+      }
+    }
+
+    function updateHUD(data) {
+      const summary = data.summary;
+      document.getElementById('stat-crew-count').innerText = `${summary.online}/${summary.total}`;
+      document.getElementById('stat-working-count').innerText = summary.working;
+      const apvCountEl = document.getElementById('stat-approvals-count');
+      apvCountEl.innerText = `${summary.pending_approvals} pending`;
+      if (summary.pending_approvals > 0) {
+        apvCountEl.parentElement.className = 'hud-chip clickable warn';
       } else {
-        char.x = target.x;
-        char.y = target.y;
+        apvCountEl.parentElement.className = 'hud-chip clickable';
       }
-    } else {
-      // Pindah lantai langsung setelah jeda
-      char.floor = target.floor;
-      char.x = target.x;
-      char.y = target.y;
+
+      // Fetch KPI metrics
+      fetch('/api/kpi').then(r => r.json()).then(kpi => {
+        if (kpi && kpi.success_rate) {
+          document.getElementById('stat-success-rate').innerText = kpi.success_rate;
+        }
+      }).catch(() => {});
     }
-  });
-}
 
-let lastTimestamp = 0;
-function renderLoop(timestamp) {
-  if (!lastTimestamp) lastTimestamp = timestamp;
-  const delta = Math.min(0.1, (timestamp - lastTimestamp) / 1000);
-  lastTimestamp = timestamp;
+    // Render 2D Virtual Office
+    function render2DOffice(data) {
+      const desksWrap = document.getElementById('workspace-desks');
+      const loungeWrap = document.getElementById('lounge-agents');
+      const dormWrap = document.getElementById('dorm-beds');
+      const approvalsWrap = document.getElementById('approval-tickets-wrap');
 
-  updatePositions(delta);
+      desksWrap.innerHTML = '';
+      loungeWrap.innerHTML = '';
+      dormWrap.innerHTML = '';
 
-  // Setup render transform
-  const dpr = window.devicePixelRatio || 1;
-  ctx.save();
-  ctx.scale(scaleFactor * dpr, scaleFactor * dpr);
+      let floor1Count = 0;
+      let floor2Count = 0;
 
-  // Gambar denah lantai aktif
-  if (currentFloor === 1) {
-    drawFloor1(ctx);
-  } else {
-    drawFloor2(ctx);
-  }
+      data.agents.forEach(agent => {
+        const badge = getStatusBadge(agent.status);
+        const charHtml = createPixelCharacterHTML(agent.id);
 
-  // Gambar karakter yang ada di lantai ini
-  state.agents.forEach(ag => {
-    const char = agentCharacters[ag.id];
-    if (char && char.floor === currentFloor) {
-      drawCharacter(ctx, char, ag);
-    }
-  });
+        if (agent.status === 'OFFLINE') {
+          // Lantai 2: Dorm Bed
+          floor2Count++;
+          const cell = document.createElement('div');
+          cell.className = 'dorm-cell';
+          cell.innerHTML = `
+            <button type="button" class="pixel-station state-offline" onclick="openAgentModal('${agent.id}')">
+              <span class="sleep-bubble">z z Z</span>
+              <span class="pixel-station-name">${agent.short}</span>
+              <span class="badge ${badge.tone}">${badge.text}</span>
+              ${charHtml}
+            </button>
+            <div class="pixel-bed"><span class="pillow"></span><span class="blanket"></span></div>
+          `;
+          dormWrap.appendChild(cell);
+        } else if (agent.status === 'WORKING') {
+          // Lantai 1: Workspace Hot Desk (Occupied)
+          floor1Count++;
+          const cell = document.createElement('div');
+          cell.className = 'desk-cell';
+          const speech = agent.task ? `<div class="speech">${agent.task.slice(0, 28)}...</div>` : '';
+          cell.innerHTML = `
+            <button type="button" class="pixel-station state-working" onclick="openAgentModal('${agent.id}')">
+              ${speech}
+              <span class="pixel-station-name">${agent.short}</span>
+              <span class="badge ${badge.tone}">${badge.text}</span>
+              ${charHtml}
+            </button>
+            <div class="ws-desk occupied"><i></i></div>
+          `;
+          desksWrap.appendChild(cell);
+        } else if (agent.status === 'WAITING_APPROVAL' || agent.status === 'HUMAN_NEEDED') {
+          // Lantai 1: Sedang menunggu di meja kerja / meja Owner
+          floor1Count++;
+          const cell = document.createElement('div');
+          cell.className = 'desk-cell';
+          const speech = `<div class="speech" style="border-color:#d9695a; color:#d9695a;">⚠️ Butuh Owner!</div>`;
+          cell.innerHTML = `
+            <button type="button" class="pixel-station state-waiting_approval" onclick="openAgentModal('${agent.id}')">
+              ${speech}
+              <span class="pixel-station-name">${agent.short}</span>
+              <span class="badge ${badge.tone}">${badge.text}</span>
+              ${charHtml}
+            </button>
+            <div class="ws-desk"><i></i></div>
+          `;
+          desksWrap.appendChild(cell);
+        } else {
+          // IDLE: Duduk santai di Lounge / Meeting table
+          floor1Count++;
+          const station = document.createElement('button');
+          station.type = 'button';
+          station.className = 'pixel-station state-idle';
+          station.onclick = () => openAgentModal(agent.id);
+          station.innerHTML = `
+            <span class="pixel-station-name">${agent.short}</span>
+            <span class="badge ${badge.tone}">${badge.text}</span>
+            ${charHtml}
+          `;
+          loungeWrap.appendChild(station);
+        }
+      });
 
-  ctx.restore();
-  requestAnimationFrame(renderLoop);
-}
+      // Tambahkan sisa meja kosong (hot desking) jika meja kerja sedikit
+      const workingCount = data.agents.filter(a => a.status === 'WORKING' || a.status === 'WAITING_APPROVAL').length;
+      for (let i = workingCount; i < 6; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'desk-cell';
+        emptyCell.innerHTML = `
+          <div style="height:60px;"></div>
+          <div class="ws-desk"><i></i></div>
+        `;
+        desksWrap.appendChild(emptyCell);
+      }
 
-/* Klik agen pada canvas untuk inspeksi */
-canvas.addEventListener('click', e => {
-  const rect = canvas.getBoundingClientRect();
-  const clickX = (e.clientX - rect.left) / scaleFactor;
-  const clickY = (e.clientY - rect.top) / scaleFactor;
+      document.getElementById('count-floor-1').innerText = floor1Count;
+      document.getElementById('count-floor-2').innerText = floor2Count;
 
-  for (const ag of state.agents) {
-    const char = agentCharacters[ag.id];
-    if (char && char.floor === currentFloor) {
-      const dist = Math.hypot(char.x - clickX, char.y - clickY);
-      if (dist < 22) {
-        openAgentModal(ag.id);
-        return;
+      // Render antrean approval Owner
+      const approvals = data.approvals || [];
+      if (approvals.length === 0) {
+        approvalsWrap.innerHTML = '<span style="font-size:11px; color:var(--text-dim);">Tidak ada tiket approval yang menunggu.</span>';
+      } else {
+        approvalsWrap.innerHTML = approvals.map(apv => `
+          <div class="approval-ticket">
+            <div>
+              <strong style="color:var(--accent);">${apv.approval_id}</strong> · <span>${apv.agent_name}</span>
+              <div style="color:var(--text-muted); margin-top:2px;">${apv.task || 'Permintaan diskon/approval sewa'}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn-approve" onclick="resolveApproval('${apv.approval_id}', 'APPROVED')">Setujui ✓</button>
+              <button type="button" class="btn-reject" onclick="resolveApproval('${apv.approval_id}', 'REJECTED')">Tolak ✕</button>
+            </div>
+          </div>
+        `).join('');
       }
     }
-  }
-});
 
-/* =====================================================================
-   INTERAKSI API & STATE SYNC
-   ===================================================================== */
-async function syncServerState() {
-  try {
-    const res = await fetch('/api/agents/state');
-    if (!res.ok) return;
-    const data = await res.json();
-    state = data;
-
-    // Update HUD chips
-    $('hud-crew').textContent = `${data.summary.online || 0} / ${data.summary.total || 10} Active`;
-    $('hud-tasks').textContent = `${data.summary.working || 0} Running`;
-    $('hud-approvals').textContent = `${data.summary.pending_approvals || 0} Pending`;
-    $('badge-floor-1-count').textContent = data.summary.floor1 ?? 5;
-    $('badge-floor-2-count').textContent = data.summary.floor2 ?? 5;
-
-    // Cek status sleep global
-    const anySleeping = data.agents.some(a => a.status === 'SLEEPING');
-    globalSleepMode = anySleeping;
-    $('btn-global-sleep').classList.toggle('active-sleep', anySleeping);
-    $('sleep-btn-icon').textContent = anySleeping ? '☀️' : '💤';
-    $('sleep-btn-label').textContent = anySleeping ? 'Bangun' : 'Tidur';
-
-    // Update Panel drawer list
-    renderCrewDrawer();
-    renderStatsTab();
-  } catch (err) {
-    console.error('Sync error:', err);
-  }
-}
-
-async function syncLogs() {
-  try {
-    const res = await fetch('/api/logs');
-    if (!res.ok) return;
-    const logs = await res.json();
-    renderAuditTable(logs);
-    renderActivityFeed(logs);
-  } catch (err) {}
-}
-
-function renderAuditTable(logs) {
-  const tbody = $('audit-table-body');
-  if (!logs || !logs.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:16px;">Belum ada riwayat transaksi.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = logs.slice(0, 10).map(l => {
-    const timeStr = l.timestamp ? l.timestamp.split('T')[1]?.split('.')[0] || l.timestamp : '-';
-    const isSuccess = l.status === 'SUCCESS';
-    const badgeClass = isSuccess ? 'badge-success' : (l.status?.includes('APPROVAL') ? 'badge-warning' : 'badge-danger');
-    return `
-      <tr>
-        <td class="time-cell">${escapeHtml(timeStr)}</td>
-        <td class="agent-cell">${escapeHtml(l.agent_name || l.agent_id)}</td>
-        <td style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(l.user_input || l.action)}</td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(l.status || 'OK')}</span></td>
-      </tr>
-    `;
-  }).join('');
-}
-
-function renderActivityFeed(logs) {
-  const container = $('drawer-activity-feed');
-  if (!logs || !logs.length) {
-    container.innerHTML = '<div style="color:var(--text-muted); text-align:center;">Belum ada aktivitas.</div>';
-    return;
-  }
-  container.innerHTML = logs.slice(0, 15).map(l => {
-    const timeStr = l.timestamp ? l.timestamp.split('T')[1]?.split('.')[0] : '';
-    return `
-      <div style="background:var(--card-sub); border:1px solid var(--border); padding:8px 10px; border-radius:4px;">
-        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
-          <strong style="color:#60a5fa;">${escapeHtml(l.agent_name || l.agent_id)}</strong>
-          <span style="color:var(--text-muted); font-family:monospace;">${escapeHtml(timeStr)}</span>
-        </div>
-        <div style="font-size:11px; color:var(--text);">${escapeHtml(l.user_input || l.action)}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderCrewDrawer() {
-  const container = $('crew-list-container');
-  $('drawer-tab-crew-cnt').textContent = state.agents.length;
-
-  container.innerHTML = state.agents.map(ag => {
-    const meta = AGENT_META[ag.id] || { color: '#3b82f6' };
-    const char = agentCharacters[ag.id];
-    const station = char?.target?.label || (ag.floor === 2 ? 'Kamar Dorm' : 'Meja Kerja');
-    const isSleeping = ag.status === 'SLEEPING';
-    const statusBadge = ag.status === 'WORKING' ? 'badge-working' : (isSleeping ? 'badge-dorm' : (ag.powered ? 'badge-success' : 'badge-muted'));
-
-    return `
-      <div class="crew-card ${ag.id === selectedAgentId ? 'selected' : ''}" onclick="openAgentModal('${ag.id}')">
-        <div class="crew-avatar" style="background:${meta.color};">${ag.short.slice(0, 2).toUpperCase()}</div>
-        <div class="crew-info">
-          <div class="crew-name">${escapeHtml(ag.name)}</div>
-          <div class="crew-sub">${escapeHtml(station)} · <span class="badge ${statusBadge}">${escapeHtml(ag.status)}</span></div>
-        </div>
-        <div class="crew-ctrl" onclick="event.stopPropagation()">
-          <button class="btn-micro" onclick="toggleAgentPower('${ag.id}', ${!ag.powered})" title="Power Toggle">${ag.powered ? 'ON' : 'OFF'}</button>
-          <button class="btn-micro" onclick="toggleAgentSleep('${ag.id}')" title="Sleep Toggle">${isSleeping ? '☀️' : '💤'}</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderStatsTab() {
-  $('stat-total-tx').textContent = state.summary.total_transactions || 20;
-  $('stat-pending-apv').textContent = state.summary.pending_approvals || 0;
-  const apvList = $('drawer-apv-list');
-  if (state.approvals && state.approvals.length) {
-    apvList.innerHTML = state.approvals.map(apv => `
-      <div style="border:1px solid #78350f; background:rgba(245,158,11,0.08); padding:8px; border-radius:4px; margin-bottom:6px; font-size:11px;">
-        <div style="font-weight:600; color:#fbbf24;">${escapeHtml(apv.approval_id)} — ${escapeHtml(apv.agent_name)}</div>
-        <div style="margin:3px 0;">${escapeHtml(apv.task || apv.summary)}</div>
-        <div style="display:flex; gap:6px; margin-top:6px;">
-          <button class="btn-micro" style="background:#059669; color:#fff;" onclick="resolveApproval('${apv.approval_id}', 'APPROVED')">Setujui</button>
-          <button class="btn-micro" style="background:#dc2626; color:#fff;" onclick="resolveApproval('${apv.approval_id}', 'REJECTED')">Tolak</button>
-        </div>
-      </div>
-    `).join('');
-  } else {
-    apvList.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:12px;">Tidak ada tiket otorisasi pending.</div>';
-  }
-}
-
-/* =====================================================================
-   AKSI SLEEP, POWER & APPROVAL
-   ===================================================================== */
-async function toggleGlobalSleep() {
-  const endpoint = globalSleepMode ? '/api/agents/wake-all' : '/api/agents/sleep-all';
-  try {
-    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-    const data = await res.json();
-    showToast(globalSleepMode ? '☀️ Seluruh kru dibangunkan kembali ke kantor' : '💤 Seluruh kru idle beristirahat di Lantai 2');
-    if (!globalSleepMode) switchFloor(2); // Otomatis lihat dorm saat tidur
-    syncServerState();
-  } catch (err) {
-    showToast('Gagal mengubah mode tidur kru');
-  }
-}
-
-async function toggleAgentPower(agentId, on) {
-  try {
-    const res = await fetch('/api/agents/power', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agent_id: agentId, on })
-    });
-    const d = await res.json();
-    if (d.error) showToast(d.error);
-    else {
-      showToast(`Power ${agentId}: ${on ? 'ON' : 'OFF'}`);
-      syncServerState();
+    // Modal Details Inspector
+    function openAgentModal(agentId) {
+      if (!stateCache) return;
+      const agent = stateCache.agents.find(a => a.id === agentId);
+      if (!agent) return;
+      selectedAgent = agent;
+      updateModalData(agent);
+      document.getElementById('agent-modal').style.display = 'flex';
     }
-  } catch (e) {
-    showToast('Koneksi server gagal');
-  }
-}
 
-async function toggleAgentSleep(agentId) {
-  try {
-    const res = await fetch('/api/agents/toggle-sleep', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agent_id: agentId })
-    });
-    const d = await res.json();
-    showToast(`Status tidur ${agentId} diperbarui`);
-    syncServerState();
-  } catch (e) {
-    showToast('Gagal toggle sleep agen');
-  }
-}
+    function updateModalData(agent) {
+      document.getElementById('modal-avatar').innerHTML = createPixelCharacterHTML(agent.id);
+      document.getElementById('modal-agent-name').innerText = agent.name;
+      document.getElementById('modal-agent-id').innerText = agent.id;
+      const badge = getStatusBadge(agent.status);
+      const badgeEl = document.getElementById('modal-agent-badge');
+      badgeEl.className = `badge ${badge.tone}`;
+      badgeEl.innerText = badge.text;
 
-async function resolveApproval(apvId, action) {
-  try {
-    const res = await fetch('/api/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ approval_id: apvId, action })
-    });
-    const d = await res.json();
-    showToast(`Keputusan Owner: ${action}`);
-    syncServerState();
-    syncLogs();
-  } catch (e) {
-    showToast('Gagal memproses approval');
-  }
-}
+      document.getElementById('modal-role').innerText = agent.role;
+      document.getElementById('modal-room').innerText = agent.status === 'OFFLINE' ? 'Lantai 2 (Dormitory/Kamar Tidur)' : 'Lantai 1 (Workspace)';
+      document.getElementById('modal-task').innerText = agent.task || 'Sedang siaga (Standby)';
+      document.getElementById('modal-done').innerText = `${agent.tasks_done || 0} Tugas Selesai`;
+      document.getElementById('modal-last-reply').innerText = agent.last_reply || 'Belum ada tugas dijalankan.';
 
-/* =====================================================================
-   KONSOL PERINTAH & TRANSAKSI
-   ===================================================================== */
-async function handleSendPrompt(e) {
-  if (e) e.preventDefault();
-  const input = $('prompt-input');
-  const text = (input.value || '').trim();
-  if (!text) return;
-
-  const terminal = $('result-terminal');
-  terminal.innerHTML = `<span class="tag-ok">PROCESSING</span> Mengirim instruksi ke AI Core...\n> "${escapeHtml(text)}"`;
-  input.value = '';
-  switchFloor(1); // Kembali ke kantor untuk melihat proses
-
-  const startTime = Date.now();
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, user_id: 'owner_web' })
-    });
-    const data = await res.json();
-    const lat = Date.now() - startTime;
-    $('hud-latency').textContent = `${lat}ms`;
-
-    if (data.error) {
-      terminal.innerHTML = `<span class="tag-err">ERROR</span> ${escapeHtml(data.error)}`;
-    } else {
-      const exec = data.execution || {};
-      const statusTag = exec.status === 'SUCCESS' ? 'tag-ok' : (exec.status?.includes('APPROVAL') ? 'tag-warn' : 'tag-err');
-      terminal.innerHTML = `<span class="${statusTag}">${escapeHtml(exec.status || 'DONE')}</span> [${escapeHtml(exec.agent_name || 'Agent')}] (${lat}ms)\n${escapeHtml(exec.reply || 'Proses selesai.')}`;
+      const powerBtn = document.getElementById('btn-agent-power');
+      if (agent.powered) {
+        powerBtn.className = 'btn-action sleep';
+        powerBtn.innerText = '💤 Istirahatkan / Tidur';
+      } else {
+        powerBtn.className = 'btn-action wake';
+        powerBtn.innerText = '⚡ Bangunkan ke Meja Kerja';
+      }
     }
-    syncServerState();
-    syncLogs();
-  } catch (err) {
-    terminal.innerHTML = `<span class="tag-err">NETWORK ERROR</span> Gagal menghubungi server: ${escapeHtml(err.message)}`;
-  }
-}
 
-/* =====================================================================
-   DRAWER & MODAL MANAGEMENT
-   ===================================================================== */
-function toggleDrawer(force) {
-  isDrawerOpen = force !== undefined ? force : !isDrawerOpen;
-  $('side-drawer').classList.toggle('open', isDrawerOpen);
-  $('drawer-overlay').classList.toggle('open', isDrawerOpen);
-}
-
-function switchDrawerTab(tab) {
-  const tabs = document.querySelectorAll('.drawer-tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  ['crew', 'stats', 'activity'].forEach((name, i) => {
-    const pane = $('pane-' + name);
-    if (name === tab) {
-      tabs[i].classList.add('active');
-      pane.classList.add('active');
-    } else {
-      pane.classList.remove('active');
+    function closeModal() {
+      document.getElementById('agent-modal').style.display = 'none';
+      selectedAgent = null;
     }
-  });
-}
 
-function openAgentModal(agentId) {
-  selectedAgentId = agentId;
-  const ag = state.agents.find(a => a.id === agentId);
-  if (!ag) return;
+    function switchModalTab(tab) {
+      document.getElementById('modal-tab-overview').style.display = tab === 'overview' ? 'block' : 'none';
+      document.getElementById('modal-tab-sop').style.display = tab === 'sop' ? 'block' : 'none';
+      document.getElementById('modal-tab-activity').style.display = tab === 'activity' ? 'block' : 'none';
 
-  const meta = AGENT_META[ag.id] || { color: '#3b82f6' };
-  const char = agentCharacters[ag.id];
-
-  $('modal-agent-name').textContent = ag.name;
-  $('modal-agent-id').textContent = ag.id;
-  $('modal-agent-avatar').textContent = ag.short.slice(0, 2).toUpperCase();
-  $('modal-agent-avatar').style.background = meta.color;
-
-  $('modal-val-role').textContent = ag.role;
-  $('modal-val-status').textContent = ag.status;
-  $('modal-val-floor').textContent = `Lantai ${ag.floor || char?.floor || 1}`;
-  $('modal-val-room').textContent = char?.target?.label || ag.room || 'Kantor';
-  $('modal-val-task').textContent = ag.task || 'Tidak ada tugas aktif';
-  $('modal-val-tasks-done').textContent = `${ag.tasks_done || 0} tugas diselesaikan`;
-  $('modal-val-last-reply').textContent = ag.last_reply ? `"${ag.last_reply.slice(0, 120)}..."` : 'Belum ada';
-
-  // Tools
-  const tools = meta.tools || ['general_query'];
-  $('modal-tools-list').innerHTML = tools.map(t => `<span class="tool-chip">${t}</span>`).join('');
-
-  // Memory / SOUL
-  $('modal-soul-content').textContent = AGENT_SOUL_DOCS[ag.id] || 'SOUL.md default tidak tersedia.';
-
-  $('agent-modal').classList.add('open');
-}
-
-function closeAgentModal() {
-  $('agent-modal').classList.remove('open');
-}
-
-function switchModalTab(tab) {
-  const tabs = document.querySelectorAll('.modal-tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  ['overview', 'tools', 'memory'].forEach((name, i) => {
-    const el = $('modal-tab-' + name);
-    if (name === tab) {
-      tabs[i].classList.add('active');
-      el.style.display = 'block';
-    } else {
-      el.style.display = 'none';
+      const buttons = document.querySelectorAll('.detail-tabs button');
+      buttons.forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
     }
-  });
-}
 
-function toggleModalAgentPower() {
-  const ag = state.agents.find(a => a.id === selectedAgentId);
-  if (ag) toggleAgentPower(ag.id, !ag.powered);
-}
+    async function toggleAgentPower() {
+      if (!selectedAgent) return;
+      const newStatus = !selectedAgent.powered;
+      try {
+        const res = await fetch('/api/agents/power', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent_id: selectedAgent.id, on: newStatus })
+        });
+        const result = await res.json();
+        if (result.error) alert(result.error);
+        await refreshState();
+      } catch (err) {
+        alert('Gagal mengubah status daya agen');
+      }
+    }
 
-function toggleModalAgentSleep() {
-  if (selectedAgentId) toggleAgentSleep(selectedAgentId);
-}
+    function triggerAgentChat() {
+      if (!selectedAgent) return;
+      closeModal();
+      const input = document.getElementById('chat-input');
+      input.value = `Halo ${selectedAgent.short}, `;
+      input.focus();
+    }
 
-function openTasksModal() {
-  renderKanbanBoard();
-  $('tasks-modal').classList.add('open');
-}
+    // Floor Switcher in 2D View
+    function showFloor(floor) {
+      currentFloor = floor;
+      const f1 = document.getElementById('section-floor-1');
+      const f2 = document.getElementById('section-floor-2');
+      const btn1 = document.getElementById('tab-floor-1');
+      const btn2 = document.getElementById('tab-floor-2');
+      const btnAll = document.getElementById('tab-floor-all');
 
-function closeTasksModal() {
-  $('tasks-modal').classList.remove('open');
-}
+      btn1.classList.remove('active');
+      btn2.classList.remove('active');
+      btnAll.classList.remove('active');
 
-function renderKanbanBoard() {
-  const grid = $('kanban-board-grid');
-  const working = state.agents.filter(a => a.status === 'WORKING');
-  const apv = state.approvals || [];
-  const idle = state.agents.filter(a => a.status === 'IDLE');
+      if (floor === 1) {
+        f1.style.display = 'block';
+        f2.style.display = 'none';
+        btn1.classList.add('active');
+      } else if (floor === 2) {
+        f1.style.display = 'none';
+        f2.style.display = 'block';
+        btn2.classList.add('active');
+      } else {
+        f1.style.display = 'block';
+        f2.style.display = 'block';
+        btnAll.classList.add('active');
+      }
+    }
 
-  grid.innerHTML = `
-    <div class="kanban-col">
-      <div class="kanban-col-head"><span>Triage / Standby</span><span>${idle.length}</span></div>
-      ${idle.slice(0, 4).map(a => `<div class="kanban-card"><strong>${a.short}</strong><br><span style="color:var(--text-muted);">${a.role}</span></div>`).join('')}
-    </div>
-    <div class="kanban-col">
-      <div class="kanban-col-head"><span>In Progress</span><span>${working.length}</span></div>
-      ${working.length ? working.map(a => `<div class="kanban-card" style="border-color:#3b82f6;"><strong>${a.short}</strong><br>${escapeHtml(a.task || 'Memproses permintaan...')}</div>`).join('') : '<div style="color:var(--text-muted);font-size:10px;text-align:center;padding:12px;">Antrean kosong</div>'}
-    </div>
-    <div class="kanban-col">
-      <div class="kanban-col-head"><span>Waiting Approval</span><span>${apv.length}</span></div>
-      ${apv.length ? apv.map(a => `<div class="kanban-card" style="border-color:#fbbf24;"><strong>${escapeHtml(a.approval_id)}</strong><br>${escapeHtml(a.agent_name)}</div>`).join('') : '<div style="color:var(--text-muted);font-size:10px;text-align:center;padding:12px;">Semua terotorisasi</div>'}
-    </div>
-    <div class="kanban-col">
-      <div class="kanban-col-head"><span>Verified Done</span><span>20</span></div>
-      <div class="kanban-card"><strong>20 Skenario Rental</strong><br><span style="color:#34d399;">100% Passed</span></div>
-      <div class="kanban-card"><strong>Anti-Hallucination</strong><br><span style="color:#34d399;">Active Guard</span></div>
-    </div>
-  `;
-}
+    // Approvals
+    async function resolveApproval(approvalId, action) {
+      try {
+        const res = await fetch('/api/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approval_id: approvalId, action })
+        });
+        await refreshState();
+      } catch (err) {
+        alert('Gagal mengirim keputusan approval');
+      }
+    }
 
-/* =====================================================================
-   INISIALISASI APLIKASI
-   ===================================================================== */
-function init() {
-  resizeCanvas();
-  updateLegend();
+    function openApprovalDesk() {
+      showFloor(1);
+      const desk = document.getElementById('owner-desk-section');
+      desk.scrollIntoView({ behavior: 'smooth' });
+    }
 
-  // Presets
-  const pwrap = $('preset-container');
-  pwrap.innerHTML = PRESETS.map(p => `<button type="button" class="preset-tag" onclick="$('prompt-input').value='${escapeHtml(p)}'; handleSendPrompt();">${escapeHtml(p)}</button>`).join('');
+    // Live Chat & Command Execution
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
 
-  // Clock
-  setInterval(() => {
-    const d = new Date();
-    $('hud-clock').textContent = d.toTimeString().split(' ')[0] + ' WIB';
-  }, 1000);
+      input.value = '';
+      const btn = document.getElementById('btn-send');
+      btn.disabled = true;
+      btn.innerText = 'Memproses...';
 
-  // Polling Server State
-  syncServerState();
-  syncLogs();
-  setInterval(syncServerState, 1500);
-  setInterval(syncLogs, 4000);
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, user_id: 'owner_web' })
+        });
+        const data = await res.json();
+        await refreshState();
+      } catch (err) {
+        alert('Terjadi kesalahan saat memproses perintah');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Kirim Perintah';
+      }
+    }
 
-  // Mulai Loop Animasi
-  requestAnimationFrame(renderLoop);
-}
+    function quickPrompt(text) {
+      document.getElementById('chat-input').value = text;
+      document.getElementById('btn-send').click();
+    }
 
-window.addEventListener('DOMContentLoaded', init);
-</script>
+    // Side Drawer (Audit Logs)
+    async function toggleDrawer(kind) {
+      const drawer = document.getElementById('drawer-panel');
+      if (drawer.classList.contains('open')) {
+        closeDrawer();
+      } else {
+        drawer.classList.add('open');
+        document.getElementById('btn-toggle-logs').classList.add('active');
+        await loadAuditLogs();
+      }
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer-panel').classList.remove('open');
+      document.getElementById('btn-toggle-logs').classList.remove('active');
+    }
+
+    async function loadAuditLogs() {
+      const body = document.getElementById('drawer-body');
+      try {
+        const res = await fetch('/api/logs');
+        const logs = await res.json();
+        if (!logs || logs.length === 0) {
+          body.innerHTML = '<div style="font-size:12px; color:var(--text-dim); text-align:center; padding:20px;">Belum ada log audit tersimpan.</div>';
+          return;
+        }
+        body.innerHTML = logs.map(l => `
+          <div class="log-entry">
+            <div class="log-entry-head">
+              <strong>${l.agent_name || l.agent_id}</strong>
+              <span>${l.timestamp ? l.timestamp.split('T')[1].slice(0,8) : ''}</span>
+            </div>
+            <div class="log-entry-text"><strong>Input:</strong> ${l.user_input || '-'}</div>
+            <div class="log-entry-text" style="color:var(--accent); margin-top:2px;"><strong>Hasil:</strong> ${l.action || l.keputusan || '-'}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        body.innerHTML = '<div style="font-size:12px; color:var(--c-d9695a); text-align:center; padding:20px;">Gagal memuat log audit.</div>';
+      }
+    }
+
+    // ========================================================================
+    // THREE.JS 3D VIRTUAL OFFICE ENGINE (Adapted directly from Ruang 3D Scene)
+    // ========================================================================
+    function init3DOffice() {
+      if (threeInitialized) return;
+      const container = document.getElementById('office3d-canvas-wrap');
+
+      // Scene, Camera, Renderer
+      scene3d = new THREE.Scene();
+      scene3d.background = new THREE.Color(0x101311);
+
+      const width = container.clientWidth || window.innerWidth;
+      const height = container.clientHeight || (window.innerHeight - 57);
+
+      camera3d = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+      camera3d.position.set(16, 22, 28);
+
+      renderer3d = new THREE.WebGLRenderer({ antialias: true });
+      renderer3d.setSize(width, height);
+      renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer3d.shadowMap.enabled = true;
+      renderer3d.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer3d.domElement);
+
+      controls3d = new THREE.OrbitControls(camera3d, renderer3d.domElement);
+      controls3d.enableDamping = true;
+      controls3d.dampingFactor = 0.05;
+      controls3d.target.set(0, 2, 0);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.7);
+      scene3d.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.9);
+      dirLight.position.set(20, 40, 20);
+      dirLight.castShadow = true;
+      scene3d.add(dirLight);
+
+      // Build Office Architecture: Floor 1 (Workspace) & Floor 2 (Dormitory)
+      buildOfficeStructure3D();
+
+      // Handle Resize
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth || window.innerWidth;
+        const h = container.clientHeight || (window.innerHeight - 57);
+        camera3d.aspect = w / h;
+        camera3d.updateProjectionMatrix();
+        renderer3d.setSize(w, h);
+      });
+
+      // Animation Loop
+      function animate() {
+        requestAnimationFrame(animate);
+        controls3d.update();
+
+        // Idle bounce animation for working agents
+        const time = Date.now() * 0.003;
+        Object.values(agent3dMeshes).forEach(mesh => {
+          if (mesh.userData.status === 'WORKING') {
+            mesh.position.y = mesh.userData.baseY + Math.sin(time * 3) * 0.08;
+          }
+        });
+
+        renderer3d.render(scene3d, camera3d);
+      }
+      animate();
+
+      threeInitialized = true;
+    }
+
+    function buildOfficeStructure3D() {
+      // Floor 1 (Tiled floor)
+      const f1Geo = new THREE.BoxGeometry(28, 0.4, 20);
+      const f1Mat = new THREE.MeshStandardMaterial({ color: 0x1a211c, roughness: 0.8 });
+      const f1 = new THREE.Mesh(f1Geo, f1Mat);
+      f1.position.set(0, -0.2, 0);
+      f1.receiveShadow = true;
+      scene3d.add(f1);
+
+      // Floor 2 (Dormitory raised platform)
+      const f2Geo = new THREE.BoxGeometry(28, 0.4, 12);
+      const f2Mat = new THREE.MeshStandardMaterial({ color: 0x151a16, roughness: 0.8 });
+      const f2 = new THREE.Mesh(f2Geo, f2Mat);
+      f2.position.set(0, 5, -8);
+      f2.receiveShadow = true;
+      scene3d.add(f2);
+
+      // Back wall
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x121613 });
+      const backWallGeo = new THREE.BoxGeometry(28, 10, 0.4);
+      const backWall = new THREE.Mesh(backWallGeo, wallMat);
+      backWall.position.set(0, 5, -14);
+      scene3d.add(backWall);
+
+      // 6 Work Desks (Floor 1)
+      const deskMat = new THREE.MeshStandardMaterial({ color: 0x5c4436 });
+      const screenMat = new THREE.MeshStandardMaterial({ color: 0x6bd4c0, emissive: 0x6bd4c0, emissiveIntensity: 0.6 });
+
+      for (let i = 0; i < 6; i++) {
+        const x = -10 + (i % 3) * 6;
+        const z = -2 + Math.floor(i / 3) * 5;
+
+        // Desk Table
+        const table = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 2.2), deskMat);
+        table.position.set(x, 0.6, z);
+        table.castShadow = true;
+        scene3d.add(table);
+
+        // Computer Monitor
+        const monitor = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.15), screenMat);
+        monitor.position.set(x, 1.8, z - 0.4);
+        scene3d.add(monitor);
+      }
+
+      // Lounge Sofa (Floor 1)
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x28443e });
+      const sofa = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.4, 2.4), sofaMat);
+      sofa.position.set(9, 0.7, 4);
+      scene3d.add(sofa);
+
+      // Dorm Beds (Floor 2)
+      const bedMat = new THREE.MeshStandardMaterial({ color: 0x233446 });
+      const blanketMat = new THREE.MeshStandardMaterial({ color: 0x3c5878 });
+
+      for (let i = 0; i < 6; i++) {
+        const x = -10 + (i % 3) * 6;
+        const z = -11 + Math.floor(i / 3) * 4;
+
+        const bed = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.8, 2.0), bedMat);
+        bed.position.set(x, 5.4, z);
+        scene3d.add(bed);
+
+        const blanket = new THREE.Mesh(new THREE.BoxGeometry(3.22, 0.82, 1.2), blanketMat);
+        blanket.position.set(x, 5.41, z + 0.4);
+        scene3d.add(blanket);
+      }
+    }
+
+    function update3DOffice(data) {
+      if (!threeInitialized) return;
+
+      // Update positions of agents in 3D
+      data.agents.forEach((agent, index) => {
+        let mesh = agent3dMeshes[agent.id];
+        const look = getAgentLook(agent.id);
+
+        if (!mesh) {
+          // Buat voxel character mesh (Head, Torso, Legs)
+          const group = new THREE.Group();
+
+          const headMat = new THREE.MeshStandardMaterial({ color: look.skin });
+          const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), headMat);
+          head.position.y = 1.8;
+          group.add(head);
+
+          const shirtMat = new THREE.MeshStandardMaterial({ color: look.shirt });
+          const torso = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.6), shirtMat);
+          torso.position.y = 0.9;
+          group.add(torso);
+
+          const pantsMat = new THREE.MeshStandardMaterial({ color: look.pants });
+          const legs = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.5), pantsMat);
+          legs.position.y = 0.2;
+          group.add(legs);
+
+          group.userData = { agentId: agent.id, baseY: 0, status: agent.status };
+          scene3d.add(group);
+          agent3dMeshes[agent.id] = group;
+          mesh = group;
+        }
+
+        mesh.userData.status = agent.status;
+
+        if (agent.status === 'OFFLINE') {
+          // Lantai 2: Dorm Bed (berbaring horizontal)
+          const bedIndex = index % 6;
+          const x = -10 + (bedIndex % 3) * 6;
+          const z = -11 + Math.floor(bedIndex / 3) * 4;
+          mesh.position.set(x, 5.9, z);
+          mesh.rotation.z = Math.PI / 2;
+          mesh.userData.baseY = 5.9;
+        } else if (agent.status === 'WORKING') {
+          // Lantai 1: Workstation Desk (duduk menghadap monitor)
+          const deskIndex = index % 6;
+          const x = -10 + (deskIndex % 3) * 6;
+          const z = -2 + Math.floor(deskIndex / 3) * 5 + 1.2;
+          mesh.position.set(x, 0.6, z);
+          mesh.rotation.z = 0;
+          mesh.userData.baseY = 0.6;
+        } else {
+          // Lantai 1: Lounge Sofa / Ruang santai
+          mesh.position.set(7 + (index % 3) * 1.5, 0.6, 4 + Math.floor(index / 3) * 1.5);
+          mesh.rotation.z = 0;
+          mesh.userData.baseY = 0.6;
+        }
+      });
+    }
+
+    // View Switcher (2D vs 3D)
+    function switchView(view) {
+      currentView = view;
+      const btn2d = document.getElementById('btn-view-2d');
+      const btn3d = document.getElementById('btn-view-3d');
+      const canvasWrap = document.getElementById('office3d-canvas-wrap');
+      const floorsContainer = document.getElementById('floors-container');
+
+      if (view === '3d') {
+        btn2d.classList.remove('active');
+        btn3d.classList.add('active');
+        canvasWrap.classList.add('active');
+        floorsContainer.style.display = 'none';
+        init3DOffice();
+        if (stateCache) update3DOffice(stateCache);
+      } else {
+        btn3d.classList.remove('active');
+        btn2d.classList.add('active');
+        canvasWrap.classList.remove('active');
+        floorsContainer.style.display = 'flex';
+      }
+    }
+
+    // Initialize polling
+    refreshState();
+    setInterval(refreshState, 2500);
+  </script>
 </body>
 </html>
