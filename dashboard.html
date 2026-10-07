@@ -355,21 +355,150 @@ Menunggu instruksi pengguna...
 </div>
 
 <script>
+  const IS_HTTP = window.location.protocol.startsWith('http');
+
   function setPreset(text) {
     document.getElementById('prompt-input').value = text;
   }
 
-  function simulateRequest() {
+  // Load Initial Logs & KPIs from API if running under server.py
+  window.addEventListener('DOMContentLoaded', () => {
+    if (IS_HTTP) {
+      fetchLogs();
+      fetchKPI();
+      // Polling refresh setiap 5 detik
+      setInterval(fetchKPI, 5000);
+    }
+  });
+
+  async function fetchKPI() {
+    try {
+      const res = await fetch('/api/kpi');
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('kpi-total').innerText = data.total_transactions;
+        document.getElementById('kpi-pending').innerText = data.pending_approvals;
+      }
+    } catch (e) {
+      console.log('KPI fetch failed, using local display', e);
+    }
+  }
+
+  async function fetchLogs() {
+    try {
+      const res = await fetch('/api/logs');
+      if (res.ok) {
+        const logs = await res.json();
+        const tbody = document.getElementById('logs-tbody');
+        tbody.innerHTML = '';
+        logs.forEach(item => {
+          renderLogRow(item);
+        });
+      }
+    } catch (e) {
+      console.log('Log fetch failed', e);
+    }
+  }
+
+  function renderLogRow(item) {
+    const tbody = document.getElementById('logs-tbody');
+    const tr = document.createElement('tr');
+    const timeStr = item.timestamp ? item.timestamp.substring(11, 19) : new Date().toISOString().substring(11, 19);
+    const badgeClass = item.status === 'SUCCESS' ? 'badge-success' : 'badge-pending';
+    const isApproval = item.status === 'PENDING_APPROVAL';
+
+    const actionBtn = isApproval ? `
+      <button class="btn-action btn-approve" onclick="approveAction(this, '${item.agent_id}')">Approve</button>
+      <button class="btn-action btn-reject" onclick="rejectAction(this, '${item.agent_id}')">Reject</button>
+    ` : `<span style="color: var(--muted); font-size: 11px;">-</span>`;
+
+    tr.innerHTML = `
+      <td>${timeStr}</td>
+      <td><strong>${item.agent_id}</strong></td>
+      <td>"${item.input_snippet || item.input_text || ''}"</td>
+      <td>${item.intent || 'GENERAL'}</td>
+      <td><code>${(item.tools_called || []).join(', ') || '-'}</code></td>
+      <td><span class="badge ${badgeClass}">${item.status}</span></td>
+      <td>${actionBtn}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function setDeskState(agentId, state) {
+    // Reset all desks to idle first
+    const desks = ['desk-mgr', 'desk-sls', 'desk-inv', 'desk-cs', 'desk-fin'];
+    
+    let targetDesk = 'desk-sls';
+    if (agentId && agentId.includes('INV')) targetDesk = 'desk-inv';
+    else if (agentId && agentId.includes('CS')) targetDesk = 'desk-cs';
+    else if (agentId && agentId.includes('FIN')) targetDesk = 'desk-fin';
+    else if (agentId && agentId.includes('KPI') || agentId && agentId.includes('MGR')) targetDesk = 'desk-mgr';
+
+    const deskEl = document.getElementById(targetDesk);
+    if (deskEl) {
+      deskEl.className = `desk-card ${state}`;
+      const badge = deskEl.querySelector('.agent-status-badge');
+      if (badge) {
+        badge.className = `agent-status-badge status-${state}`;
+        badge.innerText = state.toUpperCase();
+      }
+    }
+  }
+
+  async function simulateRequest() {
     const text = document.getElementById('prompt-input').value.trim();
     if (!text) return;
 
     const term = document.getElementById('terminal-output');
     term.innerHTML += `\n\n[USER INPUT] "${text}"`;
-    
-    // Highlight desk animation
-    const deskSls = document.getElementById('desk-sls');
-    deskSls.className = "desk-card working";
-    
+    term.scrollTop = term.scrollHeight;
+
+    // Default activation
+    setDeskState('AGENT-SLS-01', 'working');
+
+    if (IS_HTTP) {
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, user_id: 'web_dashboard_user' })
+        });
+        const data = await response.json();
+        
+        const routing = data.routing;
+        const execution = data.execution;
+
+        term.innerHTML += `\n[ROUTER] Intent: ${routing.intent} (Confidence: ${(routing.confidence * 100).toFixed(0)}%)`;
+        term.innerHTML += `\n[DISPATCH] Assigned to ${routing.agent_name} (${routing.agent_id})`;
+        term.innerHTML += `\n[TOOLS] Executed: ${execution.tools_called.join(', ') || 'none'}`;
+        
+        if (execution.requires_approval) {
+          term.innerHTML += `\n[GUARDRAIL] Memerlukan Otorisasi Owner/Manager!`;
+          term.innerHTML += `\n[STATUS] PENDING_APPROVAL -> Tiket diajukan ke antrean Owner.`;
+          setDeskState(routing.agent_id, 'approval');
+        } else {
+          term.innerHTML += `\n[RESULT] Status: ${execution.status} (${data.latency_ms} ms)`;
+          setDeskState(routing.agent_id, 'idle');
+        }
+        term.innerHTML += `\n[AGENT REPLY] ${execution.reply_message}`;
+
+        // Perbarui tabel log & KPI
+        fetchLogs();
+        fetchKPI();
+      } catch (err) {
+        term.innerHTML += `\n[ERROR] Koneksi API gagal: ${err.message}. Menjalankan simulasi offline...`;
+        runOfflineSimulation(text);
+      }
+    } else {
+      runOfflineSimulation(text);
+    }
+
+    term.scrollTop = term.scrollHeight;
+    document.getElementById('prompt-input').value = "";
+  }
+
+  function runOfflineSimulation(text) {
+    const term = document.getElementById('terminal-output');
     setTimeout(() => {
       let routed = "Sales & Rental Agent";
       let intent = "RENTAL_SALES_INQUIRY";
@@ -389,17 +518,15 @@ Menunggu instruksi pengguna...
       if (isApproval) {
         term.innerHTML += `\n[GUARDRAIL] Diskon melebihi wewenang (>10%). Status: PENDING_APPROVAL.`;
         term.innerHTML += `\n[ALERT] Tiket persetujuan telah diteruskan ke antrean Owner!`;
-        deskSls.className = "desk-card approval";
+        setDeskState('AGENT-SLS-01', 'approval');
         addLogRow(routed, text, intent, ["check_inventory", "request_approval"], "PENDING APPROVAL", true);
       } else {
         term.innerHTML += `\n[TOOLS] Executed: check_inventory, create_quotation. Status: SUCCESS.`;
-        deskSls.className = "desk-card";
+        setDeskState('AGENT-SLS-01', 'idle');
         addLogRow(routed, text, intent, ["check_inventory", "create_quotation"], "SUCCESS", false);
       }
-
       term.scrollTop = term.scrollHeight;
-      document.getElementById('prompt-input').value = "";
-    }, 600);
+    }, 500);
   }
 
   function addLogRow(agent, input, intent, tools, status, needsApproval) {
@@ -409,8 +536,8 @@ Menunggu instruksi pengguna...
 
     const badgeClass = status === 'SUCCESS' ? 'badge-success' : 'badge-pending';
     const actionBtn = needsApproval ? `
-      <button class="btn-action btn-approve" onclick="approveAction(this)">Approve</button>
-      <button class="btn-action btn-reject" onclick="rejectAction(this)">Reject</button>
+      <button class="btn-action btn-approve" onclick="approveAction(this, 'SLS')">Approve</button>
+      <button class="btn-action btn-reject" onclick="rejectAction(this, 'SLS')">Reject</button>
     ` : `<span style="color: var(--muted); font-size: 11px;">-</span>`;
 
     tr.innerHTML = `
@@ -424,12 +551,20 @@ Menunggu instruksi pengguna...
     `;
     tbody.prepend(tr);
 
-    // Update KPI
     const totalEl = document.getElementById('kpi-total');
-    totalEl.innerText = parseInt(totalEl.innerText) + 1;
+    if (totalEl) totalEl.innerText = parseInt(totalEl.innerText || 0) + 1;
   }
 
-  function approveAction(btn) {
+  async function approveAction(btn, agentId) {
+    if (IS_HTTP) {
+      try {
+        await fetch('/api/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approval_id: 'APV-CURRENT', action: 'APPROVED' })
+        });
+      } catch (e) {}
+    }
     const row = btn.closest('tr');
     const badge = row.querySelector('.badge');
     badge.className = 'badge badge-success';
@@ -437,10 +572,22 @@ Menunggu instruksi pengguna...
     btn.parentElement.innerHTML = '<span style="color: #10B981; font-weight: 600; font-size: 11px;">✓ Disetujui</span>';
     
     const pendingEl = document.getElementById('kpi-pending');
-    pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+    if (pendingEl) pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+
+    // Reset meja dari status approval
+    setDeskState(agentId || 'AGENT-SLS-01', 'idle');
   }
 
-  function rejectAction(btn) {
+  async function rejectAction(btn, agentId) {
+    if (IS_HTTP) {
+      try {
+        await fetch('/api/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approval_id: 'APV-CURRENT', action: 'REJECTED' })
+        });
+      } catch (e) {}
+    }
     const row = btn.closest('tr');
     const badge = row.querySelector('.badge');
     badge.className = 'badge';
@@ -450,7 +597,9 @@ Menunggu instruksi pengguna...
     btn.parentElement.innerHTML = '<span style="color: #EF4444; font-weight: 600; font-size: 11px;">✕ Ditolak</span>';
     
     const pendingEl = document.getElementById('kpi-pending');
-    pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+    if (pendingEl) pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+
+    setDeskState(agentId || 'AGENT-SLS-01', 'idle');
   }
 </script>
 
