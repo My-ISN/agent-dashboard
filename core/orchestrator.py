@@ -1,7 +1,7 @@
 """
 ISKOM AI-OS Master Core Orchestrator
 Kernel utama eksekusi instruksi:
-USER -> AI CORE -> ROUTER -> AGENT -> KNOWLEDGE -> RESULT
+USER -> AI CORE -> ROUTER -> AGENT -> KNOWLEDGE & TOOLS -> RESULT
 """
 
 import time
@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional
 from core.models import UserMessage, CoreResponse, RouteDecision
 from core.router import IntentRouter
 from core.knowledge_loader import KnowledgeBase
+from tools.business_tools import registry as tool_registry
 from agents.base_agent import BaseAgent
 from agents.sales_agent import SalesRentalAgent
 from agents.inventory_agent import InventoryAgent
@@ -18,22 +19,23 @@ from agents.kpi_agent import KPIExecutiveAgent
 
 
 class CoreOrchestrator:
-    """Master Orchestrator untuk mengoordinasi Router, Knowledge Base, dan Agen Spesialis"""
+    """Master Orchestrator untuk mengoordinasi Router, Knowledge Base, Tool Registry, dan Agen"""
 
     def __init__(self, knowledge_dir: Optional[str] = None):
         self.knowledge = KnowledgeBase(knowledge_dir=knowledge_dir)
+        self.tools = tool_registry
         self.router = IntentRouter()
         self.agents: Dict[str, BaseAgent] = {}
         self._register_default_agents()
 
     def _register_default_agents(self):
-        """Pendaftaran seluruh agen spesialis ke dalam kernel dengan akses Knowledge Base"""
+        """Pendaftaran seluruh agen spesialis ke dalam kernel dengan akses Knowledge & Tools"""
         agents_list = [
-            SalesRentalAgent(knowledge_base=self.knowledge),
-            InventoryAgent(knowledge_base=self.knowledge),
-            FinanceAgent(knowledge_base=self.knowledge),
-            CustomerServiceAgent(knowledge_base=self.knowledge),
-            KPIExecutiveAgent(knowledge_base=self.knowledge)
+            SalesRentalAgent(knowledge_base=self.knowledge, tool_registry=self.tools),
+            InventoryAgent(knowledge_base=self.knowledge, tool_registry=self.tools),
+            FinanceAgent(knowledge_base=self.knowledge, tool_registry=self.tools),
+            CustomerServiceAgent(knowledge_base=self.knowledge, tool_registry=self.tools),
+            KPIExecutiveAgent(knowledge_base=self.knowledge, tool_registry=self.tools)
         ]
         for ag in agents_list:
             self.agents[ag.agent_id] = ag
@@ -53,7 +55,7 @@ class CoreOrchestrator:
         if not agent:
             agent = self.agents["AGENT-SLS-01"]
 
-        # 4. Delegasikan eksekusi ke agen dengan dukungan Knowledge Base
+        # 4. Delegasikan eksekusi ke agen dengan dukungan Knowledge & Tools
         execution_result = await agent.process(msg, route_decision)
 
         # 5. Hitung latency total pemrosesan

@@ -1,6 +1,6 @@
 """
 ISKOM AI-OS Base Agent Class
-Standard interface for all specialist agents with Knowledge Base access.
+Standard interface for all specialist agents with Knowledge Base & Tool Registry access.
 """
 
 from abc import ABC, abstractmethod
@@ -17,11 +17,13 @@ class BaseAgent(ABC):
     capabilities: List[str]
     allowed_tools: List[str]
     knowledge: Any = None  # Reference to KnowledgeBase
+    tools: Any = None      # Reference to ToolRegistry
 
-    def __init__(self, knowledge_base: Any = None):
+    def __init__(self, knowledge_base: Any = None, tool_registry: Any = None):
         if not hasattr(self, 'agent_id'):
             raise NotImplementedError("Setiap agent wajib memiliki agent_id")
         self.knowledge = knowledge_base
+        self.tools = tool_registry
 
     @abstractmethod
     async def process(self, message: UserMessage, route_decision: RouteDecision) -> AgentExecutionResult:
