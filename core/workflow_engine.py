@@ -33,7 +33,7 @@ class WorkflowInstance:
     # Definisi Transisi yang Diperbolehkan (State Machine Transition Graph)
     ALLOWED_TRANSITIONS = {
         LeadState.NEW_LEAD: [LeadState.QUALIFIED, LeadState.LOST],
-        LeadState.QUALIFIED: [LeadState.FOLLOW_UP, LeadState.QUOTATION_SENT, LeadState.LOST],
+        LeadState.QUALIFIED: [LeadState.FOLLOW_UP, LeadState.QUOTATION_SENT, LeadState.NEGOTIATION, LeadState.LOST],
         LeadState.FOLLOW_UP: [LeadState.QUOTATION_SENT, LeadState.LOST],
         LeadState.QUOTATION_SENT: [LeadState.NEGOTIATION, LeadState.CLOSING, LeadState.LOST],
         LeadState.NEGOTIATION: [LeadState.PENDING_APPROVAL, LeadState.CLOSING, LeadState.LOST],

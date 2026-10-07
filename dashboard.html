@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISKOM AI-OS — Virtual Office & Multi-Agent Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0E14;
+      --card: rgba(18, 24, 38, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #6366F1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --text: #F3F4F6;
+      --muted: #9CA3AF;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; box-shadow: 0 0 20px var(--primary-glow);
+    }
+    .brand-title h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .brand-title p { font-size: 13px; color: var(--muted); }
+    .live-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--accent);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px; margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 20px; backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); }
+    .kpi-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 800; }
+    .kpi-sub { font-size: 12px; color: var(--accent); margin-top: 4px; }
+
+    /* Virtual Office 2D Layout */
+    .section-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .virtual-office {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 28px;
+      backdrop-filter: blur(12px);
+    }
+    .office-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px;
+    }
+    .desk-card {
+      background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px; padding: 18px; text-align: center;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .desk-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(99, 102, 241, 0.3); }
+    .avatar-wrapper {
+      width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 12px;
+      background: rgba(99, 102, 241, 0.1); border: 2px solid rgba(99, 102, 241, 0.3);
+      display: flex; align-items: center; justify-content: center; font-size: 30px;
+      position: relative;
+    }
+    .desk-card.working .avatar-wrapper {
+      border-color: var(--accent); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    }
+    .desk-card.approval .avatar-wrapper {
+      border-color: var(--warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      animation: alertPulse 1.5s infinite;
+    }
+    @keyframes alertPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .agent-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .agent-role { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+    .agent-status-badge {
+      display: inline-block; padding: 4px 10px; border-radius: 99px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+    }
+    .status-idle { background: rgba(156, 163, 175, 0.15); color: #9CA3AF; }
+    .status-working { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+    .status-approval { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+
+    /* Interactive Console & Simulator */
+    .console-section {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .console-section { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card); border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 20px; backdrop-filter: blur(12px);
+    }
+    .input-box {
+      width: 100%; padding: 14px 16px; border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text); font-family: inherit; font-size: 14px; margin-bottom: 12px;
+      outline: none; resize: vertical; min-height: 80px;
+    }
+    .input-box:focus { border-color: var(--primary); }
+    .btn-send {
+      background: linear-gradient(135deg, #6366F1, #4F46E5); color: white;
+      border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s; font-size: 14px;
+    }
+    .btn-send:hover { opacity: 0.9; }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .btn-preset {
+      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted); padding: 4px 10px; border-radius: 8px; font-size: 11px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-preset:hover { color: var(--text); background: rgba(99, 102, 241, 0.2); }
+
+    /* Output Console */
+    .terminal {
+      background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; line-height: 1.6; height: 180px; overflow-y: auto; color: #D1D5DB;
+    }
+
+    /* Logs Table */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th {
+      padding: 12px 14px; border-bottom: 1px solid var(--card-border);
+      color: var(--muted); font-size: 12px; font-weight: 600;
+    }
+    td { padding: 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+    tr:hover { background: rgba(255, 255, 255, 0.02); }
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+    .btn-action {
+      padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      border: none; cursor: pointer; margin-right: 4px;
+    }
+    .btn-approve { background: var(--accent); color: #000; }
+    .btn-reject { background: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🏢</div>
+      <div class="brand-title">
+        <h1>ISKOM AI-OS Dashboard</h1>
+        <p>Virtual Office & Autonomous Multi-Agent Management (Hermes Engine)</p>
+      </div>
+    </div>
+    <div class="live-badge">
+      <div class="pulse-dot"></div>
+      5 Agents Online
+    </div>
+  </header>
+
+  <!-- KPI Metrics Strip -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Requests</div>
+      <div class="kpi-value" id="kpi-total">24</div>
+      <div class="kpi-sub">↑ 100% Berhasil</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Agents</div>
+      <div class="kpi-value">5 / 5</div>
+      <div class="kpi-sub">All Systems Healthy</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pending Approval (Owner)</div>
+      <div class="kpi-value" id="kpi-pending" style="color: var(--warning);">1</div>
+      <div class="kpi-sub" style="color: var(--warning);">Diskon > 10% Menunggu Review</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Average Latency</div>
+      <div class="kpi-value" id="kpi-latency">1.4 ms</div>
+      <div class="kpi-sub">Ultra Fast Execution</div>
+    </div>
+  </div>
+
+  <!-- Virtual Office 2D Layout -->
+  <div class="virtual-office">
+    <div class="section-title">
+      <span>🏢</span> Kantor Virtual 2D — Live Multi-Agent Workspace
+    </div>
+    <div class="office-grid">
+      <!-- Desk 1 -->
+      <div class="desk-card" id="desk-mgr">
+        <div class="avatar-wrapper">👑</div>
+        <div class="agent-name">AI Business Manager</div>
+        <div class="agent-role">Executive Orchestrator</div>
+        <span class="agent-status-badge status-idle">STANDBY</span>
+      </div>
+
+      <!-- Desk 2 -->
+      <div class="desk-card working" id="desk-sls">
+        <div class="avatar-wrapper">💼</div>
+        <div class="agent-name">Sales & Rental Agent</div>
+        <div class="agent-role">Consultant & Quotation</div>
+        <span class="agent-status-badge status-working">WORKING</span>
+      </div>
+
+      <!-- Desk 3 -->
+      <div class="desk-card" id="desk-inv">
+        <div class="avatar-wrapper">📦</div>
+        <div class="agent-name">Inventory Agent</div>
+        <div class="agent-role">Stock & Asset Control</div>
+        <span class="agent-status-badge status-idle">STANDBY</span>
+      </div>
+
+      <!-- Desk 4 -->
+      <div class="desk-card" id="desk-fin">
+        <div class="avatar-wrapper">💰</div>
+        <div class="agent-name">Finance Agent</div>
+        <div class="agent-role">Billing & Invoicing</div>
+        <span class="agent-status-badge status-idle">STANDBY</span>
+      </div>
+
+      <!-- Desk 5 -->
+      <div class="desk-card" id="desk-cs">
+        <div class="avatar-wrapper">🎧</div>
+        <div class="agent-name">Customer Care</div>
+        <div class="agent-role">FAQ & Support 24/7</div>
+        <span class="agent-status-badge status-idle">STANDBY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Simulator & Console -->
+  <div class="console-section">
+    <!-- Panel Input -->
+    <div class="panel">
+      <div class="section-title"><span>💬</span> Instruksikan Tim AI (Simulasi Prompt)</div>
+      <textarea id="prompt-input" class="input-box" placeholder="Ketik instruksi sewa atau kendala unit di sini... (contoh: Saya butuh 20 laptop ThinkPad)"></textarea>
+      <button class="btn-send" onclick="simulateRequest()">Kirim Instruksi</button>
+      
+      <div class="presets">
+        <span style="font-size: 11px; color: var(--muted); margin-right: 4px;">Preset Cepat:</span>
+        <button class="btn-preset" onclick="setPreset('Saya mau sewa 20 unit ThinkPad T480 untuk 1 bulan')">Sewa 20 Laptop</button>
+        <button class="btn-preset" onclick="setPreset('Sewa 10 laptop tapi tolong kasih diskon 20% ya')">Diskon 20% (Trigger Approval)</button>
+        <button class="btn-preset" onclick="setPreset('Cek ketersediaan MacBook Pro M1 di gudang')">Cek Stok Gudang</button>
+        <button class="btn-preset" onclick="setPreset('Laptop yang disewa layarnya flickering mati')">Komplain Rusak</button>
+      </div>
+    </div>
+
+    <!-- Output Terminal -->
+    <div class="panel">
+      <div class="section-title"><span>📜</span> Live Activity & Response Terminal</div>
+      <div class="terminal" id="terminal-output">
+[SYSTEM READY] ISKOM AI-OS Kernel Online.
+[ROUTER] Intent Router initialized with 5 specialized agents.
+[KNOWLEDGE] Loaded 6 products, 5 FAQ items, SOP & company policies.
+[TOOLS] RBAC Guard active across 8 registered business tools.
+Menunggu instruksi pengguna...
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Logs Table -->
+  <div class="panel">
+    <div class="section-title"><span>📋</span> Audit Trail Activity Log (Terbaru)</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu (UTC)</th>
+            <th>Agent</th>
+            <th>Input Pengguna</th>
+            <th>Intent / Keputusan</th>
+            <th>Tools Dipanggil</th>
+            <th>Status</th>
+            <th>Aksi Owner</th>
+          </tr>
+        </thead>
+        <tbody id="logs-tbody">
+          <tr>
+            <td>11:45:10</td>
+            <td><strong>Sales Agent</strong></td>
+            <td>"Saya mau sewa 10 unit ThinkPad T480 diskon 25%"</td>
+            <td>RENTAL_SALES_INQUIRY</td>
+            <td><code>check_inventory</code>, <code>request_approval</code></td>
+            <td><span class="badge badge-pending">PENDING APPROVAL</span></td>
+            <td>
+              <button class="btn-action btn-approve" onclick="approveAction(this)">Approve</button>
+              <button class="btn-action btn-reject" onclick="rejectAction(this)">Reject</button>
+            </td>
+          </tr>
+          <tr>
+            <td>11:43:20</td>
+            <td><strong>Customer Care</strong></td>
+            <td>"Syarat sewa laptop untuk perorangan apa saja?"</td>
+            <td>CUSTOMER_SUPPORT_OR_FAQ</td>
+            <td><code>search_knowledge_faq</code></td>
+            <td><span class="badge badge-success">SUCCESS</span></td>
+            <td><span style="color: var(--muted); font-size: 11px;">-</span></td>
+          </tr>
+          <tr>
+            <td>11:40:15</td>
+            <td><strong>Inventory Agent</strong></td>
+            <td>"Cek ketersediaan MacBook Pro M1 di gudang"</td>
+            <td>INVENTORY_STOCK_CHECK</td>
+            <td><code>check_inventory</code></td>
+            <td><span class="badge badge-success">SUCCESS</span></td>
+            <td><span style="color: var(--muted); font-size: 11px;">-</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setPreset(text) {
+    document.getElementById('prompt-input').value = text;
+  }
+
+  function simulateRequest() {
+    const text = document.getElementById('prompt-input').value.trim();
+    if (!text) return;
+
+    const term = document.getElementById('terminal-output');
+    term.innerHTML += `\n\n[USER INPUT] "${text}"`;
+    
+    // Highlight desk animation
+    const deskSls = document.getElementById('desk-sls');
+    deskSls.className = "desk-card working";
+    
+    setTimeout(() => {
+      let routed = "Sales & Rental Agent";
+      let intent = "RENTAL_SALES_INQUIRY";
+      let isApproval = text.includes("diskon 20%") || text.includes("diskon 25%");
+
+      if (text.includes("Cek") || text.includes("stok")) {
+        routed = "Inventory & Unit Agent";
+        intent = "INVENTORY_STOCK_CHECK";
+      } else if (text.includes("rusak") || text.includes("flickering")) {
+        routed = "Customer Care Agent";
+        intent = "TECHNICAL_SUPPORT_COMPLAINT";
+      }
+
+      term.innerHTML += `\n[ROUTER] Intent identified: ${intent}`;
+      term.innerHTML += `\n[DELEGATION] Directed to ${routed}`;
+
+      if (isApproval) {
+        term.innerHTML += `\n[GUARDRAIL] Diskon melebihi wewenang (>10%). Status: PENDING_APPROVAL.`;
+        term.innerHTML += `\n[ALERT] Tiket persetujuan telah diteruskan ke antrean Owner!`;
+        deskSls.className = "desk-card approval";
+        addLogRow(routed, text, intent, ["check_inventory", "request_approval"], "PENDING APPROVAL", true);
+      } else {
+        term.innerHTML += `\n[TOOLS] Executed: check_inventory, create_quotation. Status: SUCCESS.`;
+        deskSls.className = "desk-card";
+        addLogRow(routed, text, intent, ["check_inventory", "create_quotation"], "SUCCESS", false);
+      }
+
+      term.scrollTop = term.scrollHeight;
+      document.getElementById('prompt-input').value = "";
+    }, 600);
+  }
+
+  function addLogRow(agent, input, intent, tools, status, needsApproval) {
+    const tbody = document.getElementById('logs-tbody');
+    const tr = document.createElement('tr');
+    const now = new Date().toISOString().substring(11, 19);
+
+    const badgeClass = status === 'SUCCESS' ? 'badge-success' : 'badge-pending';
+    const actionBtn = needsApproval ? `
+      <button class="btn-action btn-approve" onclick="approveAction(this)">Approve</button>
+      <button class="btn-action btn-reject" onclick="rejectAction(this)">Reject</button>
+    ` : `<span style="color: var(--muted); font-size: 11px;">-</span>`;
+
+    tr.innerHTML = `
+      <td>${now}</td>
+      <td><strong>${agent}</strong></td>
+      <td>"${input}"</td>
+      <td>${intent}</td>
+      <td><code>${tools.join(', ')}</code></td>
+      <td><span class="badge ${badgeClass}">${status}</span></td>
+      <td>${actionBtn}</td>
+    `;
+    tbody.prepend(tr);
+
+    // Update KPI
+    const totalEl = document.getElementById('kpi-total');
+    totalEl.innerText = parseInt(totalEl.innerText) + 1;
+  }
+
+  function approveAction(btn) {
+    const row = btn.closest('tr');
+    const badge = row.querySelector('.badge');
+    badge.className = 'badge badge-success';
+    badge.innerText = 'APPROVED (OWNER)';
+    btn.parentElement.innerHTML = '<span style="color: #10B981; font-weight: 600; font-size: 11px;">✓ Disetujui</span>';
+    
+    const pendingEl = document.getElementById('kpi-pending');
+    pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+  }
+
+  function rejectAction(btn) {
+    const row = btn.closest('tr');
+    const badge = row.querySelector('.badge');
+    badge.className = 'badge';
+    badge.style.background = 'rgba(239, 68, 68, 0.2)';
+    badge.style.color = '#EF4444';
+    badge.innerText = 'REJECTED';
+    btn.parentElement.innerHTML = '<span style="color: #EF4444; font-weight: 600; font-size: 11px;">✕ Ditolak</span>';
+    
+    const pendingEl = document.getElementById('kpi-pending');
+    pendingEl.innerText = Math.max(0, parseInt(pendingEl.innerText) - 1);
+  }
+</script>
+
+</body>
+</html>

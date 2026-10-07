@@ -1,7 +1,7 @@
 """
 ISKOM AI-OS Master Core Orchestrator
 Kernel utama eksekusi instruksi:
-USER -> AI CORE -> ROUTER -> AGENT -> KNOWLEDGE & TOOLS -> WORKFLOW -> RESULT
+USER -> AI CORE -> ROUTER -> AGENT -> KNOWLEDGE & TOOLS -> WORKFLOW -> LOGGER -> RESULT
 """
 
 import time
@@ -10,6 +10,7 @@ from core.models import UserMessage, CoreResponse, RouteDecision
 from core.router import IntentRouter
 from core.knowledge_loader import KnowledgeBase
 from core.workflow_engine import WorkflowEngine, LeadState
+from core.logger import ActivityLogger
 from tools.business_tools import registry as tool_registry
 from agents.base_agent import BaseAgent
 from agents.sales_agent import SalesRentalAgent
@@ -20,12 +21,13 @@ from agents.kpi_agent import KPIExecutiveAgent
 
 
 class CoreOrchestrator:
-    """Master Orchestrator untuk mengoordinasi Router, Knowledge, Tools, Workflow, dan Agen"""
+    """Master Orchestrator untuk mengoordinasi Router, Knowledge, Tools, Workflow, Logger, dan Agen"""
 
-    def __init__(self, knowledge_dir: Optional[str] = None):
+    def __init__(self, knowledge_dir: Optional[str] = None, log_dir: Optional[str] = None):
         self.knowledge = KnowledgeBase(knowledge_dir=knowledge_dir)
         self.tools = tool_registry
         self.workflows = WorkflowEngine()
+        self.logger = ActivityLogger(log_dir=log_dir)
         self.router = IntentRouter()
         self.agents: Dict[str, BaseAgent] = {}
         self._register_default_agents()
@@ -60,7 +62,7 @@ class CoreOrchestrator:
         # 4. Delegasikan eksekusi ke agen
         execution_result = await agent.process(msg, route_decision)
 
-        # 5. Jika ini prospek sewa baru, catat / sinkronkan ke Workflow Engine
+        # 5. Sinkronkan ke Workflow Engine jika berkaitan dengan sewa
         if route_decision.intent == "RENTAL_SALES_INQUIRY":
             wf = self.workflows.start_lead_workflow(customer_name=user_id)
             wf.transition_to(LeadState.QUALIFIED, actor=agent.agent_id, notes="Kualifikasi kebutuhan sewa selesai")
@@ -73,7 +75,23 @@ class CoreOrchestrator:
         # 6. Hitung latency total pemrosesan
         latency_ms = int((time.time() - start_time) * 1000)
 
-        # 7. Bentuk CoreResponse final
+        # 7. AUDIT TRAIL LOGGING (10 Parameter Wajib)
+        self.logger.log_action(
+            user=user_id,
+            agent_id=agent.agent_id,
+            agent_name=agent.name,
+            user_input=user_text,
+            keputusan=f"{route_decision.intent} ({route_decision.confidence*100:.0f}%)",
+            tools_called=execution_result.tools_called,
+            action=execution_result.action_taken,
+            result=execution_result.reply_message[:150],
+            error=None,
+            approval_required=execution_result.requires_approval,
+            approval_details=execution_result.approval_details,
+            latency_ms=latency_ms
+        )
+
+        # 8. Bentuk CoreResponse final
         return CoreResponse(
             user_input=user_text,
             routing=route_decision,
