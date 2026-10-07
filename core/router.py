@@ -52,15 +52,15 @@ class IntentRouter:
                 reasoning="Instruksi berkaitan dengan penagihan invoice, status pembayaran, atau urusan finansial sewa."
             )
 
-        # 3. Deteksi Kendala Teknis / Komplain / Customer Service / Rusak
-        if any(k in text for k in ["rusak", "mati", "error", "bergaris", "flickering", "komplain", "kendala", "bantuan teknis", "charger rusak", "baterai drop"]):
+        # 3. Deteksi Kendala Teknis / Komplain / Customer Service / FAQ & Syarat
+        if any(k in text for k in ["rusak", "mati", "error", "bergaris", "flickering", "komplain", "kendala", "bantuan teknis", "charger rusak", "baterai drop", "syarat", "jaminan", "ktp", "prosedur sewa", "faq"]):
             return RouteDecision(
                 agent_id="AGENT-CS-01",
                 agent_name=self.agent_registry["AGENT-CS-01"],
-                intent="TECHNICAL_SUPPORT_COMPLAINT",
+                intent="CUSTOMER_SUPPORT_OR_FAQ",
                 confidence=0.98,
                 extracted_entities=entities,
-                reasoning="Instruksi melaporkan masalah fisik atau keluhan operasional unit laptop sewa."
+                reasoning="Instruksi berupa pertanyaan syarat sewa/FAQ atau keluhan operasional unit laptop."
             )
 
         # 4. Deteksi Inventory / Cek Stok Fisik Gudang

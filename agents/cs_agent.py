@@ -1,6 +1,7 @@
 """
 Customer Service & FAQ Specialist Agent (AGENT-CS-01)
-Menangani komplain kendala teknis unit laptop, panduan troubleshooting, dan syarat sewa.
+Menangani komplain kendala teknis unit laptop, panduan troubleshooting, dan syarat sewa
+berdasarkan FAQ dan SOP resmi dari Knowledge Base.
 """
 
 from agents.base_agent import BaseAgent
@@ -15,15 +16,31 @@ class CustomerServiceAgent(BaseAgent):
     allowed_tools = ["search_knowledge_faq", "create_support_ticket", "lookup_active_rental"]
 
     async def process(self, message: UserMessage, route_decision: RouteDecision) -> AgentExecutionResult:
-        tools_called = ["create_support_ticket"]
+        query = message.text.lower()
+        tools_called = ["search_knowledge_faq"]
 
+        # Cek apakah ini pertanyaan seputar syarat sewa / jaminan
+        if any(w in query for w in ["syarat", "jaminan", "ktp", "deposit", "prosedur"]):
+            faq_item = self.knowledge.search_faq(query) if self.knowledge else None
+            answer = faq_item["answer"] if faq_item else "Syarat sewa perorangan: KTP Asli + Deposit Rp 200rb - 500rb."
+            return AgentExecutionResult(
+                agent_id=self.agent_id,
+                action_taken="FAQ_ANSWERED",
+                reply_message=f"Informasi Layanan ISKOM:\n{answer}",
+                status="SUCCESS",
+                tools_called=tools_called,
+                requires_approval=False
+            )
+
+        # Jika ini laporan kendala teknis / kerusakan unit
+        tools_called.append("create_support_ticket")
         return AgentExecutionResult(
             agent_id=self.agent_id,
             action_taken="TICKET_CREATED",
             reply_message=(
-                "Customer Care ISKOM: Kami mohon maaf atas kendala teknis pada unit laptop sewa Anda. "
-                "Tiket bantuan telah otomatis kami terbitkan di HRIS Helpdesk. Tim teknisi operasional kami "
-                "akan segera menghubungi Anda untuk koordinasi remote check atau penukaran unit (swap unit)."
+                "Customer Care ISKOM: Kami memohon maaf atas kendala pada unit laptop sewa Anda. "
+                "Sesuai SOP Layanan ISKOM (Garansi Swap Unit 1x24 jam), tiket perbaikan telah diterbitkan. "
+                "Teknisi kami siap melakukan penggantian unit cadangan dengan spek sepadan ke lokasi Anda."
             ),
             status="SUCCESS",
             tools_called=tools_called,

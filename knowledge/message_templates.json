@@ -1,0 +1,6 @@
+{
+  "quotation_sent": "Yth. Bapak/Ibu {customer_name},\nBerikut kami lampirkan Surat Penawaran Resmi Sewa Laptop ISKOM #{quotation_no} untuk {qty} unit {unit_model}. Penawaran ini berlaku 24 jam ke depan. Silakan hubungi kami untuk konfirmasi jadwal pengiriman. Terima kasih!",
+  "followup_gentle": "Halo Kak {customer_name}, semoga harinya menyenangkan! Menindaklanjuti penawaran sewa laptop kemarin #{quotation_no}, apakah ada spesifikasi atau kebutuhan tambahan yang bisa kami bantu sesuaikan? Unit saat ini masih aman teralokasi di gudang kami.",
+  "invoice_due_reminder": "Pemberitahuan Tagihan ISKOM: Tagihan sewa nomor {invoice_no} sebesar Rp {amount} akan jatuh tempo pada {due_date}. Pembayaran dapat dilakukan via transfer ke rekening resmi Bank BCA 123-456-7890 a.n. PT ISKOM. Konfirmasi bukti bayar dapat dikirimkan ke kontak ini.",
+  "swap_unit_notice": "Halo Kak {customer_name}, laporan kendala unit Anda telah kami terima. Teknisi kami sedang menyiapkan unit pengganti (Swap Unit) dengan spek setara dan dijadwalkan meluncur ke lokasi Anda hari ini. Mohon ditunggu ya!"
+}

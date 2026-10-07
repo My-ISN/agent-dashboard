@@ -1,6 +1,7 @@
 """
 Sales & Rental Specialist Agent (AGENT-SLS-01)
-Menangani konsultasi sewa laptop, kualifikasi kebutuhan, kalkulasi harga, dan pengajuan diskon.
+Menangani konsultasi sewa laptop, kualifikasi kebutuhan, kalkulasi harga, dan pengajuan diskon
+berdasarkan data resmi dari Knowledge Base.
 """
 
 from typing import Dict, Any
@@ -18,20 +19,30 @@ class SalesRentalAgent(BaseAgent):
     async def process(self, message: UserMessage, route_decision: RouteDecision) -> AgentExecutionResult:
         entities = route_decision.extracted_entities
         qty = entities.get("quantity", 1)
-        unit = entities.get("unit_model", "Laptop Standar")
+        unit_query = entities.get("unit_model", "ThinkPad")
         discount = entities.get("discount_percent", 0.0)
+
+        # Ambil data unit riil dari Knowledge Base
+        product = None
+        if self.knowledge:
+            product = self.knowledge.get_product_by_model(unit_query)
+
+        product_name = product["model"] if product else unit_query
+        specs = product["specs"] if product else "Core i5 / RAM 16GB"
+        daily_rate = product["rates"]["daily"] if product else 75000
+        monthly_rate = product["rates"]["monthly"] if product else 950000
 
         tools_called = ["search_laptop_catalog", "calculate_rental_pricing"]
 
-        # Evaluasi aturan diskon jika ada permintaan diskon
+        # Evaluasi aturan diskon jika melebihi batas 10%
         if discount > 10.0:
             return AgentExecutionResult(
                 agent_id=self.agent_id,
                 action_taken="DISCOUNT_APPROVAL_REQUIRED",
                 reply_message=(
-                    f"Permintaan sewa untuk {qty} unit '{unit}' dengan permohonan diskon {discount}% "
-                    f"telah kami catat. Karena diskon melebihi wewenang mandiri agen (> 10%), "
-                    f"pengajuan penawaran ini telah diteruskan ke Owner untuk mendapatkan persetujuan (estimasi < 10 menit)."
+                    f"Permintaan sewa untuk {qty} unit '{product_name}' ({specs}) dengan pengajuan diskon {discount}% "
+                    f"telah kami terima. Sesuai aturan perusahaan, diskon di atas 10% memerlukan persetujuan Owner. "
+                    f"Tiket persetujuan telah otomatis kami kirimkan ke dashboard Owner."
                 ),
                 status="PENDING_APPROVAL",
                 tools_called=tools_called,
@@ -40,17 +51,22 @@ class SalesRentalAgent(BaseAgent):
                     "category": "DISCOUNT_REQUEST",
                     "requested_discount_percent": discount,
                     "quantity": qty,
-                    "unit": unit
+                    "unit": product_name,
+                    "estimated_monthly_total": monthly_rate * qty
                 }
             )
 
-        # Transaksi normal
+        # Transaksi normal: ambil rincian tarif sewa riil
+        total_estimate = monthly_rate * qty
         return AgentExecutionResult(
             agent_id=self.agent_id,
             action_taken="PREPARE_QUOTATION",
             reply_message=(
-                f"Halo! Kebutuhan sewa Anda untuk {qty} unit '{unit}' telah kami verifikasi. "
-                f"Spesifikasi unit dan estimasi penawaran resmi (Quotation) sedang disiapkan sesuai tarif standar ISKOM."
+                f"Kebutuhan sewa Anda untuk {qty} unit '{product_name}' telah diverifikasi di katalog ISKOM.\n"
+                f"- Spesifikasi: {specs}\n"
+                f"- Tarif Sewa: Rp {daily_rate:,}/hari atau Rp {monthly_rate:,}/bulan per unit.\n"
+                f"- Estimasi Total: Rp {total_estimate:,} (untuk {qty} unit/bulan).\n"
+                f"Draf Quotation resmi sedang diterbitkan."
             ),
             status="SUCCESS",
             tools_called=tools_called,

@@ -1,0 +1,86 @@
+[
+  {
+    "sku": "NB-LNV-T480",
+    "brand": "Lenovo",
+    "model": "ThinkPad T480",
+    "specs": "Intel Core i5-8350U, RAM 16GB, SSD 256GB, Layar 14 Inch FHD",
+    "rates": {
+      "daily": 75000,
+      "weekly": 350000,
+      "monthly": 950000
+    },
+    "min_deposit": 200000,
+    "stock_total": 45,
+    "category": "Office Standard"
+  },
+  {
+    "sku": "NB-LNV-T490",
+    "brand": "Lenovo",
+    "model": "ThinkPad T490",
+    "specs": "Intel Core i7-8565U, RAM 16GB, SSD 512GB, Layar 14 Inch IPS",
+    "rates": {
+      "daily": 110000,
+      "weekly": 500000,
+      "monthly": 1350000
+    },
+    "min_deposit": 300000,
+    "stock_total": 30,
+    "category": "Business Pro"
+  },
+  {
+    "sku": "NB-DEL-L5400",
+    "brand": "Dell",
+    "model": "Latitude 5400",
+    "specs": "Intel Core i5-8265U, RAM 16GB, SSD 256GB, Layar 14 Inch HD",
+    "rates": {
+      "daily": 75000,
+      "weekly": 350000,
+      "monthly": 950000
+    },
+    "min_deposit": 200000,
+    "stock_total": 25,
+    "category": "Office Standard"
+  },
+  {
+    "sku": "NB-APP-MBP13",
+    "brand": "Apple",
+    "model": "MacBook Pro M1 13 Inch",
+    "specs": "Apple M1 Chip 8-Core, RAM 16GB, SSD 512GB, Retina Display",
+    "rates": {
+      "daily": 220000,
+      "weekly": 1050000,
+      "monthly": 2800000
+    },
+    "min_deposit": 1000000,
+    "stock_total": 12,
+    "category": "Creative & Executive"
+  },
+  {
+    "sku": "NB-ASU-ROG16",
+    "brand": "Asus",
+    "model": "ROG Strix G16",
+    "specs": "Intel Core i9-13980HX, RTX 4070, RAM 32GB, SSD 1TB",
+    "rates": {
+      "daily": 350000,
+      "weekly": 1600000,
+      "monthly": 4200000
+    },
+    "min_deposit": 1500000,
+    "stock_total": 8,
+    "category": "High Performance Gaming"
+  },
+  {
+    "sku": "NB-ASU-ROG16",
+    "brand": "Asus",
+    "model": "ROG Strix G16",
+    "specs": "Intel Core i9-13980HX, RTX 4070, RAM 32GB, SSD 1TB",
+    "rates": {
+      "daily": 350000,
+      "weekly": 1600000,
+      "monthly": 4200000
+    },
+    "min_deposit": 1500000,
+    "stock_total": 8,
+    "category": "High Performance Gaming"
+  }
+]

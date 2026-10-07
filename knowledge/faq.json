@@ -1,0 +1,27 @@
+[
+  {
+    "id": "FAQ-01",
+    "question": "Apa saja syarat sewa laptop untuk perorangan?",
+    "answer": "Syarat sewa perorangan sangat mudah: Cukup KTP asli sebagai jaminan fisik yang ditahan selama masa sewa, ditambah uang deposit jaminan sebesar Rp 200.000 - Rp 500.000 yang akan dikembalikan penuh setelah unit selesai disewa dalam kondisi baik."
+  },
+  {
+    "id": "FAQ-02",
+    "question": "Bagaimana jika laptop mengalami kendala teknis atau rusak selama disewa?",
+    "answer": "Kami menyediakan garansi ganti unit (Swap Unit) 1x24 jam secara gratis jika kendala berasal dari kerusakan hardware/mesin non-kelalaian. Tim teknisi kami siap datang ke lokasi Anda."
+  },
+  {
+    "id": "FAQ-03",
+    "question": "Apakah melayani pengiriman ke luar kota?",
+    "answer": "Saat ini kami melayani pengiriman instan untuk area Jabodetabek via kurir internal ISKOM. Untuk luar kota, kami melayani pemesanan sewa kuantitas korporat (minimal 10 unit) menggunakan ekspedisi rekanan berasuransi."
+  },
+  {
+    "id": "FAQ-04",
+    "question": "Bisa sewa harian untuk seminar atau event dadakan?",
+    "answer": "Bisa! Kami melayani sewa harian mulai dari 1 hari sewa lengkap dengan instalasi software pendukung, mouse, tas, dan charger."
+  },
+  {
+    "id": "FAQ-05",
+    "question": "Metode pembayaran apa saja yang diterima?",
+    "answer": "Kami menerima transfer bank resmi rekening PT/CV ISKOM (BCA, Mandiri, BNI) serta QRIS resmi. Pembayaran tidak diperkenankan ke rekening pribadi staf."
+  }
+]
