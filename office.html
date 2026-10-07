@@ -3,995 +3,1513 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ISKOM AI-OS — Pixel Office</title>
-  <meta name="description" content="Kantor virtual pixel ISKOM AI-OS: pantau tim agen AI secara live, setiap agen pindah ruangan sesuai statusnya.">
+  <title>ISKOM AI-OS — Virtual Office Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0e1a;
-      --panel: #121829;
-      --panel-2: #182036;
-      --border: #263252;
-      --text: #e6eaf5;
-      --muted: #8a94b3;
-      --accent: #7c5cff;
-      --working: #34d399;
-      --idle: #60a5fa;
-      --offline: #6b7280;
-      --waiting: #fbbf24;
-      --human: #f472b6;
-      --error: #f87171;
-      --radius: 12px;
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-sub: #1f2937;
+      --border: #1f2937;
+      --border-focus: #374151;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-secondary: #d1d5db;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --radius: 8px;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
-      background-image:
-        radial-gradient(circle at 10% 0%, rgba(124, 92, 255, .14), transparent 40%),
-        radial-gradient(circle at 90% 100%, rgba(52, 211, 153, .08), transparent 40%);
       color: var(--text);
       min-height: 100vh;
-      padding: 18px;
+      padding: 20px;
+      line-height: 1.5;
     }
-    .pixel { font-family: 'Press Start 2P', monospace; letter-spacing: .5px; }
-    .app { max-width: 1480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
-    /* Header */
+    .container {
+      max-width: 1520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Navigation Bar */
     header {
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px 18px; box-shadow: 0 0 0 1px rgba(124,92,255,.05), 0 10px 30px rgba(0,0,0,.25);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-      width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center;
-      background: linear-gradient(135deg, #7c5cff, #4f46e5); box-shadow: 0 0 18px rgba(124,92,255,.45);
-      image-rendering: pixelated;
-    }
-    .brand h1 { font-size: 15px; line-height: 1.4; }
-    .brand p { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .chips { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .chip {
-      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px;
-      background: var(--panel-2); border: 1px solid var(--border); font-size: 12px; color: var(--muted);
-    }
-    .chip b { color: var(--text); font-size: 14px; }
-    .chip.live { color: var(--working); border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.08); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; animation: pulse 1.8s infinite; }
-    @keyframes pulse { 50% { opacity: .35; } }
-    .clock { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text); }
 
-    .demo-banner {
-      display: none; padding: 10px 14px; border-radius: 10px; font-size: 13px;
-      background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.35); color: var(--waiting);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .demo-banner code { background: rgba(0,0,0,.3); padding: 2px 6px; border-radius: 4px; }
 
-    /* Main grid */
-    .main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; }
-    @media (max-width: 1150px) { .main { grid-template-columns: 1fr; } }
+    .brand-title h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: var(--text);
+    }
+
+    .brand-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: rgba(22, 163, 74, 0.15);
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+
+    .clock-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Stat Strips */
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .exp-stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+    }
+
+    .exp-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .exp-stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text);
+    }
+
+    .exp-stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Main Workspace Grid */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 16px;
+    }
+
+    @media (max-width: 1180px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+
     .card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px; min-width: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
     }
-    .card-title { font-size: 10px; color: var(--text); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .card-title small { font-family: 'Inter'; font-size: 11px; color: var(--muted); letter-spacing: 0; }
 
-    .office-wrap { position: relative; width: 100%; border-radius: 8px; overflow: hidden; background: #050810; border: 2px solid #1d2540; }
-    #office { display: block; width: 100%; height: auto; cursor: default; }
-    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--muted); }
-    .legend span { display: flex; align-items: center; gap: 6px; }
-    .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
 
-    .side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-    /* Roster */
-    .roster { display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
-    .agent-row {
-      display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: center;
-      padding: 7px 8px; border-radius: 9px; border: 1px solid transparent; cursor: pointer;
-      transition: background .15s, border-color .15s, transform .15s;
+    .card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: none;
     }
-    .agent-row:hover { background: var(--panel-2); transform: translateX(2px); }
-    .agent-row.selected { background: rgba(124,92,255,.12); border-color: rgba(124,92,255,.45); }
-    .agent-row canvas { width: 24px; height: 36px; image-rendering: pixelated; }
-    .agent-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .agent-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pill {
-      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; white-space: nowrap;
-      border: 1px solid currentColor; background: rgba(255,255,255,.03);
-    }
-    .switch {
-      width: 34px; height: 18px; border-radius: 99px; background: #2a3350; position: relative; border: none; cursor: pointer;
-      transition: background .2s;
-    }
-    .switch::after {
-      content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
-      background: #cbd5e1; transition: transform .2s;
-    }
-    .switch.on { background: var(--working); }
-    .switch.on::after { transform: translateX(16px); background: #fff; }
-    .switch:disabled { opacity: .35; cursor: not-allowed; }
 
-    /* Approval */
-    .approvals { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
-    .ticket {
-      border: 1px solid rgba(251,191,36,.4); border-left: 4px solid var(--waiting); border-radius: 10px;
-      padding: 10px 12px; background: rgba(251,191,36,.06); animation: slideIn .35s ease;
+    /* Canvas Frame */
+    .canvas-container {
+      width: 100%;
+      position: relative;
+      background: #070a12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
     }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } }
-    .ticket-head { display: flex; justify-content: space-between; font-size: 11px; color: var(--waiting); margin-bottom: 6px; font-weight: 700; }
-    .ticket-task { font-size: 13px; margin-bottom: 4px; }
-    .ticket-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
-    .btns { display: flex; gap: 8px; }
+
+    #office-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .room-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* Sidebar Panels */
+    .sidebar-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .roster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .roster-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--card-sub);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .roster-row:hover {
+      border-color: var(--border-focus);
+    }
+
+    .roster-row.selected {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .roster-info {
+      min-width: 0;
+      flex: 1;
+      margin-right: 10px;
+    }
+
+    .roster-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .roster-role {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .roster-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Solid Status Badges */
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-working { background: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid rgba(22, 163, 74, 0.3); }
+    .badge-idle { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.3); }
+    .badge-offline { background: rgba(107, 114, 128, 0.2); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+    .badge-waiting { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.3); }
+    .badge-human { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+    .badge-error { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.3); }
+
+    /* Flat Button Controls */
     .btn {
-      flex: 1; padding: 8px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 9px;
-      font-family: 'Press Start 2P', monospace; color: #0a0e1a; box-shadow: 0 3px 0 rgba(0,0,0,.4);
-      transition: transform .1s, filter .15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
     }
-    .btn:hover { filter: brightness(1.1); }
-    .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.4); }
-    .btn-ok { background: var(--working); }
-    .btn-no { background: var(--error); }
-    .btn-ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
-    .empty { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 0; }
 
-    /* Detail */
-    .detail-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-    .detail-head canvas { width: 40px; height: 60px; image-rendering: pixelated; background: var(--panel-2); border-radius: 8px; padding: 4px; }
-    .detail-grid { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; font-size: 12px; }
-    .detail-grid dt { color: var(--muted); }
-    .detail-grid dd { word-break: break-word; }
-    .tool-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel-2); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; margin: 0 4px 4px 0; }
-    .reply-box { margin-top: 10px; font-size: 12px; line-height: 1.5; background: var(--panel-2); border-radius: 8px; padding: 10px; color: #cfd6ea; white-space: pre-wrap; max-height: 140px; overflow-y: auto; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-secondary { background: var(--card-sub); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-secondary:hover:not(:disabled) { background: #374151; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
 
-    /* Console */
-    .bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
-    @media (max-width: 900px) { .bottom { grid-template-columns: 1fr; } }
-    .cmd { display: flex; gap: 8px; }
-    .cmd input {
-      flex: 1; background: #0b1020; border: 1px solid var(--border); border-radius: 8px; color: var(--text);
-      padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s;
+    /* Toggle Switch */
+    .toggle {
+      width: 32px;
+      height: 18px;
+      background: #374151;
+      border-radius: 99px;
+      position: relative;
+      cursor: pointer;
+      border: none;
     }
-    .cmd input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,.15); }
-    .send { flex: 0 0 auto; background: var(--accent); color: #fff; padding: 0 16px; }
-    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .preset {
-      font-size: 11px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border);
-      border-radius: 99px; padding: 5px 10px; cursor: pointer; transition: color .15s, border-color .15s;
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #9ca3af;
+      transition: transform 0.2s, background 0.2s;
     }
-    .preset:hover { color: var(--text); border-color: var(--accent); }
-    .response { margin-top: 12px; font-size: 13px; line-height: 1.55; background: #0b1020; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 64px; white-space: pre-wrap; }
-    .response .route { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-    .feed { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
-    .feed-row { display: grid; grid-template-columns: 64px 130px 1fr auto; gap: 8px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,.02); align-items: center; }
-    .feed-row:nth-child(odd) { background: rgba(255,255,255,.04); }
-    .feed-row .t { color: var(--muted); }
-    .feed-row .a { color: #c4b5fd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .feed-row .m { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #cfd6ea; }
+
+    .toggle.active {
+      background: var(--primary);
+    }
+
+    .toggle.active::after {
+      transform: translateX(14px);
+      background: #fff;
+    }
+
+    /* Approval Queue Tickets */
+    .ticket-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .ticket-item {
+      background: var(--card-sub);
+      border: 1px solid #78350f;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 4px;
+    }
+
+    .ticket-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .ticket-footer {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Console Command Prompt */
+    .control-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .input-control {
+      flex: 1;
+      background: #070a12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .input-control:focus {
+      border-color: var(--primary);
+    }
+
+    .preset-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .preset-chip {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .preset-chip:hover {
+      color: var(--text);
+      border-color: #374151;
+    }
+
+    .output-box {
+      background: #070a12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      min-height: 60px;
+      white-space: pre-wrap;
+      color: var(--text-secondary);
+    }
+
+    .output-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* Activity Feed Table */
+    .table-container {
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    th {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-sub);
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-secondary);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Agent Detail View */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 6px 12px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .detail-label { color: var(--text-muted); }
+    .detail-val { color: var(--text); word-break: break-word; }
 
     .toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0;
-      background: var(--panel-2); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px;
-      font-size: 13px; transition: all .25s; pointer-events: none; z-index: 10;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text);
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #2a3350; border-radius: 3px; }
+    .toast.show { display: block; }
   </style>
 </head>
 <body>
-<div class="app">
+
+<div class="container">
+  <!-- Top Navigation -->
   <header>
     <div class="brand">
-      <div class="brand-icon"><canvas id="logo" width="16" height="16" style="width:28px;height:28px;image-rendering:pixelated"></canvas></div>
-      <div>
-        <h1 class="pixel">ISKOM AI-OS</h1>
-        <p>Pixel Office — Tim Agen AI Rental Laptop & IT Equipment</p>
+      <div class="brand-title">
+        <h1>ISKOM AI Operating System</h1>
+        <p>Enterprise Multi-Agent Virtual Workspace & Management Portal</p>
       </div>
     </div>
-    <div class="chips">
-      <div class="chip live"><span class="dot"></span><b id="k-online">0/10</b> Agen Online</div>
-      <div class="chip">⌨️ <b id="k-working">0</b> Bekerja</div>
-      <div class="chip" style="color:var(--waiting)">❗ <b id="k-pending">0</b> Menunggu Approval</div>
-      <div class="chip">📊 <b id="k-total">0</b> Request</div>
-      <div class="chip clock" id="clock">--:--:--</div>
+    <div class="header-meta">
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        <span id="stat-online">5 / 10 Agen Aktif</span>
+      </div>
+      <div class="clock-display" id="clock-display">00:00:00</div>
     </div>
   </header>
 
-  <div class="demo-banner" id="demo-banner">
-    ⚠️ Mode Demo (data simulasi). Untuk data live dari AI Core jalankan <code>python server.py</code> lalu buka <code>http://localhost:8080</code>
-  </div>
+  <!-- Stat Strips -->
+  <section class="stat-strip">
+    <div class="exp-stat-card">
+      <div class="exp-stat-label">Total Permintaan</div>
+      <div class="exp-stat-value" id="kpi-total">0</div>
+      <div class="exp-stat-sub">Semua transaksi tercatat</div>
+    </div>
+    <div class="exp-stat-card">
+      <div class="exp-stat-label">Sedang Memproses</div>
+      <div class="exp-stat-value" id="kpi-working" style="color: #4ade80;">0</div>
+      <div class="exp-stat-sub">Agen di ruang kerja</div>
+    </div>
+    <div class="exp-stat-card">
+      <div class="exp-stat-label">Persetujuan Owner</div>
+      <div class="exp-stat-value" id="kpi-pending" style="color: #fbbf24;">0</div>
+      <div class="exp-stat-sub">Menunggu review wewenang</div>
+    </div>
+    <div class="exp-stat-card">
+      <div class="exp-stat-label">Tingkat Keberhasilan</div>
+      <div class="exp-stat-value" id="kpi-rate" style="color: #60a5fa;">100%</div>
+      <div class="exp-stat-sub">Zero-hallucination compliance</div>
+    </div>
+  </section>
 
-  <main class="main">
-    <section class="card" aria-labelledby="office-title">
-      <h2 class="card-title pixel" id="office-title">KANTOR VIRTUAL <small>Klik karakter untuk melihat detail agen</small></h2>
-      <div class="office-wrap" id="office-wrap"><canvas id="office" aria-label="Peta kantor virtual pixel"></canvas></div>
-      <div class="legend">
-        <span><i style="background:var(--working)"></i>Bekerja → Ruang Kerja / Gudang</span>
-        <span><i style="background:var(--idle)"></i>Santai → Lounge</span>
-        <span><i style="background:var(--offline)"></i>Offline → Kamar Tidur</span>
-        <span><i style="background:var(--waiting)"></i>Menunggu Approval → Ruang Owner</span>
-        <span><i style="background:var(--human)"></i>Butuh Manusia (OTP/CAPTCHA)</span>
-        <span><i style="background:var(--error)"></i>Error → Ruang ER</span>
+  <!-- Workspace Grid: Map on Left, Management on Right -->
+  <main class="workspace-grid">
+    <!-- Left Column: Virtual Office Canvas -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Denah Operasional Kantor Virtual</div>
+        <div class="card-subtitle">Klik agen untuk melihat inspeksi detail</div>
       </div>
-    </section>
+      <div class="canvas-container" id="canvas-container">
+        <canvas id="office-canvas"></canvas>
+      </div>
+      <div class="room-legend">
+        <div class="legend-item"><span class="legend-dot" style="background: #16a34a;"></span> Ruang Kerja (Processing)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #2563eb;"></span> Lounge / Pantry (Standby)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #4b5563;"></span> Kamar Tidur (Offline)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> Ruang Owner (Approval Required)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #dc2626;"></span> Ruang ER (Rule Blocked)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #78716c;"></span> Gudang Logistik</div>
+      </div>
+    </div>
 
-    <aside class="side">
-      <section class="card" aria-labelledby="roster-title">
-        <h2 class="card-title pixel" id="roster-title">TIM AGEN <small id="roster-sub">10 agen</small></h2>
-        <div class="roster" id="roster"></div>
-      </section>
-      <section class="card" aria-labelledby="apv-title">
-        <h2 class="card-title pixel" id="apv-title">ANTREAN APPROVAL <small>Keputusan Owner</small></h2>
-        <div class="approvals" id="approvals"><div class="empty">Tidak ada tiket menunggu ✨</div></div>
-      </section>
-      <section class="card" aria-labelledby="detail-title">
-        <h2 class="card-title pixel" id="detail-title">DETAIL AGEN</h2>
-        <div id="detail"><div class="empty">Pilih agen di peta atau daftar</div></div>
-      </section>
-    </aside>
+    <!-- Right Column: Agent Roster & Approvals -->
+    <div class="sidebar-stack">
+      <!-- Roster -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Daftar Agen Tim</div>
+          <div class="card-subtitle" id="roster-count">10 Agen Terdaftar</div>
+        </div>
+        <div class="roster-list" id="roster-list"></div>
+      </div>
+
+      <!-- Approval Queue -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Antrean Otorisasi Owner</div>
+          <div class="card-subtitle">Tiket Eskalasi</div>
+        </div>
+        <div class="ticket-list" id="ticket-list">
+          <div class="empty-state">Tidak ada tiket menunggu otorisasi.</div>
+        </div>
+      </div>
+
+      <!-- Agent Inspection Details -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Inspeksi Agen Terpilih</div>
+          <div class="card-subtitle" id="detail-agent-id">-</div>
+        </div>
+        <div id="detail-content">
+          <div class="empty-state">Pilih agen pada denah kantor atau daftar di atas.</div>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <section class="bottom">
+  <!-- Bottom Workspace: Control Input & Audit Log -->
+  <section class="workspace-grid">
+    <!-- Command Prompt -->
     <div class="card">
-      <h2 class="card-title pixel">PERINTAH KE TIM AI</h2>
-      <form class="cmd" id="cmd-form">
-        <input id="cmd-input" autocomplete="off" placeholder="Beri instruksi ke tim AI... (contoh: sewa 10 laptop ThinkPad 1 bulan)">
-        <button class="btn send" id="cmd-send" type="submit">KIRIM</button>
+      <div class="card-header">
+        <div class="card-title">Konsol Perintah AI Core</div>
+        <div class="card-subtitle">Kirim instruksi bisnis langsung ke tim agen</div>
+      </div>
+      <form id="prompt-form">
+        <div class="control-row">
+          <input type="text" id="prompt-input" class="input-control" placeholder="Ketik instruksi kebutuhan sewa atau pertanyaan operasional..." autocomplete="off">
+          <button type="submit" id="btn-submit" class="btn btn-primary">Kirim</button>
+        </div>
       </form>
-      <div class="presets" id="presets"></div>
-      <div class="response" id="response"><span style="color:var(--muted)">Respon agen akan tampil di sini.</span></div>
+      <div class="preset-container" id="preset-container"></div>
+      <div class="output-box" id="output-box">
+        <div class="output-meta">STATUS: Siap menerima instruksi</div>
+        <div>Silakan masukkan instruksi sewa atau pilih salah satu template cepat di atas.</div>
+      </div>
     </div>
+
+    <!-- Audit Activity Feed -->
     <div class="card">
-      <h2 class="card-title pixel">AKTIVITAS LIVE <small>Audit log terbaru</small></h2>
-      <div class="feed" id="feed"><div class="empty">Belum ada aktivitas</div></div>
+      <div class="card-header">
+        <div class="card-title">Audit Trail Transaksi Terakhir</div>
+        <div class="card-subtitle">Log Aktivitas Forensik</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70px;">Waktu</th>
+              <th style="width: 110px;">Agen</th>
+              <th>Aksi / Input</th>
+              <th style="width: 85px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="audit-table-body">
+            <tr>
+              <td colspan="4" class="empty-state">Memuat riwayat transaksi...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </div>
-<div class="toast" id="toast"></div>
+
+<div class="toast" id="toast-message"></div>
 
 <script>
 /* =====================================================================
-   KONFIGURASI PETA (koordinat logis 480x272, 1 tile = 16px)
+   KONFIGURASI DENAH LOGIS KANTOR PIXEL (480 x 272 px)
    ===================================================================== */
-const W = 480, H = 272, WALL = 22, CORRIDOR_Y = 144;
+const LOGICAL_W = 480;
+const LOGICAL_H = 272;
+const WALL_THICK = 22;
+const CORRIDOR_Y = 144;
+
 const ROOMS = {
-  work:      { x: 0,   y: 0,   w: 208, h: 128, label: 'RUANG KERJA', door: 124, side: 'b', wall: '#c9b79c', floor: 'wood' },
-  meeting:   { x: 208, y: 0,   w: 112, h: 128, label: 'MEETING',     door: 264, side: 'b', wall: '#a7b8c9', floor: 'blue' },
-  owner:     { x: 320, y: 0,   w: 160, h: 128, label: 'RUANG OWNER', door: 352, side: 'b', wall: '#b9a3a3', floor: 'red' },
-  warehouse: { x: 0,   y: 160, w: 112, h: 112, label: 'GUDANG',      door: 56,  side: 't', wall: '#8f8f8f', floor: 'concrete' },
-  lounge:    { x: 112, y: 160, w: 128, h: 112, label: 'LOUNGE',      door: 176, side: 't', wall: '#d8c7a0', floor: 'wood2' },
-  bedroom:   { x: 240, y: 160, w: 128, h: 112, label: 'KAMAR TIDUR', door: 292, side: 't', wall: '#7b74a6', floor: 'purple', lane: 221 },
-  server:    { x: 368, y: 160, w: 64,  h: 112, label: 'SERVER',      door: 400, side: 't', wall: '#3b4252', floor: 'tech' },
-  er:        { x: 432, y: 160, w: 48,  h: 112, label: 'ER',          door: 456, side: 't', wall: '#d9d9d9', floor: 'tile' },
+  work:      { x: 0,   y: 0,   w: 208, h: 128, label: 'RUANG KERJA', door: 124, side: 'bottom', wall: '#bfae96', floor: '#8c5e34' },
+  meeting:   { x: 208, y: 0,   w: 112, h: 128, label: 'MEETING',     door: 264, side: 'bottom', wall: '#94a3b8', floor: '#334155' },
+  owner:     { x: 320, y: 0,   w: 160, h: 128, label: 'RUANG OWNER', door: 352, side: 'bottom', wall: '#a8a29e', floor: '#7f1d1d' },
+  warehouse: { x: 0,   y: 160, w: 112, h: 112, label: 'GUDANG',      door: 56,  side: 'top',    wall: '#78716c', floor: '#57534e' },
+  lounge:    { x: 112, y: 160, w: 128, h: 112, label: 'LOUNGE',      door: 176, side: 'top',    wall: '#d6c7a1', floor: '#9a6b3d' },
+  bedroom:   { x: 240, y: 160, w: 128, h: 112, label: 'KAMAR TIDUR', door: 292, side: 'top',    wall: '#6b7280', floor: '#3730a3', lane: 221 },
+  server:    { x: 368, y: 160, w: 64,  h: 112, label: 'SERVER',      door: 400, side: 'top',    wall: '#334155', floor: '#0f172a' },
+  er:        { x: 432, y: 160, w: 48,  h: 112, label: 'ER',          door: 456, side: 'top',    wall: '#cbd5e1', floor: '#e2e8f0' }
 };
 
-const STATUS = {
-  WORKING:          { label: 'Bekerja',           color: '#34d399' },
-  IDLE:             { label: 'Santai',            color: '#60a5fa' },
-  OFFLINE:          { label: 'Tidur',             color: '#6b7280' },
-  WAITING_APPROVAL: { label: 'Menunggu Approval', color: '#fbbf24' },
-  HUMAN_NEEDED:     { label: 'Butuh Manusia',     color: '#f472b6' },
-  ERROR:            { label: 'Error',             color: '#f87171' },
+const ROOM_DISPLAY_NAMES = {
+  work: 'Ruang Kerja',
+  meeting: 'Ruang Meeting',
+  owner: 'Ruang Owner',
+  warehouse: 'Gudang Logistik',
+  lounge: 'Lounge / Pantry',
+  bedroom: 'Kamar Tidur',
+  server: 'Server Room',
+  er: 'Ruang ER'
 };
-const ROOM_NAME = { work: 'Ruang Kerja', warehouse: 'Gudang', lounge: 'Lounge', bedroom: 'Kamar Tidur', owner: 'Ruang Owner', er: 'Ruang ER', meeting: 'Meeting' };
 
-// Penampilan karakter per agen (index = urutan roster -> kasur, meja & spot lounge)
-const LOOK = {
-  'AGENT-MGR-01': { hair: '#2b2b2b', shirt: '#7c5cff', pants: '#1f2937', skin: '#f1c27d', tie: '#fbbf24', desk: 0 },
-  'AGENT-SLS-01': { hair: '#5a3a1e', shirt: '#2f80ed', pants: '#1e3a5f', skin: '#e8b48a', desk: 1 },
-  'AGENT-INV-01': { hair: '#d9a441', shirt: '#27ae60', pants: '#3f3f46', skin: '#f5d0a9', desk: null },
-  'AGENT-CS-01':  { hair: '#8e3b2e', shirt: '#eb5757', pants: '#374151', skin: '#f1c27d', desk: 2 },
-  'AGENT-FIN-01': { hair: '#1f1f1f', shirt: '#f2c94c', pants: '#4b3b1f', skin: '#c68642', desk: 3 },
-  'AGENT-KPI-01': { hair: '#6b6b6b', shirt: '#56ccf2', pants: '#1f2937', skin: '#e0ac69', desk: 4 },
-  'AGENT-MKT-01': { hair: '#c0392b', shirt: '#f2994a', pants: '#3f3f46', skin: '#f5d0a9', desk: 5 },
-  'AGENT-PRS-01': { hair: '#3d2b1f', shirt: '#bb6bd9', pants: '#312e81', skin: '#c68642', desk: 6 },
-  'AGENT-OPS-01': { hair: '#444444', shirt: '#219653', pants: '#1f2937', skin: '#e8b48a', desk: 7 },
-  'AGENT-COL-01': { hair: '#7a4b2a', shirt: '#9aa5b1', pants: '#334155', skin: '#f1c27d', desk: 8 },
+const AGENT_VISUALS = {
+  'AGENT-MGR-01': { hair: '#1e293b', shirt: '#4f46e5', pants: '#0f172a', skin: '#f1c27d', desk: 0 },
+  'AGENT-SLS-01': { hair: '#451a03', shirt: '#2563eb', pants: '#1e3a8a', skin: '#f5d0a9', desk: 1 },
+  'AGENT-INV-01': { hair: '#b45309', shirt: '#16a34a', pants: '#374151', skin: '#f5d0a9', desk: null },
+  'AGENT-CS-01':  { hair: '#7f1d1d', shirt: '#e11d48', pants: '#1f2937', skin: '#f1c27d', desk: 2 },
+  'AGENT-FIN-01': { hair: '#18181b', shirt: '#d97706', pants: '#451a03', skin: '#c68642', desk: 3 },
+  'AGENT-KPI-01': { hair: '#52525b', shirt: '#0284c7', pants: '#0f172a', skin: '#e0ac69', desk: 4 },
+  'AGENT-MKT-01': { hair: '#991b1b', shirt: '#ea580c', pants: '#374151', skin: '#f5d0a9', desk: 5 },
+  'AGENT-PRS-01': { hair: '#312e81', shirt: '#9333ea', pants: '#1e1b4b', skin: '#c68642', desk: 6 },
+  'AGENT-OPS-01': { hair: '#374151', shirt: '#059669', pants: '#0f172a', skin: '#f1c27d', desk: 7 },
+  'AGENT-COL-01': { hair: '#713f12', shirt: '#64748b', pants: '#1e293b', skin: '#f5d0a9', desk: 8 }
 };
-const OWNER_LOOK = { hair: '#1f2937', shirt: '#111827', pants: '#111827', skin: '#e0ac69', tie: '#dc2626' };
 
-const DEMO_ROSTER = [
-  ['AGENT-MGR-01', 'AI Business Manager', 'Manager', 'Executive Orchestrator', false],
-  ['AGENT-SLS-01', 'Sales & Rental Agent', 'Sales', 'Rental Sales Consultant', true],
-  ['AGENT-INV-01', 'Inventory & Unit Agent', 'Inventory', 'Warehouse & Stock Controller', true],
-  ['AGENT-CS-01', 'Customer Service Agent', 'CS', 'Helpdesk & Customer Care', true],
-  ['AGENT-FIN-01', 'Finance & Invoicing Agent', 'Finance', 'Billing & Invoicing', true],
-  ['AGENT-KPI-01', 'KPI & Executive Agent', 'KPI', 'Executive Reporting', true],
-  ['AGENT-MKT-01', 'Marketing Agent', 'Marketing', 'Campaign & Content', false],
-  ['AGENT-PRS-01', 'Prospecting Agent', 'Prospect', 'Lead Generation', false],
-  ['AGENT-OPS-01', 'Rental Operation Agent', 'Operation', 'Delivery & Pickup', false],
-  ['AGENT-COL-01', 'Collection Agent', 'Collection', 'Payment Collection', false],
-];
+const OWNER_VISUAL = { hair: '#0f172a', shirt: '#111827', pants: '#0f172a', skin: '#e0ac69' };
 
 const PRESETS = [
   'Saya butuh 10 laptop ThinkPad untuk 1 bulan',
   'Kasih diskon 25% untuk sewa 20 laptop Lenovo',
   'Ada stok MacBook Pro ready di gudang?',
   'Laptop sewaan layarnya bergaris, tolong diganti',
-  'Sistem minta kode OTP SMS dari penyewa',
-  'Rekap omset sewa dan utilisasi unit bulan ini',
+  'Sistem meminta kode OTP SMS penyewa',
+  'Rekap omset sewa dan tingkat utilisasi bulan ini'
 ];
 
 /* =====================================================================
-   STATE
+   APPLICATION STATE
    ===================================================================== */
 let state = { agents: [], approvals: [], summary: {}, server_time: Date.now() / 1000 };
-let demo = false;
-let selectedId = null;
-const chars = {};            // id -> karakter animasi
-let tick = 0;
+let selectedAgentId = 'AGENT-SLS-01';
+const agentCharacters = {};
+let frameCounter = 0;
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const shade = (hex, f = 0.72) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
-  return `rgb(${r},${g},${b})`;
-};
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+const escapeHtml = str => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* =====================================================================
-   SPRITE KARAKTER (digambar prosedural, tanpa aset eksternal)
-   ===================================================================== */
-function drawChar(g, x, y, p, o = {}) {
-  x = Math.round(x); y = Math.round(y);
-  const L = x - 5, T = y - 17;
-  const r = (dx, dy, w, h, c) => { g.fillStyle = c; g.fillRect(L + dx, T + dy, w, h); };
-  g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(L + 1, y - 1, 8, 2);
-  const step = o.walking ? o.frame % 2 : 0;
-  if (!o.sit) {
-    r(2, 13, 2, step ? 3 : 4, p.pants); r(6, 13, 2, step ? 4 : 3, p.pants);
-    r(2, step ? 16 : 17, 2, 1, '#111827'); r(6, step ? 17 : 16, 2, 1, '#111827');
-  }
-  r(1, 8, 8, 6, p.shirt); r(1, 13, 8, 1, shade(p.shirt));
-  const a = o.typing ? o.frame % 2 : 0;
-  r(0, 9 + a, 1, 4, shade(p.shirt, .85)); r(9, 9 + (o.typing ? 1 - a : 0), 1, 4, shade(p.shirt, .85));
-  r(0, 13 + a, 1, 1, p.skin); r(9, 13 + (o.typing ? 1 - a : 0), 1, 1, p.skin);
-  r(2, 2, 6, 6, p.skin);
-  r(1, 0, 8, 3, p.hair); r(1, 3, 1, 3, p.hair); r(8, 3, 1, 3, p.hair);
-  if (o.face === 'up') { r(2, 2, 6, 5, p.hair); }
-  else {
-    r(3, 4, 1, 2, '#111827'); r(6, 4, 1, 2, '#111827'); r(4, 7, 2, 1, shade(p.skin));
-    if (p.tie) r(4, 8, 2, 4, p.tie);
-  }
-  if (o.cup) { r(10, 10, 3, 3, '#f3f4f6'); r(13, 11, 1, 1, '#f3f4f6'); r(11, 9 - (tick >> 4) % 2, 1, 1, 'rgba(255,255,255,.6)'); }
+function showToast(text) {
+  const el = $('toast-message');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-function drawSleeper(g, bx, by, p) {
-  // kasur 16x28 + kepala di bantal + selimut warna baju
-  g.fillStyle = '#4a2e17'; g.fillRect(bx - 1, by - 1, 18, 30);
-  g.fillStyle = '#e5e7eb'; g.fillRect(bx, by, 16, 28);
-  g.fillStyle = '#ffffff'; g.fillRect(bx + 2, by + 2, 12, 6);
-  if (p) {
-    g.fillStyle = p.skin; g.fillRect(bx + 5, by + 3, 6, 5);
-    g.fillStyle = p.hair; g.fillRect(bx + 4, by + 2, 8, 2); g.fillRect(bx + 4, by + 4, 1, 3); g.fillRect(bx + 11, by + 4, 1, 3);
-    g.fillStyle = '#111827'; g.fillRect(bx + 6, by + 6, 1, 1); g.fillRect(bx + 9, by + 6, 1, 1);
-    const breathe = (tick >> 5) % 2;
-    g.fillStyle = p.shirt; g.fillRect(bx + 1, by + 9 - breathe, 14, 18 + breathe);
-    g.fillStyle = shade(p.shirt); g.fillRect(bx + 1, by + 9 - breathe, 14, 2);
+/* =====================================================================
+   PROSEDURAL PIXEL CANVAS RENDERING
+   ===================================================================== */
+const offscreenCanvas = document.createElement('canvas');
+offscreenCanvas.width = LOGICAL_W;
+offscreenCanvas.height = LOGICAL_H;
+const offCtx = offscreenCanvas.getContext('2d');
+
+const mainCanvas = $('office-canvas');
+const mainCtx = mainCanvas.getContext('2d');
+let scaleFactor = 2;
+let deviceRatio = 1;
+
+function adjustCanvasSize() {
+  const container = $('canvas-container');
+  scaleFactor = container.clientWidth / LOGICAL_W;
+  deviceRatio = window.devicePixelRatio || 1;
+  mainCanvas.width = Math.round(LOGICAL_W * scaleFactor * deviceRatio);
+  mainCanvas.height = Math.round(LOGICAL_H * scaleFactor * deviceRatio);
+  mainCanvas.style.height = (LOGICAL_H * scaleFactor) + 'px';
+}
+window.addEventListener('resize', adjustCanvasSize);
+
+function drawCharacterSprite(ctx, cx, cy, vis, options = {}) {
+  const x = Math.round(cx);
+  const y = Math.round(cy);
+  const left = x - 5;
+  const top = y - 17;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(left + 1, y - 1, 8, 2);
+
+  // Legs & Shoes
+  const walkOffset = options.walking ? (options.frame % 2) : 0;
+  if (!options.sitting) {
+    ctx.fillStyle = vis.pants;
+    ctx.fillRect(left + 2, top + 13, 2, walkOffset ? 3 : 4);
+    ctx.fillRect(left + 6, top + 13, 2, walkOffset ? 4 : 3);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(left + 2, top + (walkOffset ? 16 : 17), 2, 1);
+    ctx.fillRect(left + 6, top + (walkOffset ? 17 : 16), 2, 1);
+  }
+
+  // Torso / Shirt
+  ctx.fillStyle = vis.shirt;
+  ctx.fillRect(left + 1, top + 8, 8, 6);
+
+  // Arms / Typing
+  const typeOffset = options.typing ? (options.frame % 2) : 0;
+  ctx.fillRect(left, top + 9 + typeOffset, 1, 4);
+  ctx.fillRect(left + 9, top + 9 + (options.typing ? 1 - typeOffset : 0), 1, 4);
+  ctx.fillStyle = vis.skin;
+  ctx.fillRect(left, top + 13 + typeOffset, 1, 1);
+  ctx.fillRect(left + 9, top + 13 + (options.typing ? 1 - typeOffset : 0), 1, 1);
+
+  // Head
+  ctx.fillRect(left + 2, top + 2, 6, 6);
+
+  // Hair
+  ctx.fillStyle = vis.hair;
+  ctx.fillRect(left + 1, top, 8, 3);
+  ctx.fillRect(left + 1, top + 3, 1, 3);
+  ctx.fillRect(left + 8, top + 3, 1, 3);
+
+  // Face features
+  if (options.faceUp) {
+    ctx.fillRect(left + 2, top + 2, 6, 5);
   } else {
-    g.fillStyle = '#9ca3af'; g.fillRect(bx + 1, by + 10, 14, 17);
-    g.fillStyle = '#6b7280'; g.fillRect(bx + 1, by + 10, 14, 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(left + 3, top + 4, 1, 2);
+    ctx.fillRect(left + 6, top + 4, 1, 2);
+  }
+
+  // Cup indicator in lounge
+  if (options.hasCup) {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(left + 10, top + 10, 3, 3);
   }
 }
 
-/* =====================================================================
-   POSISI TARGET PER STATUS
-   ===================================================================== */
-const deskPos = d => ({ x: 24 + (d % 5) * 40, y: 34 + Math.floor(d / 5) * 46 });
-const bedPos = i => ({ x: 248 + (i % 5) * 24, y: 186 + Math.floor(i / 5) * 42 });
-const LOUNGE_SPOTS = [[130, 230], [150, 246], [170, 230], [190, 246], [210, 230], [226, 250], [140, 262], [180, 262], [200, 214], [222, 214]];
+function drawBedOccupant(ctx, bx, by, vis) {
+  // Bed frame & mattress
+  ctx.fillStyle = '#3e2723';
+  ctx.fillRect(bx - 1, by - 1, 18, 30);
+  ctx.fillStyle = '#f1f5f9';
+  ctx.fillRect(bx, by, 16, 28);
+  // Pillow
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(bx + 2, by + 2, 12, 6);
 
-function spotFor(agent, idx, queueIdx, erIdx) {
-  const look = LOOK[agent.id] || {};
+  if (vis) {
+    // Sleeping character head
+    ctx.fillStyle = vis.skin;
+    ctx.fillRect(bx + 5, by + 3, 6, 5);
+    ctx.fillStyle = vis.hair;
+    ctx.fillRect(bx + 4, by + 2, 8, 2);
+    // Blanket
+    ctx.fillStyle = vis.shirt;
+    ctx.fillRect(bx + 1, by + 9, 14, 18);
+  } else {
+    // Empty bed blanket
+    ctx.fillStyle = '#64748b';
+    ctx.fillRect(bx + 1, by + 10, 14, 17);
+  }
+}
+
+const getDeskPosition = index => ({ x: 24 + (index % 5) * 40, y: 34 + Math.floor(index / 5) * 46 });
+const getBedPosition = index => ({ x: 248 + (index % 5) * 24, y: 186 + Math.floor(index / 5) * 42 });
+const LOUNGE_NODES = [[130, 230], [150, 246], [170, 230], [190, 246], [210, 230], [226, 250], [140, 262], [180, 262], [200, 214], [222, 214]];
+
+function calculateTargetNode(agent, rosterIndex, approvalIndex, errorIndex) {
+  const vis = AGENT_VISUALS[agent.id] || {};
   switch (agent.status) {
     case 'WORKING':
-      if (look.desk === null || look.desk === undefined) return { room: 'warehouse', x: 62, y: 238, pose: 'stand', face: 'up', typing: true };
-      const d = deskPos(look.desk);
-      return { room: 'work', x: d.x, y: d.y + 27, pose: 'sit', face: 'up' };
+      if (vis.desk === null || vis.desk === undefined) {
+        return { room: 'warehouse', x: 62, y: 238, pose: 'stand', faceUp: true, typing: true };
+      }
+      const desk = getDeskPosition(vis.desk);
+      return { room: 'work', x: desk.x, y: desk.y + 27, pose: 'sitting', faceUp: true };
     case 'WAITING_APPROVAL':
     case 'HUMAN_NEEDED':
-      return { room: 'owner', x: 340 + queueIdx * 18, y: 112, pose: 'stand', face: 'up' };
+      return { room: 'owner', x: 340 + approvalIndex * 18, y: 112, pose: 'stand', faceUp: true };
     case 'ERROR':
-      return { room: 'er', x: 446 + (erIdx % 2) * 20, y: 214 + Math.floor(erIdx / 2) * 22, pose: 'stand', face: 'down' };
+      return { room: 'er', x: 446 + (errorIndex % 2) * 20, y: 214 + Math.floor(errorIndex / 2) * 22, pose: 'stand', faceUp: false };
     case 'OFFLINE': {
-      const b = bedPos(idx);
-      return { room: 'bedroom', x: b.x + 8, y: b.y + 20, pose: 'sleep', bed: b };
+      const bed = getBedPosition(rosterIndex);
+      return { room: 'bedroom', x: bed.x + 8, y: bed.y + 20, pose: 'sleeping', bedCoords: bed };
     }
     default: {
-      const s = LOUNGE_SPOTS[idx % LOUNGE_SPOTS.length];
-      return { room: 'lounge', x: s[0], y: s[1], pose: 'stand', face: 'down', cup: true };
+      const node = LOUNGE_NODES[rosterIndex % LOUNGE_NODES.length];
+      return { room: 'lounge', x: node[0], y: node[1], pose: 'stand', faceUp: false, hasCup: true };
     }
   }
 }
 
-function doorInside(roomKey) {
-  const rm = ROOMS[roomKey];
-  return rm.side === 'b' ? { x: rm.door, y: rm.y + rm.h - 8 } : { x: rm.door, y: rm.y + WALL + 6 };
-}
-// titik-titik dari pintu ke spot di dalam ruangan (menghindari menembus meja / kasur)
-function inRoomPoints(roomKey, p) {
-  const rm = ROOMS[roomKey];
-  if (rm.lane) return [{ x: rm.door, y: rm.lane }, { x: p.x, y: rm.lane }, { x: p.x, y: p.y }];
-  return [{ x: rm.door, y: p.y }, { x: p.x, y: p.y }];
-}
-function buildPath(c, spot) {
-  if (c.room === spot.room) return [{ x: spot.x, y: spot.y }];
-  const pts = [];
-  if (ROOMS[c.room]) {
-    const back = inRoomPoints(c.room, c).reverse().slice(1);
-    pts.push(...back, doorInside(c.room), { x: ROOMS[c.room].door, y: CORRIDOR_Y });
-  } else pts.push({ x: c.x, y: CORRIDOR_Y });
-  pts.push({ x: ROOMS[spot.room].door, y: CORRIDOR_Y }, doorInside(spot.room), ...inRoomPoints(spot.room, spot));
-  return pts;
+function constructPath(char, target) {
+  if (char.room === target.room) return [{ x: target.x, y: target.y }];
+  const path = [];
+  const currRoom = ROOMS[char.room];
+  if (currRoom) {
+    const doorInsideY = currRoom.side === 'bottom' ? currRoom.y + currRoom.h - 8 : currRoom.y + WALL_THICK + 6;
+    path.push({ x: currRoom.door, y: doorInsideY }, { x: currRoom.door, y: CORRIDOR_Y });
+  } else {
+    path.push({ x: char.x, y: CORRIDOR_Y });
+  }
+
+  const tgtRoom = ROOMS[target.room];
+  const tgtDoorInsideY = tgtRoom.side === 'bottom' ? tgtRoom.y + tgtRoom.h - 8 : tgtRoom.y + WALL_THICK + 6;
+  path.push({ x: tgtRoom.door, y: CORRIDOR_Y }, { x: tgtRoom.door, y: tgtDoorInsideY }, { x: target.x, y: target.y });
+  return path;
 }
 
-function syncChars() {
-  let q = 0, e = 0;
+function synchronizeAgentCharacters() {
+  let apvCount = 0;
+  let errCount = 0;
+
   state.agents.forEach((ag, idx) => {
-    const qi = (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') ? q++ : 0;
-    const ei = ag.status === 'ERROR' ? e++ : 0;
-    const spot = spotFor(ag, idx, qi, ei);
-    const key = `${spot.room}:${spot.x}:${spot.y}:${spot.pose}`;
-    let c = chars[ag.id];
-    if (!c) {
-      c = chars[ag.id] = { id: ag.id, x: spot.x, y: spot.y, room: spot.room, path: [], spot, key, pose: spot.pose, frame: 0, ft: 0 };
+    const apvIdx = (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') ? apvCount++ : 0;
+    const errIdx = ag.status === 'ERROR' ? errCount++ : 0;
+    const target = calculateTargetNode(ag, idx, apvIdx, errIdx);
+    const key = `${target.room}:${target.x}:${target.y}:${target.pose}`;
+
+    let char = agentCharacters[ag.id];
+    if (!char) {
+      agentCharacters[ag.id] = {
+        id: ag.id,
+        x: target.x,
+        y: target.y,
+        room: target.room,
+        path: [],
+        target,
+        key,
+        pose: target.pose,
+        frame: 0,
+        timer: 0
+      };
       return;
     }
-    c.agent = ag;
-    if (c.key !== key) {
-      c.key = key; c.spot = spot;
-      c.path = buildPath(c, spot);
-      c.pose = 'walk';
+
+    char.agentData = ag;
+    if (char.key !== key) {
+      char.key = key;
+      char.target = target;
+      char.path = constructPath(char, target);
+      char.pose = 'walking';
     }
   });
 }
 
-function updateChars(dt) {
-  const speed = 46; // px logis per detik
-  Object.values(chars).forEach(c => {
-    c.ft += dt;
-    if (c.ft > 0.18) { c.ft = 0; c.frame++; }
-    if (!c.path.length) { c.pose = c.spot.pose; return; }
-    const t = c.path[0];
-    const dx = t.x - c.x, dy = t.y - c.y, dist = Math.hypot(dx, dy);
-    const stepLen = speed * dt;
-    c.face = dy < -0.5 ? 'up' : 'down';
-    if (dist <= stepLen) { c.x = t.x; c.y = t.y; c.path.shift(); }
-    else { c.x += dx / dist * stepLen; c.y += dy / dist * stepLen; }
-    c.room = roomAt(c.x, c.y);
+function updateCharacterPositions(delta) {
+  const movementSpeed = 50; // px / sec
+  Object.values(agentCharacters).forEach(char => {
+    char.timer += delta;
+    if (char.timer > 0.18) {
+      char.timer = 0;
+      char.frame++;
+    }
+
+    if (!char.path.length) {
+      char.pose = char.target.pose;
+      return;
+    }
+
+    const nextNode = char.path[0];
+    const diffX = nextNode.x - char.x;
+    const diffY = nextNode.y - char.y;
+    const distance = Math.hypot(diffX, diffY);
+    const stepSize = movementSpeed * delta;
+
+    char.faceUp = diffY < -0.5;
+
+    if (distance <= stepSize) {
+      char.x = nextNode.x;
+      char.y = nextNode.y;
+      char.path.shift();
+    } else {
+      char.x += (diffX / distance) * stepSize;
+      char.y += (diffY / distance) * stepSize;
+    }
   });
 }
-function roomAt(x, y) {
-  for (const [k, r] of Object.entries(ROOMS)) if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return k;
-  return 'corridor';
-}
 
-/* =====================================================================
-   RENDER SCENE (canvas resolusi rendah -> diperbesar, tetap tajam)
-   ===================================================================== */
-const off = document.createElement('canvas'); off.width = W; off.height = H;
-const g = off.getContext('2d');
-const canvas = $('office'), ctx = canvas.getContext('2d');
-let S = 2, DPR = 1;
-
-function resize() {
-  const wrap = $('office-wrap');
-  S = wrap.clientWidth / W; DPR = window.devicePixelRatio || 1;
-  canvas.width = Math.round(W * S * DPR); canvas.height = Math.round(H * S * DPR);
-  canvas.style.height = (H * S) + 'px';
-}
-window.addEventListener('resize', resize);
-
-function floor(rm) {
-  const { x, y, w, h } = rm;
-  const fy = y + WALL;
-  for (let yy = fy; yy < y + h; yy += 4) for (let xx = x; xx < x + w; xx += 8) {
-    let c;
-    const odd = ((yy - fy) / 4) % 2, chk = ((xx / 8) + ((yy - fy) / 8 | 0)) % 2;
-    switch (rm.floor) {
-      case 'wood': c = odd ? '#9a6a3f' : '#a87545'; if (((xx + yy * 3) % 40) === 0) c = '#8a5d36'; break;
-      case 'wood2': c = odd ? '#b0834f' : '#bb8d57'; break;
-      case 'blue': c = chk ? '#3d5a80' : '#41608a'; break;
-      case 'red': c = chk ? '#7a2e2e' : '#823333'; break;
-      case 'purple': c = chk ? '#4c4577' : '#524a80'; break;
-      case 'concrete': c = chk ? '#7d7d7d' : '#858585'; break;
-      case 'tech': c = chk ? '#1f2937' : '#243041'; break;
-      case 'tile': c = chk ? '#e5e7eb' : '#cfd4dc'; break;
-    }
-    g.fillStyle = c; g.fillRect(xx, yy, 8, 4);
-  }
-  // dinding + list bawah
-  g.fillStyle = rm.wall; g.fillRect(x, y, w, WALL);
-  g.fillStyle = shade(rm.wall, .85); for (let xx = x; xx < x + w; xx += 6) g.fillRect(xx, y, 1, WALL);
-  g.fillStyle = shade(rm.wall, .55); g.fillRect(x, y + WALL - 3, w, 3);
-}
-
-function walls() {
-  g.fillStyle = '#1b1410';
-  for (const rm of Object.values(ROOMS)) {
-    const { x, y, w, h } = rm;
-    g.fillRect(x, y, w, 2); g.fillRect(x, y, 2, h); g.fillRect(x + w - 2, y, 2, h);
-    const by = rm.side === 'b' ? y + h - 3 : y;
-    const other = rm.side === 'b' ? y : y + h - 3;
-    g.fillRect(x, other, w, 3);
-    g.fillRect(x, by, rm.door - 9 - x, 3); g.fillRect(rm.door + 9, by, x + w - rm.door - 9, 3);
-    // keset pintu
-    g.fillStyle = '#5b3a1e'; g.fillRect(rm.door - 7, rm.side === 'b' ? y + h - 2 : y, 14, 2); g.fillStyle = '#1b1410';
-  }
-}
-
-function corridor() {
-  for (let xx = 0; xx < W; xx += 8) for (let yy = 128; yy < 160; yy += 8) {
-    g.fillStyle = ((xx + yy) / 8) % 2 ? '#d6cfc2' : '#cbc3b4'; g.fillRect(xx, yy, 8, 8);
-  }
-  plant(8, 152); plant(196, 152); plant(330, 152); plant(470, 152);
-  // dispenser air
-  g.fillStyle = '#e5e7eb'; g.fillRect(232, 134, 8, 14); g.fillStyle = '#60a5fa'; g.fillRect(233, 130, 6, 6);
-}
-
-function plant(x, y) {
-  g.fillStyle = '#7c3f1d'; g.fillRect(x - 3, y - 5, 6, 5);
-  g.fillStyle = '#2f7d32'; g.fillRect(x - 5, y - 11, 10, 6); g.fillStyle = '#43a047'; g.fillRect(x - 3, y - 14, 6, 5); g.fillRect(x - 6, y - 9, 3, 3);
-}
-function windowAt(x, y, night) {
-  g.fillStyle = '#5b3a1e'; g.fillRect(x - 1, y - 1, 18, 13);
-  g.fillStyle = night ? '#1e2a4a' : '#9bd4f5'; g.fillRect(x, y, 16, 11);
-  g.fillStyle = '#5b3a1e'; g.fillRect(x + 7, y, 2, 11); g.fillRect(x, y + 5, 16, 1);
-  if (night) { g.fillStyle = '#fef3c7'; g.fillRect(x + 11, y + 2, 3, 3); }
-}
-
-function furniture(activeDesks) {
-  // ---- Ruang kerja
-  windowAt(30, 4); windowAt(90, 4); windowAt(150, 4);
-  g.fillStyle = '#e5e7eb'; g.fillRect(186, 6, 12, 10); g.fillStyle = '#ef4444'; g.fillRect(188, 9, 3, 5); g.fillStyle = '#22c55e'; g.fillRect(192, 8, 3, 6);
-  for (let d = 0; d < 10; d++) {
-    const p = deskPos(d), on = activeDesks.has(d);
-    g.fillStyle = '#374151'; g.fillRect(p.x - 5, p.y + 18, 10, 8); g.fillStyle = '#4b5563'; g.fillRect(p.x - 5, p.y + 18, 10, 2);
-    g.fillStyle = '#6b4220'; g.fillRect(p.x - 14, p.y + 4, 28, 12); g.fillStyle = '#8b5a2b'; g.fillRect(p.x - 14, p.y, 28, 10);
-    g.fillStyle = '#111827'; g.fillRect(p.x - 6, p.y - 6, 12, 9); g.fillRect(p.x - 1, p.y + 3, 2, 2);
-    g.fillStyle = on ? ((tick >> 3) % 2 ? '#67e8f9' : '#5eead4') : '#1e293b'; g.fillRect(p.x - 5, p.y - 5, 10, 7);
-    if (on) { g.fillStyle = '#0f172a'; g.fillRect(p.x - 4, p.y - 3, 6, 1); g.fillRect(p.x - 4, p.y - 1, 4, 1); }
-    g.fillStyle = '#d1d5db'; g.fillRect(p.x - 5, p.y + 5, 10, 3);
-    g.fillStyle = '#f9fafb'; g.fillRect(p.x + 8, p.y + 3, 4, 5);
-  }
-  plant(6, 120); plant(200, 40);
-
-  // ---- Meeting
-  g.fillStyle = '#f9fafb'; g.fillRect(232, 4, 64, 15); g.fillStyle = '#9ca3af'; g.fillRect(232, 18, 64, 2);
-  [[238, 8, '#60a5fa'], [248, 6, '#34d399'], [258, 10, '#fbbf24'], [268, 5, '#f472b6'], [278, 7, '#a78bfa']].forEach(([bx, bh, c]) => { g.fillStyle = c; g.fillRect(bx, 17 - bh, 6, bh); });
-  g.fillStyle = '#5b3a1e'; g.fillRect(240, 56, 48, 30); g.fillStyle = '#7c4a24'; g.fillRect(242, 54, 44, 28);
-  [[236, 62], [236, 74], [290, 62], [290, 74], [256, 46], [272, 46], [256, 90], [272, 90]].forEach(([cx, cy]) => { g.fillStyle = '#374151'; g.fillRect(cx - 3, cy - 3, 7, 7); });
-  plant(214, 120); plant(314, 40);
-
-  // ---- Owner
-  windowAt(334, 4); windowAt(452, 4);
-  g.fillStyle = '#5b3a1e'; g.fillRect(364, 4, 36, 16); ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'].forEach((c, i) => { g.fillStyle = c; g.fillRect(366 + i * 5, 6, 4, 6); g.fillRect(368 + i * 5, 13, 3, 6); });
-  g.fillStyle = '#7f1d1d'; g.fillRect(360, 74, 80, 34); g.fillStyle = '#991b1b'; g.fillRect(362, 76, 76, 30);
-  drawChar(g, 400, 58, OWNER_LOOK, { face: 'down', typing: (tick >> 4) % 4 === 0, frame: tick >> 3 });
-  g.fillStyle = '#3f2a14'; g.fillRect(374, 56, 52, 14); g.fillStyle = '#5b3a1e'; g.fillRect(374, 54, 52, 10);
-  g.fillStyle = '#d1d5db'; g.fillRect(392, 50, 14, 6); g.fillStyle = '#93c5fd'; g.fillRect(393, 51, 12, 4);
-  g.fillStyle = '#fbbf24'; g.fillRect(378, 58, 10, 3);
-  g.fillStyle = '#f9fafb'; g.fillRect(414, 56, 6, 5);
-  plant(330, 120); plant(470, 120); plant(470, 44);
-  // lampu antrean approval
-  const pending = state.approvals.length > 0;
-  g.fillStyle = pending && (tick >> 4) % 2 ? '#fbbf24' : '#4b5563'; g.fillRect(328, 100, 4, 4);
-
-  // ---- Gudang
-  for (let i = 0; i < 3; i++) {
-    const sx = 8 + i * 34;
-    g.fillStyle = '#4b5563'; g.fillRect(sx, 26, 28, 40); g.fillStyle = '#6b7280';
-    for (let s = 0; s < 3; s++) g.fillRect(sx, 36 + s * 12 + 160 - 160, 28, 2);
-    for (let s = 0; s < 3; s++) for (let b = 0; b < 3; b++) {
-      g.fillStyle = (s + b + i) % 3 === 0 ? '#c08a4b' : ((s + b) % 2 ? '#d4a373' : '#9ca3af');
-      g.fillRect(sx + 2 + b * 9, 29 + s * 12, 7, 7);
+function renderEnvironment() {
+  // Corridor floor
+  for (let x = 0; x < LOGICAL_W; x += 8) {
+    for (let y = 128; y < 160; y += 8) {
+      offCtx.fillStyle = ((x + y) / 8) % 2 ? '#1e293b' : '#0f172a';
+      offCtx.fillRect(x, y, 8, 8);
     }
   }
-  g.save(); g.translate(0, 160);
-  g.restore();
-  // rak gudang diposisikan di ruangan bawah
-  g.drawImage(off, 0, 0, 0, 0, 0, 0, 0, 0);
-  [[10, 206], [32, 206], [10, 250], [86, 250], [86, 228]].forEach(([bx, by]) => {
-    g.fillStyle = '#8b5a2b'; g.fillRect(bx, by + 10, 16, 3); g.fillStyle = '#c08a4b'; g.fillRect(bx + 1, by, 14, 10); g.fillStyle = '#a16207'; g.fillRect(bx + 1, by + 4, 14, 1);
+
+  // Rooms floor and interior walls
+  Object.values(ROOMS).forEach(rm => {
+    offCtx.fillStyle = rm.floor;
+    offCtx.fillRect(rm.x, rm.y + WALL_THICK, rm.w, rm.h - WALL_THICK);
+
+    // Wall upper surface
+    offCtx.fillStyle = rm.wall;
+    offCtx.fillRect(rm.x, rm.y, rm.w, WALL_THICK);
+    offCtx.fillStyle = 'rgba(0,0,0,0.2)';
+    offCtx.fillRect(rm.x, rm.y + WALL_THICK - 2, rm.w, 2);
   });
-  g.fillStyle = '#374151'; g.fillRect(70, 184, 34, 8); g.fillStyle = '#93c5fd'; g.fillRect(76, 185, 8, 5); g.fillStyle = '#d1d5db'; g.fillRect(88, 185, 10, 5);
 
-  // ---- Lounge
-  g.fillStyle = '#1f2937'; g.fillRect(150, 166, 40, 14); g.fillStyle = (tick >> 5) % 2 ? '#38bdf8' : '#22d3ee'; g.fillRect(152, 168, 36, 10);
-  g.fillStyle = '#9ca3af'; g.fillRect(116, 184, 26, 12); g.fillStyle = '#4b5563'; g.fillRect(118, 176, 8, 10); g.fillStyle = '#ef4444'; g.fillRect(121, 179, 2, 2);
-  g.fillStyle = '#e5e7eb'; g.fillRect(226, 178, 12, 24); g.fillStyle = '#9ca3af'; g.fillRect(226, 188, 12, 1);
-  g.fillStyle = '#7a3e3e'; g.fillRect(144, 198, 70, 14); g.fillStyle = '#a14d4d'; g.fillRect(146, 200, 66, 9); g.fillStyle = '#8f4444'; g.fillRect(142, 198, 4, 14); g.fillRect(212, 198, 4, 14);
-  g.fillStyle = '#d1b58c'; g.fillRect(150, 224, 50, 30); g.fillStyle = '#c4a57a'; g.fillRect(152, 226, 46, 26);
-  g.fillStyle = '#6b4220'; g.fillRect(162, 232, 26, 12); g.fillStyle = '#f9fafb'; g.fillRect(168, 235, 3, 3); g.fillRect(178, 236, 3, 3);
-  plant(120, 266); plant(232, 266);
+  // Solid room partition borders
+  offCtx.fillStyle = '#090d16';
+  Object.values(ROOMS).forEach(rm => {
+    offCtx.fillRect(rm.x, rm.y, rm.w, 2);
+    offCtx.fillRect(rm.x, rm.y, 2, rm.h);
+    offCtx.fillRect(rm.x + rm.w - 2, rm.y, 2, rm.h);
+    const bottomY = rm.side === 'bottom' ? rm.y + rm.h - 3 : rm.y;
+    offCtx.fillRect(rm.x, bottomY, rm.door - 8 - rm.x, 3);
+    offCtx.fillRect(rm.door + 8, bottomY, rm.x + rm.w - rm.door - 8, 3);
+  });
 
-  // ---- Kamar tidur
-  windowAt(316, 164, true); windowAt(250, 164, true);
-  g.fillStyle = '#3b3570'; g.fillRect(244, 216, 120, 10);
-  // kasur digambar di drawActors agar penghuni tergambar di dalamnya
-
-  // ---- Server
-  for (let i = 0; i < 3; i++) {
-    const rx = 372 + i * 19; g.fillStyle = '#111827'; g.fillRect(rx, 186, 15, 44); g.fillStyle = '#1f2937'; g.fillRect(rx + 1, 187, 13, 42);
-    for (let l = 0; l < 7; l++) { g.fillStyle = ((tick >> 2) + l * 3 + i * 5) % 7 < 3 ? '#22c55e' : '#064e3b'; g.fillRect(rx + 3, 190 + l * 6, 2, 2); g.fillStyle = ((tick >> 3) + l + i) % 9 < 2 ? '#f59e0b' : '#1f2937'; g.fillRect(rx + 7, 190 + l * 6, 2, 2); }
-  }
-  g.fillStyle = '#334155'; g.fillRect(372, 240, 54, 6);
-
-  // ---- ER
-  const anyErr = state.agents.some(a => a.status === 'ERROR');
-  g.fillStyle = anyErr && (tick >> 3) % 2 ? '#ef4444' : '#7f1d1d'; g.fillRect(452, 165, 8, 5);
-  if (anyErr && (tick >> 3) % 2) { g.fillStyle = 'rgba(239,68,68,.12)'; g.fillRect(434, 182, 44, 88); }
-  g.fillStyle = '#9ca3af'; g.fillRect(438, 244, 36, 3); g.fillStyle = '#f9fafb'; g.fillRect(438, 236, 36, 8); g.fillStyle = '#93c5fd'; g.fillRect(440, 236, 8, 6);
-  g.fillStyle = '#ef4444'; g.fillRect(466, 186, 2, 8); g.fillRect(463, 189, 8, 2);
-}
-
-function drawActors() {
-  // kasur kosong dulu
+  // Work Room Furniture (Desks)
   for (let i = 0; i < 10; i++) {
-    const occ = Object.values(chars).find(c => c.spot.pose === 'sleep' && !c.path.length && c.spot.bed && c.spot.bed.x === bedPos(i).x && c.spot.bed.y === bedPos(i).y);
-    if (!occ) { const b = bedPos(i); drawSleeper(g, b.x, b.y, null); }
+    const pos = getDeskPosition(i);
+    offCtx.fillStyle = '#475569';
+    offCtx.fillRect(pos.x - 14, pos.y + 4, 28, 12);
+    offCtx.fillStyle = '#64748b';
+    offCtx.fillRect(pos.x - 14, pos.y, 28, 6);
+    // Monitor
+    offCtx.fillStyle = '#0f172a';
+    offCtx.fillRect(pos.x - 6, pos.y - 6, 12, 8);
+    offCtx.fillStyle = '#38bdf8';
+    offCtx.fillRect(pos.x - 5, pos.y - 5, 10, 6);
   }
-  const list = Object.values(chars).sort((a, b) => a.y - b.y);
-  for (const c of list) {
-    const look = LOOK[c.id];
-    if (!look) continue;
-    if (c.id === selectedId && c.pose !== 'sleep') { g.fillStyle = 'rgba(124,92,255,.55)'; g.fillRect(Math.round(c.x) - 7, Math.round(c.y) - 1, 14, 3); }
-    if (c.pose === 'sleep') { drawSleeper(g, c.spot.bed.x, c.spot.bed.y, look); continue; }
-    const walking = c.pose === 'walk';
-    drawChar(g, c.x, c.y, look, {
-      walking, frame: c.frame,
-      face: walking ? c.face : c.spot.face,
-      sit: c.pose === 'sit',
-      typing: !walking && (c.pose === 'sit' || c.spot.typing),
-      cup: !walking && c.spot.cup,
+
+  // Owner Office Executive Table & Chair
+  offCtx.fillStyle = '#451a03';
+  offCtx.fillRect(370, 56, 60, 16);
+  offCtx.fillStyle = '#78350f';
+  offCtx.fillRect(370, 54, 60, 8);
+  drawCharacterSprite(offCtx, 400, 56, OWNER_VISUAL, { faceUp: false });
+
+  // Lounge Sofas & Coffee Station
+  offCtx.fillStyle = '#7f1d1d';
+  offCtx.fillRect(144, 200, 68, 14);
+  offCtx.fillStyle = '#991b1b';
+  offCtx.fillRect(146, 202, 64, 8);
+  offCtx.fillStyle = '#475569';
+  offCtx.fillRect(116, 184, 22, 12);
+
+  // Warehouse Shelves
+  for (let s = 0; s < 3; s++) {
+    const shelfX = 10 + s * 34;
+    offCtx.fillStyle = '#334155';
+    offCtx.fillRect(shelfX, 186, 26, 36);
+    offCtx.fillStyle = '#b45309';
+    offCtx.fillRect(shelfX + 2, 192, 10, 8);
+    offCtx.fillRect(shelfX + 14, 192, 10, 8);
+    offCtx.fillRect(shelfX + 2, 204, 10, 8);
+    offCtx.fillRect(shelfX + 14, 204, 10, 8);
+  }
+
+  // Bedroom Beds (Empty or Occupied)
+  for (let b = 0; b < 10; b++) {
+    const bed = getBedPosition(b);
+    const occupant = Object.values(agentCharacters).find(c =>
+      c.pose === 'sleeping' && !c.path.length && c.target.bedCoords &&
+      c.target.bedCoords.x === bed.x && c.target.bedCoords.y === bed.y
+    );
+    const visual = occupant ? AGENT_VISUALS[occupant.id] : null;
+    drawBedOccupant(offCtx, bed.x, bed.y, visual);
+  }
+}
+
+function renderCharacters() {
+  const sorted = Object.values(agentCharacters).sort((a, b) => a.y - b.y);
+  sorted.forEach(char => {
+    if (char.pose === 'sleeping') return; // Rendered with bed
+    const vis = AGENT_VISUALS[char.id];
+    if (!vis) return;
+
+    // Selection highlight ring
+    if (char.id === selectedAgentId) {
+      offCtx.fillStyle = 'rgba(37, 99, 235, 0.4)';
+      offCtx.fillRect(Math.round(char.x) - 7, Math.round(char.y) - 1, 14, 3);
+    }
+
+    const isWalking = char.pose === 'walking';
+    drawCharacterSprite(offCtx, char.x, char.y, vis, {
+      walking: isWalking,
+      frame: char.frame,
+      faceUp: isWalking ? char.faceUp : char.target.faceUp,
+      sitting: char.pose === 'sitting',
+      typing: !isWalking && (char.pose === 'sitting' || char.target.typing),
+      hasCup: !isWalking && char.target.hasCup
     });
-  }
-}
-
-/* ---------- Overlay resolusi tinggi: label ruangan, nama, balon status ---------- */
-function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-
-function bubble(sx, sy, text, bg, fg, font) {
-  ctx.font = font; const tw = ctx.measureText(text).width;
-  const pw = tw + 10, ph = 17, bx = sx - pw / 2, by = sy - ph - 6;
-  ctx.fillStyle = 'rgba(0,0,0,.35)'; roundRect(bx + 1, by + 2, pw, ph, 5); ctx.fill();
-  ctx.fillStyle = bg; roundRect(bx, by, pw, ph, 5); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(sx - 4, by + ph); ctx.lineTo(sx + 4, by + ph); ctx.lineTo(sx, by + ph + 5); ctx.fill();
-  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, sx, by + ph / 2 + 1);
-}
-
-function overlay() {
-  const px = Math.max(7, Math.min(10, S * 4));
-  ctx.textBaseline = 'middle';
-  for (const rm of Object.values(ROOMS)) {
-    ctx.font = `${px}px 'Press Start 2P'`;
-    const tw = ctx.measureText(rm.label).width;
-    const lx = (rm.x + 4) * S, ly = (rm.y + 4) * S;
-    ctx.fillStyle = 'rgba(15,10,6,.78)'; roundRect(lx, ly, tw + 10, px + 9, 3); ctx.fill();
-    ctx.fillStyle = '#fde68a'; ctx.textAlign = 'left'; ctx.fillText(rm.label, lx + 5, ly + (px + 9) / 2 + 1);
-  }
-  const nameFont = `600 ${Math.max(9, Math.min(12, S * 4.6))}px Inter`;
-  const bubFont = `700 ${Math.max(9, Math.min(12, S * 4.6))}px Inter`;
-  for (const c of Object.values(chars)) {
-    const ag = c.agent || state.agents.find(a => a.id === c.id);
-    if (!ag) continue;
-    const sleeping = c.pose === 'sleep';
-    const cx = (sleeping ? c.spot.bed.x + 8 : c.x) * S;
-    const footY = (sleeping ? c.spot.bed.y + 28 : c.y) * S;
-    const headY = (sleeping ? c.spot.bed.y : c.y - 18) * S;
-
-    // name tag
-    ctx.font = nameFont; const label = ag.short; const tw = ctx.measureText(label).width;
-    const st = STATUS[ag.status] || STATUS.IDLE;
-    ctx.fillStyle = c.id === selectedId ? 'rgba(124,92,255,.95)' : 'rgba(10,14,26,.82)';
-    roundRect(cx - tw / 2 - 6, footY + 2, tw + 12, 15, 7); ctx.fill();
-    ctx.fillStyle = st.color; ctx.beginPath(); ctx.arc(cx - tw / 2 - 1, footY + 9.5, 2.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(label, cx + 3, footY + 10);
-
-    if (c.pose === 'walk') continue;
-    if (sleeping) {
-      const t = (tick % 90) / 90;
-      ctx.font = `700 ${Math.max(9, S * 4)}px 'Press Start 2P'`; ctx.fillStyle = `rgba(199,210,254,${1 - t})`;
-      ctx.textAlign = 'left'; ctx.fillText('z', cx + 6 + t * 8, headY - t * 18); ctx.fillText('Z', cx + 12 + t * 6, headY - 8 - t * 18);
-      continue;
-    }
-    if (ag.status === 'WORKING') {
-      const dots = '.'.repeat(1 + (tick >> 4) % 3);
-      const tool = ag.tools && ag.tools.length ? ag.tools[(tick >> 6) % ag.tools.length] : null;
-      bubble(cx, headY, tool ? `⚙ ${tool}` : `⌨ ${dots}`, '#ecfdf5', '#065f46', bubFont);
-    } else if (ag.status === 'WAITING_APPROVAL') {
-      const bob = Math.sin(tick / 6) * 2 * S / 2;
-      bubble(cx, headY + bob, '!', '#fbbf24', '#1f2937', `800 ${Math.max(11, S * 6)}px Inter`);
-    } else if (ag.status === 'HUMAN_NEEDED') {
-      bubble(cx, headY, '🔒 OTP', '#fce7f3', '#9d174d', bubFont);
-    } else if (ag.status === 'ERROR') {
-      bubble(cx, headY, '✖', '#fee2e2', '#b91c1c', bubFont);
-    } else if (ag.status === 'IDLE' && ((tick + c.id.length * 37) % 400) < 70) {
-      bubble(cx, headY, '☕', '#eff6ff', '#1e3a8a', bubFont);
-    }
-  }
-}
-
-let last = performance.now();
-function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; tick++;
-  updateChars(dt);
-  const activeDesks = new Set(Object.values(chars).filter(c => c.pose === 'sit').map(c => (LOOK[c.id] || {}).desk));
-  g.clearRect(0, 0, W, H);
-  corridor();
-  Object.values(ROOMS).forEach(floor);
-  furniture(activeDesks);
-  walls();
-  drawActors();
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, W * S, H * S);
-  ctx.drawImage(off, 0, 0, W * S, H * S);
-  overlay();
-  requestAnimationFrame(frame);
-}
-
-/* =====================================================================
-   INTERAKSI PETA
-   ===================================================================== */
-function hitTest(evt) {
-  const r = canvas.getBoundingClientRect();
-  const x = (evt.clientX - r.left) / S, y = (evt.clientY - r.top) / S;
-  return Object.values(chars).find(c => {
-    if (c.pose === 'sleep') { const b = c.spot.bed; return x >= b.x - 2 && x <= b.x + 18 && y >= b.y - 2 && y <= b.y + 30; }
-    return x >= c.x - 7 && x <= c.x + 7 && y >= c.y - 20 && y <= c.y + 4;
   });
 }
-canvas.addEventListener('mousemove', e => { canvas.style.cursor = hitTest(e) ? 'pointer' : 'default'; });
-canvas.addEventListener('click', e => { const c = hitTest(e); if (c) selectAgent(c.id); });
 
-function selectAgent(id) { selectedId = id; renderRoster(); renderDetail(); }
+function renderHighResLabels() {
+  // Room Labels (Clear sans-serif clean tags)
+  mainCtx.font = '600 11px Inter';
+  mainCtx.textBaseline = 'top';
+  Object.values(ROOMS).forEach(rm => {
+    const rx = (rm.x + 8) * scaleFactor;
+    const ry = (rm.y + 6) * scaleFactor;
+    const textWidth = mainCtx.measureText(rm.label).width;
+
+    mainCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    mainCtx.fillRect(rx - 4, ry - 2, textWidth + 8, 18);
+    mainCtx.fillStyle = '#94a3b8';
+    mainCtx.fillText(rm.label, rx, ry);
+  });
+
+  // Agent Nameplates & Status Callouts
+  mainCtx.font = '600 11px Inter';
+  mainCtx.textAlign = 'center';
+  mainCtx.textBaseline = 'middle';
+
+  Object.values(agentCharacters).forEach(char => {
+    const agent = char.agentData || state.agents.find(a => a.id === char.id);
+    if (!agent) return;
+
+    const isSleeping = char.pose === 'sleeping';
+    const canvasX = (isSleeping ? char.target.bedCoords.x + 8 : char.x) * scaleFactor;
+    const tagY = (isSleeping ? char.target.bedCoords.y + 32 : char.y + 4) * scaleFactor;
+
+    // Name Tag
+    const tagText = agent.short;
+    const textW = mainCtx.measureText(tagText).width;
+    const isSelected = char.id === selectedAgentId;
+
+    mainCtx.fillStyle = isSelected ? '#1d4ed8' : 'rgba(15, 23, 42, 0.9)';
+    mainCtx.fillRect(canvasX - textW / 2 - 6, tagY - 2, textW + 12, 16);
+
+    // Status indicator dot inside tag
+    const dotColors = { WORKING: '#4ade80', IDLE: '#60a5fa', OFFLINE: '#9ca3af', WAITING_APPROVAL: '#fbbf24', ERROR: '#f87171' };
+    mainCtx.fillStyle = dotColors[agent.status] || '#9ca3af';
+    mainCtx.fillRect(canvasX - textW / 2 - 2, tagY + 4, 4, 4);
+
+    mainCtx.fillStyle = '#ffffff';
+    mainCtx.fillText(tagText, canvasX + 3, tagY + 6);
+
+    // Status Callouts (No emojis, simple solid pills)
+    if (char.pose === 'walking') return;
+
+    const bubbleY = (isSleeping ? char.target.bedCoords.y - 12 : char.y - 28) * scaleFactor;
+    if (agent.status === 'WORKING') {
+      const activeTool = agent.tools && agent.tools.length ? agent.tools[0] : 'Processing';
+      renderPillCallout(canvasX, bubbleY, activeTool, '#16a34a');
+    } else if (agent.status === 'WAITING_APPROVAL') {
+      renderPillCallout(canvasX, bubbleY, 'Approval Required', '#d97706');
+    } else if (agent.status === 'HUMAN_NEEDED') {
+      renderPillCallout(canvasX, bubbleY, 'OTP / Human Action', '#db2777');
+    } else if (agent.status === 'ERROR') {
+      renderPillCallout(canvasX, bubbleY, 'Rule Blocked', '#dc2626');
+    }
+  });
+}
+
+function renderPillCallout(x, y, text, color) {
+  mainCtx.font = '600 10px Inter';
+  const width = mainCtx.measureText(text).width + 12;
+  mainCtx.fillStyle = color;
+  mainCtx.fillRect(x - width / 2, y, width, 16);
+  mainCtx.fillStyle = '#ffffff';
+  mainCtx.fillText(text, x, y + 8);
+}
+
+let lastTimestamp = performance.now();
+function animationLoop(timestamp) {
+  const delta = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
+  lastTimestamp = timestamp;
+  frameCounter++;
+
+  updateCharacterPositions(delta);
+
+  offCtx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+  renderEnvironment();
+  renderCharacters();
+
+  mainCtx.setTransform(deviceRatio, 0, 0, deviceRatio, 0, 0);
+  mainCtx.imageSmoothingEnabled = false;
+  mainCtx.clearRect(0, 0, LOGICAL_W * scaleFactor, LOGICAL_H * scaleFactor);
+  mainCtx.drawImage(offscreenCanvas, 0, 0, LOGICAL_W * scaleFactor, LOGICAL_H * scaleFactor);
+
+  renderHighResLabels();
+
+  requestAnimationFrame(animationLoop);
+}
 
 /* =====================================================================
-   PANEL SAMPING
+   INTERACTIVITY & SELECTION
    ===================================================================== */
-function avatarCanvas(id, w = 12, h = 18) {
-  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-  const look = LOOK[id]; if (look) drawChar(cv.getContext('2d'), w / 2, h, look, { face: 'down' });
-  return cv;
-}
-function pill(status) {
-  const s = STATUS[status] || STATUS.IDLE;
-  return `<span class="pill" style="color:${s.color}">${s.label}</span>`;
+mainCanvas.addEventListener('click', evt => {
+  const rect = mainCanvas.getBoundingClientRect();
+  const clickX = (evt.clientX - rect.left) / scaleFactor;
+  const clickY = (evt.clientY - rect.top) / scaleFactor;
+
+  const hit = Object.values(agentCharacters).find(c => {
+    if (c.pose === 'sleeping') {
+      const bed = c.target.bedCoords;
+      return clickX >= bed.x && clickX <= bed.x + 18 && clickY >= bed.y && clickY <= bed.y + 30;
+    }
+    return clickX >= c.x - 10 && clickX <= c.x + 10 && clickY >= c.y - 20 && clickY <= c.y + 5;
+  });
+
+  if (hit) {
+    selectedAgentId = hit.id;
+    updateRosterSelection();
+    renderAgentInspection();
+  }
+});
+
+/* =====================================================================
+   SIDEBAR RENDERING & UI UPDATES
+   ===================================================================== */
+function updateRosterSelection() {
+  const rows = document.querySelectorAll('.roster-row');
+  rows.forEach(r => {
+    if (r.dataset.id === selectedAgentId) r.classList.add('selected');
+    else r.classList.remove('selected');
+  });
 }
 
 function renderRoster() {
-  const box = $('roster'); box.innerHTML = '';
-  state.agents.forEach(ag => {
+  const list = $('roster-list');
+  list.innerHTML = '';
+
+  state.agents.forEach(agent => {
     const row = document.createElement('div');
-    row.className = 'agent-row' + (ag.id === selectedId ? ' selected' : '');
-    row.appendChild(avatarCanvas(ag.id));
-    const info = document.createElement('div'); info.style.minWidth = '0';
-    info.innerHTML = `<div class="agent-name">${esc(ag.name)}</div><div class="agent-sub">${ag.implemented ? esc(ROOM_NAME[ag.room] || '') : 'Belum dibangun (fase berikutnya)'}</div>`;
-    row.appendChild(info);
-    row.insertAdjacentHTML('beforeend', pill(ag.status));
-    const sw = document.createElement('button');
-    sw.className = 'switch' + (ag.powered ? ' on' : '');
-    sw.disabled = !ag.implemented;
-    sw.title = ag.implemented ? (ag.powered ? 'Tidurkan agen' : 'Bangunkan agen') : 'Agen belum dibangun';
-    sw.setAttribute('aria-label', `${ag.powered ? 'Matikan' : 'Nyalakan'} ${ag.name}`);
-    sw.addEventListener('click', ev => { ev.stopPropagation(); setPower(ag.id, !ag.powered); });
-    row.appendChild(sw);
-    row.addEventListener('click', () => selectAgent(ag.id));
-    box.appendChild(row);
-  });
-  $('roster-sub').textContent = `${state.summary.online || 0} online · ${state.agents.length} agen`;
-}
+    row.className = 'roster-row' + (agent.id === selectedAgentId ? ' selected' : '');
+    row.dataset.id = agent.id;
 
-let lastApvKey = '';
-function renderApprovals() {
-  const key = state.approvals.map(a => a.approval_id).join(',');
-  if (key === lastApvKey) return; lastApvKey = key;
-  const box = $('approvals');
-  if (!state.approvals.length) { box.innerHTML = '<div class="empty">Tidak ada tiket menunggu ✨</div>'; return; }
-  box.innerHTML = state.approvals.map(a => `
-    <div class="ticket">
-      <div class="ticket-head"><span>#${esc(a.approval_id)}</span><span>${esc(a.category || '')}</span></div>
-      <div class="ticket-task">“${esc(a.task)}”</div>
-      <div class="ticket-meta">${esc(a.agent_name)}${a.total ? ' · Rp ' + Number(a.total).toLocaleString('id-ID') : ''}</div>
-      <div class="btns">
-        <button class="btn btn-ok" data-apv="${esc(a.approval_id)}" data-act="APPROVED">APPROVE</button>
-        <button class="btn btn-no" data-apv="${esc(a.approval_id)}" data-act="REJECTED">REJECT</button>
+    const statusBadgeClass = {
+      WORKING: 'badge-working',
+      IDLE: 'badge-idle',
+      OFFLINE: 'badge-offline',
+      WAITING_APPROVAL: 'badge-waiting',
+      HUMAN_NEEDED: 'badge-human',
+      ERROR: 'badge-error'
+    }[agent.status] || 'badge-idle';
+
+    row.innerHTML = `
+      <div class="roster-info">
+        <div class="roster-name">${escapeHtml(agent.name)}</div>
+        <div class="roster-role">${escapeHtml(agent.role)} (${escapeHtml(ROOM_DISPLAY_NAMES[agent.room] || agent.room)})</div>
       </div>
-    </div>`).join('');
-  box.querySelectorAll('button[data-apv]').forEach(b => b.addEventListener('click', () => decide(b.dataset.apv, b.dataset.act)));
+      <div class="roster-actions">
+        <span class="badge ${statusBadgeClass}">${escapeHtml(agent.status)}</span>
+        <button class="toggle ${agent.powered ? 'active' : ''}" title="${agent.powered ? 'Nonaktifkan agen (tidur)' : 'Aktifkan agen'}" ${!agent.implemented ? 'disabled' : ''}></button>
+      </div>
+    `;
+
+    const toggleBtn = row.querySelector('.toggle');
+    toggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      setAgentPower(agent.id, !agent.powered);
+    });
+
+    row.addEventListener('click', () => {
+      selectedAgentId = agent.id;
+      updateRosterSelection();
+      renderAgentInspection();
+    });
+
+    list.appendChild(row);
+  });
 }
 
-function renderDetail() {
-  const box = $('detail');
-  const ag = state.agents.find(a => a.id === selectedId);
-  if (!ag) { box.innerHTML = '<div class="empty">Pilih agen di peta atau daftar</div>'; return; }
-  const ago = Math.max(0, Math.round((state.server_time - ag.since)));
-  const agoTxt = ago < 60 ? `${ago} dtk lalu` : ago < 3600 ? `${Math.floor(ago / 60)} mnt lalu` : `${Math.floor(ago / 3600)} jam lalu`;
-  box.innerHTML = `
-    <div class="detail-head">
-      <div id="detail-avatar"></div>
-      <div><div class="agent-name" style="font-size:14px">${esc(ag.name)}</div><div class="agent-sub">${esc(ag.role)} · ${esc(ag.id)}</div><div style="margin-top:6px">${pill(ag.status)}</div></div>
-    </div>
-    <dl class="detail-grid">
-      <dt>Lokasi</dt><dd>${esc(ROOM_NAME[ag.room] || '-')} <span style="color:var(--muted)">(${agoTxt})</span></dd>
-      <dt>Tugas</dt><dd>${ag.task ? '“' + esc(ag.task) + '”' : '<span style="color:var(--muted)">-</span>'}</dd>
-      <dt>Tools</dt><dd>${(ag.tools || []).length ? ag.tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('') : '<span style="color:var(--muted)">-</span>'}</dd>
-      <dt>Selesai</dt><dd>${ag.tasks_done || 0} tugas</dd>
-    </dl>
-    ${ag.last_reply ? `<div class="reply-box">${esc(ag.last_reply)}</div>` : ''}
-    <div class="btns" style="margin-top:12px">
-      ${ag.status === 'HUMAN_NEEDED' ? `<button class="btn btn-ok" id="btn-resolve">SUDAH DITANGANI</button>` : ''}
-      ${ag.implemented ? `<button class="btn btn-ghost" id="btn-power">${ag.powered ? 'TIDURKAN' : 'BANGUNKAN'}</button>` : '<span class="agent-sub">Agen ini dijadwalkan di fase pengembangan berikutnya.</span>'}
-    </div>`;
-  const av = avatarCanvas(ag.id); av.style.cssText = 'width:40px;height:60px;image-rendering:pixelated;background:var(--panel-2);border-radius:8px;padding:4px';
-  $('detail-avatar').appendChild(av);
-  const bp = $('btn-power'); if (bp) bp.onclick = () => setPower(ag.id, !ag.powered);
-  const br = $('btn-resolve'); if (br) br.onclick = () => resolveHuman(ag.id);
-}
-
-function renderKPI() {
-  const s = state.summary || {};
-  $('k-online').textContent = `${s.online || 0}/${s.total || 10}`;
-  $('k-working').textContent = s.working || 0;
-  $('k-pending').textContent = s.pending_approvals || 0;
-}
-
-let lastRosterKey = '';
-function renderAll() {
-  const rk = state.agents.map(a => a.id + a.status + a.powered + a.room).join('|') + selectedId;
-  if (rk !== lastRosterKey) { lastRosterKey = rk; renderRoster(); }
-  renderApprovals(); renderKPI(); renderDetail();
-}
-
-/* =====================================================================
-   API (dengan fallback Mode Demo)
-   ===================================================================== */
-async function api(path, body) {
-  const opt = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
-  const res = await fetch(path, opt);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || res.statusText);
-  return data;
-}
-
-async function pollState() {
-  if (demo) { demoTick(); return; }
-  try {
-    state = await api('/api/agents/state');
-  } catch (e) {
-    enterDemo(); return;
+function renderApprovals() {
+  const container = $('ticket-list');
+  if (!state.approvals || !state.approvals.length) {
+    container.innerHTML = '<div class="empty-state">Tidak ada tiket menunggu otorisasi.</div>';
+    return;
   }
-  syncChars(); renderAll();
+
+  container.innerHTML = state.approvals.map(ticket => `
+    <div class="ticket-item">
+      <div class="ticket-header">
+        <span>#${escapeHtml(ticket.approval_id)}</span>
+        <span>${escapeHtml(ticket.category || 'APPROVAL')}</span>
+      </div>
+      <div class="ticket-title">"${escapeHtml(ticket.task)}"</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+        Agen: ${escapeHtml(ticket.agent_name)} ${ticket.total ? '· Nilai: Rp ' + Number(ticket.total).toLocaleString('id-ID') : ''}
+      </div>
+      <div class="ticket-footer">
+        <button class="btn btn-success btn-sm" onclick="handleApprovalAction('${escapeHtml(ticket.approval_id)}', 'APPROVED')">Setujui</button>
+        <button class="btn btn-danger btn-sm" onclick="handleApprovalAction('${escapeHtml(ticket.approval_id)}', 'REJECTED')">Tolak</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-async function pollLogs() {
-  if (demo) return;
-  try {
-    const logs = await api('/api/logs');
-    const kpi = await api('/api/kpi');
-    $('k-total').textContent = kpi.total_transactions;
-    renderFeed(logs.map(l => ({
-      t: (l.waktu || '').slice(11, 19), agent: (l.agent && l.agent.name) || '-', msg: l.action + ' — ' + (l.input || ''), status: l.status,
-    })));
-  } catch (e) { /* abaikan */ }
+function renderAgentInspection() {
+  const container = $('detail-content');
+  const agent = state.agents.find(a => a.id === selectedAgentId);
+
+  if (!agent) {
+    $('detail-agent-id').textContent = '-';
+    container.innerHTML = '<div class="empty-state">Pilih agen pada denah kantor atau daftar di atas.</div>';
+    return;
+  }
+
+  $('detail-agent-id').textContent = agent.id;
+  const toolsFormatted = (agent.tools && agent.tools.length)
+    ? agent.tools.map(t => `<code style="font-size: 11px; background: var(--card-sub); padding: 2px 4px; border-radius: 4px;">${escapeHtml(t)}</code>`).join(' ')
+    : '<span style="color: var(--text-muted);">-</span>';
+
+  container.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-label">Nama</div><div class="detail-val"><strong>${escapeHtml(agent.name)}</strong></div>
+      <div class="detail-label">Peran</div><div class="detail-val">${escapeHtml(agent.role)}</div>
+      <div class="detail-label">Ruangan</div><div class="detail-val">${escapeHtml(ROOM_DISPLAY_NAMES[agent.room] || agent.room)}</div>
+      <div class="detail-label">Status</div><div class="detail-val"><span class="badge badge-${agent.status.toLowerCase()}">${escapeHtml(agent.status)}</span></div>
+      <div class="detail-label">Tools</div><div class="detail-val">${toolsFormatted}</div>
+      <div class="detail-label">Tugas</div><div class="detail-val">${agent.task ? '"' + escapeHtml(agent.task) + '"' : '<span style="color: var(--text-muted);">-</span>'}</div>
+    </div>
+    ${agent.last_reply ? `
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">RESPONS TERAKHIR:</div>
+      <div style="background: var(--card-sub); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 12px; max-height: 120px; overflow-y: auto;">
+        ${escapeHtml(agent.last_reply)}
+      </div>
+    ` : ''}
+    <div style="margin-top: 12px;">
+      ${agent.status === 'HUMAN_NEEDED' ? `
+        <button class="btn btn-success btn-sm" onclick="resolveHumanAction('${agent.id}')">Tandai Sudah Ditangani</button>
+      ` : ''}
+    </div>
+  `;
 }
 
-function renderFeed(rows) {
-  const box = $('feed');
-  if (!rows.length) { box.innerHTML = '<div class="empty">Belum ada aktivitas</div>'; return; }
-  const col = { SUCCESS: '#34d399', PENDING_APPROVAL: '#fbbf24', ERROR: '#f87171' };
-  box.innerHTML = rows.map(r => `<div class="feed-row"><span class="t">${esc(r.t)}</span><span class="a">${esc(r.agent)}</span><span class="m" title="${esc(r.msg)}">${esc(r.msg)}</span><span class="pill" style="color:${col[r.status] || '#8a94b3'}">${esc(r.status)}</span></div>`).join('');
+function renderKPIs() {
+  const summary = state.summary || {};
+  $('kpi-working').textContent = summary.working || 0;
+  $('kpi-pending').textContent = summary.pending_approvals || 0;
+  $('stat-online').textContent = `${summary.online || 0} / ${summary.total || 10} Agen Aktif`;
 }
 
-async function setPower(id, on) {
-  if (demo) { const a = state.agents.find(x => x.id === id); a.powered = on; a.status = on ? 'IDLE' : 'OFFLINE'; refreshDemo(); return; }
-  try { await api('/api/agents/power', { agent_id: id, on }); toast(on ? '☀️ Agen dibangunkan' : '🌙 Agen ditidurkan'); pollState(); }
-  catch (e) { toast('⚠️ ' + e.message); }
-}
-async function decide(apvId, action) {
-  if (demo) { const t = state.approvals.find(a => a.approval_id === apvId); state.approvals = state.approvals.filter(a => a !== t); const ag = state.agents.find(a => a.id === t.agent_id); if (ag) ag.status = 'IDLE'; refreshDemo(); toast(action === 'APPROVED' ? '✅ Disetujui' : '❌ Ditolak'); return; }
-  try { await api('/api/approve', { approval_id: apvId, action }); toast(action === 'APPROVED' ? '✅ Tiket disetujui Owner' : '❌ Tiket ditolak Owner'); pollState(); pollLogs(); }
-  catch (e) { toast('⚠️ ' + e.message); }
-}
-async function resolveHuman(id) {
-  if (demo) { state.agents.find(a => a.id === id).status = 'IDLE'; refreshDemo(); return; }
-  try { await api('/api/agents/resolve', { agent_id: id }); toast('👍 Ditangani Owner'); pollState(); } catch (e) { toast('⚠️ ' + e.message); }
-}
+function renderAuditTable(logs) {
+  const tbody = $('audit-table-body');
+  if (!logs || !logs.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Belum ada riwayat transaksi.</td></tr>';
+    return;
+  }
 
-$('cmd-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const input = $('cmd-input'), text = input.value.trim();
-  if (!text) return;
-  const btn = $('cmd-send'); btn.disabled = true;
-  $('response').innerHTML = '<span style="color:var(--muted)">⏳ Router sedang memilih agen...</span>';
-  try {
-    if (demo) { demoChat(text); }
-    else {
-      const r = await api('/api/chat', { message: text, user_id: 'owner_dashboard' });
-      const st = r.execution.status;
-      $('response').innerHTML = `<div class="route">ROUTER → ${esc(r.routing.agent_name)} · ${esc(r.routing.intent)} (${Math.round(r.routing.confidence * 100)}%) · ${esc(st)} · ${r.latency_ms} ms</div>${esc(r.execution.reply_message)}`;
-      selectedId = r.routing.agent_id;
-      await pollState(); pollLogs();
-    }
-    input.value = '';
-  } catch (err) {
-    $('response').innerHTML = `<span style="color:var(--error)">⚠️ ${esc(err.message)}</span>`;
-  } finally { btn.disabled = false; }
-});
-$('presets').innerHTML = PRESETS.map(p => `<button type="button" class="preset">${esc(p)}</button>`).join('');
-$('presets').querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => { $('cmd-input').value = b.textContent; $('cmd-input').focus(); }));
+  tbody.innerHTML = logs.map(l => {
+    const timeStr = l.waktu ? l.waktu.substring(11, 19) : '--:--:--';
+    const agentName = (l.agent && l.agent.name) ? l.agent.name : (l.agent_id || '-');
+    const actionDesc = `${l.action || ''}: ${l.input || ''}`;
+    const statusClass = l.status === 'SUCCESS' ? 'badge-working' : (l.status === 'PENDING_APPROVAL' ? 'badge-waiting' : 'badge-error');
 
-/* ---------- Mode Demo (dibuka langsung tanpa server) ---------- */
-function enterDemo() {
-  if (demo) return;
-  demo = true; $('demo-banner').style.display = 'block';
-  const now = Date.now() / 1000;
-  state = {
-    server_time: now, approvals: [], summary: {},
-    agents: DEMO_ROSTER.map(([id, name, short, role, built]) => ({ id, name, short, role, implemented: built, powered: built, status: built ? 'IDLE' : 'OFFLINE', room: built ? 'lounge' : 'bedroom', task: null, tools: [], last_reply: null, tasks_done: 0, since: now })),
-  };
-  refreshDemo();
-}
-function refreshDemo() {
-  const roomOf = { WORKING: 'work', IDLE: 'lounge', OFFLINE: 'bedroom', WAITING_APPROVAL: 'owner', HUMAN_NEEDED: 'owner', ERROR: 'er' };
-  state.server_time = Date.now() / 1000;
-  state.agents.forEach(a => { if (!a.powered) a.status = 'OFFLINE'; a.room = a.id === 'AGENT-INV-01' && a.status === 'WORKING' ? 'warehouse' : roomOf[a.status]; });
-  state.summary = { online: state.agents.filter(a => a.powered).length, total: state.agents.length, working: state.agents.filter(a => a.status === 'WORKING').length, pending_approvals: state.approvals.length };
-  syncChars(); renderAll();
-}
-const DEMO_TASKS = [['AGENT-SLS-01', 'Sewa 10 laptop ThinkPad 1 bulan', ['check_inventory', 'create_quotation']], ['AGENT-INV-01', 'Cek stok MacBook Pro', ['check_inventory']], ['AGENT-CS-01', 'Komplain layar bergaris', ['create_ticket']], ['AGENT-FIN-01', 'Cek status invoice', ['search_customer']], ['AGENT-KPI-01', 'Rekap omset bulan ini', []]];
-let demoCounter = 0;
-function demoTick() {
-  if (++demoCounter % 4) return;
-  const [id, task, tools] = DEMO_TASKS[Math.floor(Math.random() * DEMO_TASKS.length)];
-  const ag = state.agents.find(a => a.id === id);
-  if (!ag.powered || ag.status !== 'IDLE') return;
-  ag.status = 'WORKING'; ag.task = task; ag.tools = tools; ag.since = Date.now() / 1000; refreshDemo();
-  setTimeout(() => { ag.status = 'IDLE'; ag.tasks_done++; refreshDemo(); }, 5000 + Math.random() * 3000);
-  pushDemoFeed(ag.name, task, 'SUCCESS');
-}
-const demoFeed = [];
-function pushDemoFeed(agent, msg, status) { demoFeed.unshift({ t: new Date().toTimeString().slice(0, 8), agent, msg, status }); renderFeed(demoFeed.slice(0, 25)); $('k-total').textContent = demoFeed.length; }
-function demoChat(text) {
-  const t = text.toLowerCase();
-  let id = 'AGENT-SLS-01', status = 'WORKING';
-  if (/stok|gudang|ready/.test(t)) id = 'AGENT-INV-01';
-  else if (/rusak|bergaris|komplain|otp|captcha/.test(t)) id = 'AGENT-CS-01';
-  else if (/invoice|bayar/.test(t)) id = 'AGENT-FIN-01';
-  else if (/omset|rekap|kpi/.test(t)) id = 'AGENT-KPI-01';
-  const ag = state.agents.find(a => a.id === id);
-  ag.status = status; ag.task = text; ag.since = Date.now() / 1000; selectedId = id; refreshDemo();
-  const disc = (t.match(/diskon\s*(\d+)/) || [])[1];
-  setTimeout(() => {
-    if (/otp|captcha/.test(t)) ag.status = 'HUMAN_NEEDED';
-    else if (disc && +disc > 10) { ag.status = 'WAITING_APPROVAL'; state.approvals.push({ approval_id: 'APV-' + Math.random().toString(16).slice(2, 8).toUpperCase(), agent_id: id, agent_name: ag.name, task: text, category: 'DISCOUNT_REQUEST' }); }
-    else ag.status = 'IDLE';
-    ag.tasks_done++; refreshDemo();
-    pushDemoFeed(ag.name, text, ag.status === 'WAITING_APPROVAL' ? 'PENDING_APPROVAL' : 'SUCCESS');
-  }, 4000);
-  $('response').innerHTML = `<div class="route">[DEMO] ROUTER → ${esc(ag.name)}</div>Simulasi: jalankan server.py untuk respon asli dari AI Core.`;
+    return `
+      <tr>
+        <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">${escapeHtml(timeStr)}</td>
+        <td><strong>${escapeHtml(agentName)}</strong></td>
+        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${escapeHtml(actionDesc)}">${escapeHtml(actionDesc)}</td>
+        <td><span class="badge ${statusClass}">${escapeHtml(l.status || 'OK')}</span></td>
+      </tr>
+    `;
+  }).join('');
 }
 
 /* =====================================================================
-   BOOT
+   API INTEGRATION & DISPATCH
    ===================================================================== */
-(function logo() {
-  const l = $('logo').getContext('2d');
-  l.fillStyle = '#fde68a'; l.fillRect(3, 3, 10, 12); l.fillStyle = '#1e1b4b';
-  for (let y = 5; y < 13; y += 3) for (let x = 5; x < 12; x += 3) l.fillRect(x, y, 2, 2);
-  l.fillStyle = '#7c2d12'; l.fillRect(7, 12, 2, 3);
-})();
-setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
-resize();
-pollState(); pollLogs();
-setInterval(pollState, 1000);
-setInterval(pollLogs, 4000);
-requestAnimationFrame(frame);
+async function fetchAgentState() {
+  try {
+    const res = await fetch('/api/agents/state');
+    if (res.ok) {
+      state = await res.json();
+      synchronizeAgentCharacters();
+      renderRoster();
+      renderApprovals();
+      renderKPIs();
+      renderAgentInspection();
+    }
+  } catch (err) {
+    console.error('Fetch agent state error:', err);
+  }
+}
+
+async function fetchAuditLogs() {
+  try {
+    const logsRes = await fetch('/api/logs');
+    const kpiRes = await fetch('/api/kpi');
+
+    if (logsRes.ok) {
+      const logs = await logsRes.json();
+      renderAuditTable(logs);
+    }
+    if (kpiRes.ok) {
+      const kpi = await kpiRes.json();
+      $('kpi-total').textContent = kpi.total_transactions || 0;
+      $('kpi-rate').textContent = kpi.success_rate || '100%';
+    }
+  } catch (err) {
+    console.error('Fetch logs error:', err);
+  }
+}
+
+async function setAgentPower(agentId, turnOn) {
+  try {
+    const res = await fetch('/api/agents/power', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent_id: agentId, on: turnOn })
+    });
+    if (res.ok) {
+      showToast(turnOn ? `Agen ${agentId} diaktifkan` : `Agen ${agentId} dinonaktifkan (tidur)`);
+      fetchAgentState();
+    }
+  } catch (err) {
+    showToast('Gagal mengubah status daya agen');
+  }
+}
+
+async function handleApprovalAction(approvalId, decision) {
+  try {
+    const res = await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approval_id: approvalId, action: decision })
+    });
+    if (res.ok) {
+      showToast(decision === 'APPROVED' ? `Tiket ${approvalId} disetujui` : `Tiket ${approvalId} ditolak`);
+      fetchAgentState();
+      fetchAuditLogs();
+    }
+  } catch (err) {
+    showToast('Gagal memproses keputusan approval');
+  }
+}
+
+async function resolveHumanAction(agentId) {
+  try {
+    const res = await fetch('/api/agents/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent_id: agentId })
+    });
+    if (res.ok) {
+      showToast(`Status eskalasi ${agentId} diselesaikan`);
+      fetchAgentState();
+    }
+  } catch (err) {
+    showToast('Gagal menyelesaikan status agen');
+  }
+}
+
+$('prompt-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const input = $('prompt-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  const btn = $('btn-submit');
+  btn.disabled = true;
+  const out = $('output-box');
+  out.innerHTML = '<div class="output-meta">ROUTING: Menganalisis kebutuhan & mendelegasikan ke agen...</div><div>Harap tunggu...</div>';
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, user_id: 'owner_web_portal' })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      const routing = data.routing || {};
+      const execution = data.execution || {};
+
+      out.innerHTML = `
+        <div class="output-meta">DELEGASI: ${escapeHtml(routing.agent_name || routing.agent_id)} · LATENCY: ${data.latency_ms} ms · STATUS: ${escapeHtml(execution.status)}</div>
+        <div>${escapeHtml(execution.reply_message || '')}</div>
+      `;
+
+      selectedAgentId = routing.agent_id;
+      fetchAgentState();
+      fetchAuditLogs();
+    } else {
+      out.innerHTML = `<div class="output-meta" style="color: var(--danger);">ERROR: Gagal memproses permintaan</div><div>${escapeHtml(data.error || 'Terjadi kesalahan sistem')}</div>`;
+    }
+  } catch (err) {
+    out.innerHTML = `<div class="output-meta" style="color: var(--danger);">ERROR: Gagal menghubungi server</div><div>${escapeHtml(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    input.value = '';
+  }
+});
+
+// Setup Presets
+const presetContainer = $('preset-container');
+PRESETS.forEach(presetText => {
+  const chip = document.createElement('div');
+  chip.className = 'preset-chip';
+  chip.textContent = presetText;
+  chip.addEventListener('click', () => {
+    $('prompt-input').value = presetText;
+    $('prompt-input').focus();
+  });
+  presetContainer.appendChild(chip);
+});
+
+// Clock
+setInterval(() => {
+  $('clock-display').textContent = new Date().toLocaleTimeString('id-ID', { hour12: false });
+}, 1000);
+
+// Initialize
+adjustCanvasSize();
+fetchAgentState();
+fetchAuditLogs();
+
+setInterval(fetchAgentState, 2000);
+setInterval(fetchAuditLogs, 5000);
+
+requestAnimationFrame(animationLoop);
 </script>
 </body>
 </html>
