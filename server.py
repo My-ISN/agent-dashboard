@@ -163,7 +163,25 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
             return self.handle_get_runtime()
         if path == "/api/memory":
             return self.handle_get_memory()
-        if path == "/api/folders":
+        if path.startswith("/api/folders/") and "/list" in path:
+            parts = [p for p in path.split("/") if p]
+            # Expected parts: ['api', 'folders', '<profile>', 'list']
+            if len(parts) >= 4:
+                profile = urllib.parse.unquote(parts[2])
+                parsed = urllib.parse.urlparse(self.path)
+                q = urllib.parse.parse_qs(parsed.query)
+                sub_path = q.get("path", [""])[0]
+                return self.handle_get_folder_list(profile, sub_path)
+        if path.startswith("/api/folders/") and "/file" in path:
+            parts = [p for p in path.split("/") if p]
+            # Expected parts: ['api', 'folders', '<profile>', 'file']
+            if len(parts) >= 4:
+                profile = urllib.parse.unquote(parts[2])
+                parsed = urllib.parse.urlparse(self.path)
+                q = urllib.parse.parse_qs(parsed.query)
+                file_path = q.get("path", [""])[0]
+                return self.handle_get_folder_file(profile, file_path)
+        if path == "/api/folders" or path == "/api/folders/":
             return self.handle_get_folders()
         if path == "/api/knowledge":
             return self.handle_get_knowledge()
@@ -230,19 +248,63 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
         import datetime
         snap = orchestrator.state.snapshot()
         agents = snap["agents"]
-        profiles = []
+        agent_memories = []
         for a in agents:
-            profiles.append({
+            agent_memories.append({
                 "profile": a["id"],
                 "label": a["name"],
-                "memories": [
-                    {"name": "SOUL.md", "content": f"Identity: {a['name']} ({a['role']})\nCompany: CV ISKOM (Rental Laptop & IT)"},
-                    {"name": "MEMORY.md", "content": f"Role: {a['role']}\nSOP: Diskon max 10% tanpa approval Owner. Wajib validasi unit di database fisik."},
-                    {"name": "USER.md", "content": "Owner ISKOM (Fabian) - Threshold approval Rp 25 Juta & Diskon >10%."}
+                "path": f"agents/{a['id'].lower().replace('-', '_')}.py",
+                "kind": "hermes",
+                "available": True,
+                "soul": {
+                    "name": "SOUL.md",
+                    "path": "SOUL.md",
+                    "exists": True,
+                    "content": f"# IDENTITAS AGEN\nNama: {a['name']} ({a['id']})\nRole: {a['role']}\nOrganisasi: CV ISKOM (Rental Laptop & IT Solusindo)\nStatus: Operational"
+                },
+                "memory": {
+                    "name": "MEMORY.md",
+                    "path": "MEMORY.md",
+                    "exists": True,
+                    "entries": [
+                        f"Peran Utama: {a['role']}",
+                        "SOP: Diskon sewa maksimal 10% tanpa approval Owner ISKOM",
+                        "Wajib verifikasi unit di database inventaris fisik sebelum menerbitkan penawaran",
+                        "Intervensi Keamanan: Dilarang menangani kode OTP SMS atau CAPTCHA secara otonom"
+                    ],
+                    "limit": 100,
+                    "used": 4,
+                    "percent": 4
+                },
+                "user": {
+                    "name": "USER.md",
+                    "path": "USER.md",
+                    "exists": True,
+                    "entries": [
+                        "Nama Owner: Fabian (Direktur CV ISKOM)",
+                        "Aturan Eskalasi: Nilai transaksi >= Rp 25.000.000 dan diskon > 10% wajib persetujuan Owner"
+                    ],
+                    "limit": 50,
+                    "used": 2,
+                    "percent": 4
+                },
+                "contextFiles": [
+                    {
+                        "name": "sop_rental.md",
+                        "path": "knowledge/sop_rental.md",
+                        "exists": True,
+                        "content": "# SOP Layanan Rental ISKOM\n1. Ketentuan Sewa Harian & Bulanan\n2. Jaminan KTP Asli Fisik\n3. Toleransi Keterlambatan 2 Jam"
+                    },
+                    {
+                        "name": "products_pricing.json",
+                        "path": "knowledge/products_pricing.json",
+                        "exists": True,
+                        "content": "Katalog Resmi Laptop Rental: ThinkPad T480, Dell Latitude 5490, HP ProBook 440 G5."
+                    }
                 ]
             })
         return self._json({
-            "profiles": profiles,
+            "agents": agent_memories,
             "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
         })
 
@@ -250,16 +312,144 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
         import datetime
         snap = orchestrator.state.snapshot()
         agents = snap["agents"]
+        agent_file_map = {
+            "AGENT-SLS-01": "agents/sales_agent.py",
+            "AGENT-INV-01": "agents/inventory_agent.py",
+            "AGENT-FIN-01": "agents/finance_agent.py",
+            "AGENT-CS-01": "agents/cs_agent.py",
+            "AGENT-KPI-01": "agents/kpi_agent.py",
+            "AGENT-MGR-01": "core/orchestrator.py",
+            "AGENT-OPS-01": "agents/sales_agent.py",
+            "AGENT-MKT-01": "agents/sales_agent.py",
+            "AGENT-PRS-01": "agents/sales_agent.py",
+            "AGENT-COL-01": "agents/finance_agent.py",
+        }
         return self._json({
             "agents": [
                 {
                     "profile": a["id"],
                     "label": a["name"],
                     "available": True,
-                    "path": f"agents/{a['id'].lower().replace('-', '_')}.py"
+                    "path": agent_file_map.get(a["id"], f"agents/{a['id'].lower().replace('-', '_')}.py")
                 } for a in agents
             ],
             "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_folder_list(self, profile, sub_path=""):
+        import datetime
+        snap = orchestrator.state.snapshot()
+        agent = next((a for a in snap["agents"] if a["id"] == profile), None)
+        agent_name = agent["name"] if agent else profile
+
+        agent_file_map = {
+            "AGENT-SLS-01": "agents/sales_agent.py",
+            "AGENT-INV-01": "agents/inventory_agent.py",
+            "AGENT-FIN-01": "agents/finance_agent.py",
+            "AGENT-CS-01": "agents/cs_agent.py",
+            "AGENT-KPI-01": "agents/kpi_agent.py",
+            "AGENT-MGR-01": "core/orchestrator.py",
+            "AGENT-OPS-01": "agents/sales_agent.py",
+            "AGENT-MKT-01": "agents/sales_agent.py",
+            "AGENT-PRS-01": "agents/sales_agent.py",
+            "AGENT-COL-01": "agents/finance_agent.py",
+        }
+        py_rel = agent_file_map.get(profile, "agents/sales_agent.py")
+        py_name = os.path.basename(py_rel)
+        py_abs = os.path.join(BASE_DIR, py_rel)
+        py_size = os.path.getsize(py_abs) if os.path.isfile(py_abs) else 3800
+
+        sop_abs = os.path.join(BASE_DIR, "knowledge", "sop_rental.md")
+        sop_size = os.path.getsize(sop_abs) if os.path.isfile(sop_abs) else 1950
+
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        entries = [
+            {"name": "SOUL.md", "path": "SOUL.md", "type": "file", "size": 420, "modified": now_iso, "sensitive": False},
+            {"name": "MEMORY.md", "path": "MEMORY.md", "type": "file", "size": 650, "modified": now_iso, "sensitive": False},
+            {"name": "USER.md", "path": "USER.md", "type": "file", "size": 310, "modified": now_iso, "sensitive": False},
+            {"name": py_name, "path": py_name, "type": "file", "size": py_size, "modified": now_iso, "sensitive": False},
+            {"name": "sop_rental.md", "path": "sop_rental.md", "type": "file", "size": sop_size, "modified": now_iso, "sensitive": False}
+        ]
+        return self._json({
+            "profile": profile,
+            "path": sub_path,
+            "entries": entries,
+            "truncated": False,
+            "hiddenCount": 0
+        })
+
+    def handle_get_folder_file(self, profile, file_path):
+        import datetime
+        fname = file_path.split("/")[-1] if "/" in file_path else file_path
+        snap = orchestrator.state.snapshot()
+        agent = next((a for a in snap["agents"] if a["id"] == profile), None)
+        role = agent["role"] if agent else "ISKOM AI Agent"
+        name = agent["name"] if agent else profile
+
+        agent_file_map = {
+            "AGENT-SLS-01": "agents/sales_agent.py",
+            "AGENT-INV-01": "agents/inventory_agent.py",
+            "AGENT-FIN-01": "agents/finance_agent.py",
+            "AGENT-CS-01": "agents/cs_agent.py",
+            "AGENT-KPI-01": "agents/kpi_agent.py",
+            "AGENT-MGR-01": "core/orchestrator.py",
+            "AGENT-OPS-01": "agents/sales_agent.py",
+            "AGENT-MKT-01": "agents/sales_agent.py",
+            "AGENT-PRS-01": "agents/sales_agent.py",
+            "AGENT-COL-01": "agents/finance_agent.py",
+        }
+
+        if fname == "SOUL.md":
+            content = (
+                f"# SOUL & IDENTITY: {name} ({profile})\n\n"
+                f"- **Peran**: {role}\n"
+                f"- **Perusahaan**: CV ISKOM (Rental Laptop & IT Hardware)\n"
+                f"- **Domain**: Solusi rental B2B & pengadaan perangkat laptop/PC\n"
+                f"- **Status Operasional**: Active System Agent di Core Orchestrator\n"
+                f"- **Model**: Google Gemini 1.5 Flash\n"
+            )
+        elif fname == "MEMORY.md":
+            content = (
+                f"# MEMORY CONTEXT & ATURAN BISNIS: {name}\n\n"
+                f"1. **Batas Diskon**: Diskon <= 10% dapat disetujui otomatis. Diskon > 10% WAJIB eskalasi ke Fabian (Direktur).\n"
+                f"2. **Pengecekan Stok**: Ketersediaan unit wajib mengacu pada database inventaris fisik terkini.\n"
+                f"3. **Keamanan & Guardrails**: Segala permintaan kredensial, SMS OTP, atau CAPTCHA WAJIB diserahkan ke Owner via Intercept Mode.\n"
+                f"4. **Nilai Transaksi**: Transaksi sewa >= Rp 25.000.000 memerlukan verifikasi bertingkat.\n"
+            )
+        elif fname == "USER.md":
+            content = (
+                "# PROFIL PENGGUNA (OWNER & DIREKTUR)\n\n"
+                "- **Nama**: Fabian\n"
+                "- **Jabatan**: Direktur Utama CV ISKOM\n"
+                "- **Hak Akses**: Superadmin / Approval Authority Level 1\n"
+                "- **Delegasi**: Menangani resolusi OTP/CAPTCHA, approval diskon tinggi, dan SPK bernilai besar.\n"
+            )
+        elif fname == "sop_rental.md":
+            sop_path = os.path.join(BASE_DIR, "knowledge", "sop_rental.md")
+            if os.path.isfile(sop_path):
+                with open(sop_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+            else:
+                content = "# SOP RENTAL LAPTOP ISKOM\nSyarat jaminan KTP asli fisik."
+        else:
+            py_rel = agent_file_map.get(profile, "agents/sales_agent.py")
+            py_abs = os.path.join(BASE_DIR, py_rel)
+            if not os.path.isfile(py_abs):
+                py_abs = os.path.join(BASE_DIR, "agents", fname)
+            if os.path.isfile(py_abs):
+                with open(py_abs, "r", encoding="utf-8") as f:
+                    content = f.read()
+            else:
+                content = f"# Source code implementation for {name} ({profile})\n# File: {py_rel}"
+
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        return self._json({
+            "profile": profile,
+            "path": file_path,
+            "size": len(content.encode("utf-8")),
+            "modified": now_iso,
+            "kind": "text",
+            "content": content
         })
 
     def handle_get_knowledge(self):
