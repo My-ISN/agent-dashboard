@@ -82,5 +82,33 @@
     "min_deposit": 1500000,
     "stock_total": 8,
     "category": "High Performance Gaming"
+  },
+  {
+    "sku": "NB-ASU-ROG16",
+    "brand": "Asus",
+    "model": "ROG Strix G16",
+    "specs": "Intel Core i9-13980HX, RTX 4070, RAM 32GB, SSD 1TB",
+    "rates": {
+      "daily": 350000,
+      "weekly": 1600000,
+      "monthly": 4200000
+    },
+    "min_deposit": 1500000,
+    "stock_total": 8,
+    "category": "High Performance Gaming"
+  },
+  {
+    "sku": "NB-ASU-ROG16",
+    "brand": "Asus",
+    "model": "ROG Strix G16",
+    "specs": "Intel Core i9-13980HX, RTX 4070, RAM 32GB, SSD 1TB",
+    "rates": {
+      "daily": 350000,
+      "weekly": 1600000,
+      "monthly": 4200000
+    },
+    "min_deposit": 1500000,
+    "stock_total": 8,
+    "category": "High Performance Gaming"
   }
 ]

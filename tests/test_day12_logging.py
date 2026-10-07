@@ -4,6 +4,12 @@ Menguji pencatatan 10 parameter audit trail, persistensi file JSONL, dan metrik 
 """
 
 import sys
+import os
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+import sys
 import asyncio
 import os
 import json
@@ -79,8 +85,8 @@ async def test_logging_and_monitoring():
 
     # 4. Verifikasi Tampilan Visual Dashboard HTML
     print("\n[STEP 4] Verifikasi File Visual Monitoring Dashboard HTML:")
-    dashboard_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboard.html")
-    assert os.path.exists(dashboard_path), "File 'dashboard.html' harus ada!"
+    dashboard_path = os.path.join(ROOT_DIR, "dashboard.html")
+    assert os.path.exists(dashboard_path), f"File 'dashboard.html' harus ada di {dashboard_path}!"
     size_bytes = os.path.getsize(dashboard_path)
     print(f"[-] File Dashboard HTML: {dashboard_path} ({size_bytes:,} bytes)")
     print("[+] Status Step 4: PASS (Virtual Office 2D & Monitoring Dashboard siap dibuka)")
