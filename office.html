@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISKOM AI-OS — Pixel Office</title>
+  <meta name="description" content="Kantor virtual pixel ISKOM AI-OS: pantau tim agen AI secara live, setiap agen pindah ruangan sesuai statusnya.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --panel: #121829;
+      --panel-2: #182036;
+      --border: #263252;
+      --text: #e6eaf5;
+      --muted: #8a94b3;
+      --accent: #7c5cff;
+      --working: #34d399;
+      --idle: #60a5fa;
+      --offline: #6b7280;
+      --waiting: #fbbf24;
+      --human: #f472b6;
+      --error: #f87171;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 10% 0%, rgba(124, 92, 255, .14), transparent 40%),
+        radial-gradient(circle at 90% 100%, rgba(52, 211, 153, .08), transparent 40%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 18px;
+    }
+    .pixel { font-family: 'Press Start 2P', monospace; letter-spacing: .5px; }
+    .app { max-width: 1480px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Header */
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 18px; box-shadow: 0 0 0 1px rgba(124,92,255,.05), 0 10px 30px rgba(0,0,0,.25);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center;
+      background: linear-gradient(135deg, #7c5cff, #4f46e5); box-shadow: 0 0 18px rgba(124,92,255,.45);
+      image-rendering: pixelated;
+    }
+    .brand h1 { font-size: 15px; line-height: 1.4; }
+    .brand p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .chips { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .chip {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px;
+      background: var(--panel-2); border: 1px solid var(--border); font-size: 12px; color: var(--muted);
+    }
+    .chip b { color: var(--text); font-size: 14px; }
+    .chip.live { color: var(--working); border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.08); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; animation: pulse 1.8s infinite; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    .clock { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text); }
+
+    .demo-banner {
+      display: none; padding: 10px 14px; border-radius: 10px; font-size: 13px;
+      background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.35); color: var(--waiting);
+    }
+    .demo-banner code { background: rgba(0,0,0,.3); padding: 2px 6px; border-radius: 4px; }
+
+    /* Main grid */
+    .main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; }
+    @media (max-width: 1150px) { .main { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; min-width: 0;
+    }
+    .card-title { font-size: 10px; color: var(--text); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .card-title small { font-family: 'Inter'; font-size: 11px; color: var(--muted); letter-spacing: 0; }
+
+    .office-wrap { position: relative; width: 100%; border-radius: 8px; overflow: hidden; background: #050810; border: 2px solid #1d2540; }
+    #office { display: block; width: 100%; height: auto; cursor: default; }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+    .side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+    /* Roster */
+    .roster { display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+    .agent-row {
+      display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: center;
+      padding: 7px 8px; border-radius: 9px; border: 1px solid transparent; cursor: pointer;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .agent-row:hover { background: var(--panel-2); transform: translateX(2px); }
+    .agent-row.selected { background: rgba(124,92,255,.12); border-color: rgba(124,92,255,.45); }
+    .agent-row canvas { width: 24px; height: 36px; image-rendering: pixelated; }
+    .agent-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agent-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pill {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; white-space: nowrap;
+      border: 1px solid currentColor; background: rgba(255,255,255,.03);
+    }
+    .switch {
+      width: 34px; height: 18px; border-radius: 99px; background: #2a3350; position: relative; border: none; cursor: pointer;
+      transition: background .2s;
+    }
+    .switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+      background: #cbd5e1; transition: transform .2s;
+    }
+    .switch.on { background: var(--working); }
+    .switch.on::after { transform: translateX(16px); background: #fff; }
+    .switch:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* Approval */
+    .approvals { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+    .ticket {
+      border: 1px solid rgba(251,191,36,.4); border-left: 4px solid var(--waiting); border-radius: 10px;
+      padding: 10px 12px; background: rgba(251,191,36,.06); animation: slideIn .35s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } }
+    .ticket-head { display: flex; justify-content: space-between; font-size: 11px; color: var(--waiting); margin-bottom: 6px; font-weight: 700; }
+    .ticket-task { font-size: 13px; margin-bottom: 4px; }
+    .ticket-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+    .btns { display: flex; gap: 8px; }
+    .btn {
+      flex: 1; padding: 8px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 9px;
+      font-family: 'Press Start 2P', monospace; color: #0a0e1a; box-shadow: 0 3px 0 rgba(0,0,0,.4);
+      transition: transform .1s, filter .15s;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.4); }
+    .btn-ok { background: var(--working); }
+    .btn-no { background: var(--error); }
+    .btn-ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+    .empty { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 0; }
+
+    /* Detail */
+    .detail-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .detail-head canvas { width: 40px; height: 60px; image-rendering: pixelated; background: var(--panel-2); border-radius: 8px; padding: 4px; }
+    .detail-grid { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; font-size: 12px; }
+    .detail-grid dt { color: var(--muted); }
+    .detail-grid dd { word-break: break-word; }
+    .tool-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--panel-2); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; margin: 0 4px 4px 0; }
+    .reply-box { margin-top: 10px; font-size: 12px; line-height: 1.5; background: var(--panel-2); border-radius: 8px; padding: 10px; color: #cfd6ea; white-space: pre-wrap; max-height: 140px; overflow-y: auto; }
+
+    /* Console */
+    .bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+    @media (max-width: 900px) { .bottom { grid-template-columns: 1fr; } }
+    .cmd { display: flex; gap: 8px; }
+    .cmd input {
+      flex: 1; background: #0b1020; border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+      padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .2s;
+    }
+    .cmd input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,.15); }
+    .send { flex: 0 0 auto; background: var(--accent); color: #fff; padding: 0 16px; }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .preset {
+      font-size: 11px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 5px 10px; cursor: pointer; transition: color .15s, border-color .15s;
+    }
+    .preset:hover { color: var(--text); border-color: var(--accent); }
+    .response { margin-top: 12px; font-size: 13px; line-height: 1.55; background: #0b1020; border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 64px; white-space: pre-wrap; }
+    .response .route { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .feed { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+    .feed-row { display: grid; grid-template-columns: 64px 130px 1fr auto; gap: 8px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,.02); align-items: center; }
+    .feed-row:nth-child(odd) { background: rgba(255,255,255,.04); }
+    .feed-row .t { color: var(--muted); }
+    .feed-row .a { color: #c4b5fd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-row .m { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #cfd6ea; }
+
+    .toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0;
+      background: var(--panel-2); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px;
+      font-size: 13px; transition: all .25s; pointer-events: none; z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #2a3350; border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="brand-icon"><canvas id="logo" width="16" height="16" style="width:28px;height:28px;image-rendering:pixelated"></canvas></div>
+      <div>
+        <h1 class="pixel">ISKOM AI-OS</h1>
+        <p>Pixel Office — Tim Agen AI Rental Laptop & IT Equipment</p>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip live"><span class="dot"></span><b id="k-online">0/10</b> Agen Online</div>
+      <div class="chip">⌨️ <b id="k-working">0</b> Bekerja</div>
+      <div class="chip" style="color:var(--waiting)">❗ <b id="k-pending">0</b> Menunggu Approval</div>
+      <div class="chip">📊 <b id="k-total">0</b> Request</div>
+      <div class="chip clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <div class="demo-banner" id="demo-banner">
+    ⚠️ Mode Demo (data simulasi). Untuk data live dari AI Core jalankan <code>python server.py</code> lalu buka <code>http://localhost:8080</code>
+  </div>
+
+  <main class="main">
+    <section class="card" aria-labelledby="office-title">
+      <h2 class="card-title pixel" id="office-title">KANTOR VIRTUAL <small>Klik karakter untuk melihat detail agen</small></h2>
+      <div class="office-wrap" id="office-wrap"><canvas id="office" aria-label="Peta kantor virtual pixel"></canvas></div>
+      <div class="legend">
+        <span><i style="background:var(--working)"></i>Bekerja → Ruang Kerja / Gudang</span>
+        <span><i style="background:var(--idle)"></i>Santai → Lounge</span>
+        <span><i style="background:var(--offline)"></i>Offline → Kamar Tidur</span>
+        <span><i style="background:var(--waiting)"></i>Menunggu Approval → Ruang Owner</span>
+        <span><i style="background:var(--human)"></i>Butuh Manusia (OTP/CAPTCHA)</span>
+        <span><i style="background:var(--error)"></i>Error → Ruang ER</span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="card" aria-labelledby="roster-title">
+        <h2 class="card-title pixel" id="roster-title">TIM AGEN <small id="roster-sub">10 agen</small></h2>
+        <div class="roster" id="roster"></div>
+      </section>
+      <section class="card" aria-labelledby="apv-title">
+        <h2 class="card-title pixel" id="apv-title">ANTREAN APPROVAL <small>Keputusan Owner</small></h2>
+        <div class="approvals" id="approvals"><div class="empty">Tidak ada tiket menunggu ✨</div></div>
+      </section>
+      <section class="card" aria-labelledby="detail-title">
+        <h2 class="card-title pixel" id="detail-title">DETAIL AGEN</h2>
+        <div id="detail"><div class="empty">Pilih agen di peta atau daftar</div></div>
+      </section>
+    </aside>
+  </main>
+
+  <section class="bottom">
+    <div class="card">
+      <h2 class="card-title pixel">PERINTAH KE TIM AI</h2>
+      <form class="cmd" id="cmd-form">
+        <input id="cmd-input" autocomplete="off" placeholder="Beri instruksi ke tim AI... (contoh: sewa 10 laptop ThinkPad 1 bulan)">
+        <button class="btn send" id="cmd-send" type="submit">KIRIM</button>
+      </form>
+      <div class="presets" id="presets"></div>
+      <div class="response" id="response"><span style="color:var(--muted)">Respon agen akan tampil di sini.</span></div>
+    </div>
+    <div class="card">
+      <h2 class="card-title pixel">AKTIVITAS LIVE <small>Audit log terbaru</small></h2>
+      <div class="feed" id="feed"><div class="empty">Belum ada aktivitas</div></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   KONFIGURASI PETA (koordinat logis 480x272, 1 tile = 16px)
+   ===================================================================== */
+const W = 480, H = 272, WALL = 22, CORRIDOR_Y = 144;
+const ROOMS = {
+  work:      { x: 0,   y: 0,   w: 208, h: 128, label: 'RUANG KERJA', door: 124, side: 'b', wall: '#c9b79c', floor: 'wood' },
+  meeting:   { x: 208, y: 0,   w: 112, h: 128, label: 'MEETING',     door: 264, side: 'b', wall: '#a7b8c9', floor: 'blue' },
+  owner:     { x: 320, y: 0,   w: 160, h: 128, label: 'RUANG OWNER', door: 352, side: 'b', wall: '#b9a3a3', floor: 'red' },
+  warehouse: { x: 0,   y: 160, w: 112, h: 112, label: 'GUDANG',      door: 56,  side: 't', wall: '#8f8f8f', floor: 'concrete' },
+  lounge:    { x: 112, y: 160, w: 128, h: 112, label: 'LOUNGE',      door: 176, side: 't', wall: '#d8c7a0', floor: 'wood2' },
+  bedroom:   { x: 240, y: 160, w: 128, h: 112, label: 'KAMAR TIDUR', door: 292, side: 't', wall: '#7b74a6', floor: 'purple', lane: 221 },
+  server:    { x: 368, y: 160, w: 64,  h: 112, label: 'SERVER',      door: 400, side: 't', wall: '#3b4252', floor: 'tech' },
+  er:        { x: 432, y: 160, w: 48,  h: 112, label: 'ER',          door: 456, side: 't', wall: '#d9d9d9', floor: 'tile' },
+};
+
+const STATUS = {
+  WORKING:          { label: 'Bekerja',           color: '#34d399' },
+  IDLE:             { label: 'Santai',            color: '#60a5fa' },
+  OFFLINE:          { label: 'Tidur',             color: '#6b7280' },
+  WAITING_APPROVAL: { label: 'Menunggu Approval', color: '#fbbf24' },
+  HUMAN_NEEDED:     { label: 'Butuh Manusia',     color: '#f472b6' },
+  ERROR:            { label: 'Error',             color: '#f87171' },
+};
+const ROOM_NAME = { work: 'Ruang Kerja', warehouse: 'Gudang', lounge: 'Lounge', bedroom: 'Kamar Tidur', owner: 'Ruang Owner', er: 'Ruang ER', meeting: 'Meeting' };
+
+// Penampilan karakter per agen (index = urutan roster -> kasur, meja & spot lounge)
+const LOOK = {
+  'AGENT-MGR-01': { hair: '#2b2b2b', shirt: '#7c5cff', pants: '#1f2937', skin: '#f1c27d', tie: '#fbbf24', desk: 0 },
+  'AGENT-SLS-01': { hair: '#5a3a1e', shirt: '#2f80ed', pants: '#1e3a5f', skin: '#e8b48a', desk: 1 },
+  'AGENT-INV-01': { hair: '#d9a441', shirt: '#27ae60', pants: '#3f3f46', skin: '#f5d0a9', desk: null },
+  'AGENT-CS-01':  { hair: '#8e3b2e', shirt: '#eb5757', pants: '#374151', skin: '#f1c27d', desk: 2 },
+  'AGENT-FIN-01': { hair: '#1f1f1f', shirt: '#f2c94c', pants: '#4b3b1f', skin: '#c68642', desk: 3 },
+  'AGENT-KPI-01': { hair: '#6b6b6b', shirt: '#56ccf2', pants: '#1f2937', skin: '#e0ac69', desk: 4 },
+  'AGENT-MKT-01': { hair: '#c0392b', shirt: '#f2994a', pants: '#3f3f46', skin: '#f5d0a9', desk: 5 },
+  'AGENT-PRS-01': { hair: '#3d2b1f', shirt: '#bb6bd9', pants: '#312e81', skin: '#c68642', desk: 6 },
+  'AGENT-OPS-01': { hair: '#444444', shirt: '#219653', pants: '#1f2937', skin: '#e8b48a', desk: 7 },
+  'AGENT-COL-01': { hair: '#7a4b2a', shirt: '#9aa5b1', pants: '#334155', skin: '#f1c27d', desk: 8 },
+};
+const OWNER_LOOK = { hair: '#1f2937', shirt: '#111827', pants: '#111827', skin: '#e0ac69', tie: '#dc2626' };
+
+const DEMO_ROSTER = [
+  ['AGENT-MGR-01', 'AI Business Manager', 'Manager', 'Executive Orchestrator', false],
+  ['AGENT-SLS-01', 'Sales & Rental Agent', 'Sales', 'Rental Sales Consultant', true],
+  ['AGENT-INV-01', 'Inventory & Unit Agent', 'Inventory', 'Warehouse & Stock Controller', true],
+  ['AGENT-CS-01', 'Customer Service Agent', 'CS', 'Helpdesk & Customer Care', true],
+  ['AGENT-FIN-01', 'Finance & Invoicing Agent', 'Finance', 'Billing & Invoicing', true],
+  ['AGENT-KPI-01', 'KPI & Executive Agent', 'KPI', 'Executive Reporting', true],
+  ['AGENT-MKT-01', 'Marketing Agent', 'Marketing', 'Campaign & Content', false],
+  ['AGENT-PRS-01', 'Prospecting Agent', 'Prospect', 'Lead Generation', false],
+  ['AGENT-OPS-01', 'Rental Operation Agent', 'Operation', 'Delivery & Pickup', false],
+  ['AGENT-COL-01', 'Collection Agent', 'Collection', 'Payment Collection', false],
+];
+
+const PRESETS = [
+  'Saya butuh 10 laptop ThinkPad untuk 1 bulan',
+  'Kasih diskon 25% untuk sewa 20 laptop Lenovo',
+  'Ada stok MacBook Pro ready di gudang?',
+  'Laptop sewaan layarnya bergaris, tolong diganti',
+  'Sistem minta kode OTP SMS dari penyewa',
+  'Rekap omset sewa dan utilisasi unit bulan ini',
+];
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+let state = { agents: [], approvals: [], summary: {}, server_time: Date.now() / 1000 };
+let demo = false;
+let selectedId = null;
+const chars = {};            // id -> karakter animasi
+let tick = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shade = (hex, f = 0.72) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+  return `rgb(${r},${g},${b})`;
+};
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* =====================================================================
+   SPRITE KARAKTER (digambar prosedural, tanpa aset eksternal)
+   ===================================================================== */
+function drawChar(g, x, y, p, o = {}) {
+  x = Math.round(x); y = Math.round(y);
+  const L = x - 5, T = y - 17;
+  const r = (dx, dy, w, h, c) => { g.fillStyle = c; g.fillRect(L + dx, T + dy, w, h); };
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(L + 1, y - 1, 8, 2);
+  const step = o.walking ? o.frame % 2 : 0;
+  if (!o.sit) {
+    r(2, 13, 2, step ? 3 : 4, p.pants); r(6, 13, 2, step ? 4 : 3, p.pants);
+    r(2, step ? 16 : 17, 2, 1, '#111827'); r(6, step ? 17 : 16, 2, 1, '#111827');
+  }
+  r(1, 8, 8, 6, p.shirt); r(1, 13, 8, 1, shade(p.shirt));
+  const a = o.typing ? o.frame % 2 : 0;
+  r(0, 9 + a, 1, 4, shade(p.shirt, .85)); r(9, 9 + (o.typing ? 1 - a : 0), 1, 4, shade(p.shirt, .85));
+  r(0, 13 + a, 1, 1, p.skin); r(9, 13 + (o.typing ? 1 - a : 0), 1, 1, p.skin);
+  r(2, 2, 6, 6, p.skin);
+  r(1, 0, 8, 3, p.hair); r(1, 3, 1, 3, p.hair); r(8, 3, 1, 3, p.hair);
+  if (o.face === 'up') { r(2, 2, 6, 5, p.hair); }
+  else {
+    r(3, 4, 1, 2, '#111827'); r(6, 4, 1, 2, '#111827'); r(4, 7, 2, 1, shade(p.skin));
+    if (p.tie) r(4, 8, 2, 4, p.tie);
+  }
+  if (o.cup) { r(10, 10, 3, 3, '#f3f4f6'); r(13, 11, 1, 1, '#f3f4f6'); r(11, 9 - (tick >> 4) % 2, 1, 1, 'rgba(255,255,255,.6)'); }
+}
+
+function drawSleeper(g, bx, by, p) {
+  // kasur 16x28 + kepala di bantal + selimut warna baju
+  g.fillStyle = '#4a2e17'; g.fillRect(bx - 1, by - 1, 18, 30);
+  g.fillStyle = '#e5e7eb'; g.fillRect(bx, by, 16, 28);
+  g.fillStyle = '#ffffff'; g.fillRect(bx + 2, by + 2, 12, 6);
+  if (p) {
+    g.fillStyle = p.skin; g.fillRect(bx + 5, by + 3, 6, 5);
+    g.fillStyle = p.hair; g.fillRect(bx + 4, by + 2, 8, 2); g.fillRect(bx + 4, by + 4, 1, 3); g.fillRect(bx + 11, by + 4, 1, 3);
+    g.fillStyle = '#111827'; g.fillRect(bx + 6, by + 6, 1, 1); g.fillRect(bx + 9, by + 6, 1, 1);
+    const breathe = (tick >> 5) % 2;
+    g.fillStyle = p.shirt; g.fillRect(bx + 1, by + 9 - breathe, 14, 18 + breathe);
+    g.fillStyle = shade(p.shirt); g.fillRect(bx + 1, by + 9 - breathe, 14, 2);
+  } else {
+    g.fillStyle = '#9ca3af'; g.fillRect(bx + 1, by + 10, 14, 17);
+    g.fillStyle = '#6b7280'; g.fillRect(bx + 1, by + 10, 14, 2);
+  }
+}
+
+/* =====================================================================
+   POSISI TARGET PER STATUS
+   ===================================================================== */
+const deskPos = d => ({ x: 24 + (d % 5) * 40, y: 34 + Math.floor(d / 5) * 46 });
+const bedPos = i => ({ x: 248 + (i % 5) * 24, y: 186 + Math.floor(i / 5) * 42 });
+const LOUNGE_SPOTS = [[130, 230], [150, 246], [170, 230], [190, 246], [210, 230], [226, 250], [140, 262], [180, 262], [200, 214], [222, 214]];
+
+function spotFor(agent, idx, queueIdx, erIdx) {
+  const look = LOOK[agent.id] || {};
+  switch (agent.status) {
+    case 'WORKING':
+      if (look.desk === null || look.desk === undefined) return { room: 'warehouse', x: 62, y: 238, pose: 'stand', face: 'up', typing: true };
+      const d = deskPos(look.desk);
+      return { room: 'work', x: d.x, y: d.y + 27, pose: 'sit', face: 'up' };
+    case 'WAITING_APPROVAL':
+    case 'HUMAN_NEEDED':
+      return { room: 'owner', x: 340 + queueIdx * 18, y: 112, pose: 'stand', face: 'up' };
+    case 'ERROR':
+      return { room: 'er', x: 446 + (erIdx % 2) * 20, y: 214 + Math.floor(erIdx / 2) * 22, pose: 'stand', face: 'down' };
+    case 'OFFLINE': {
+      const b = bedPos(idx);
+      return { room: 'bedroom', x: b.x + 8, y: b.y + 20, pose: 'sleep', bed: b };
+    }
+    default: {
+      const s = LOUNGE_SPOTS[idx % LOUNGE_SPOTS.length];
+      return { room: 'lounge', x: s[0], y: s[1], pose: 'stand', face: 'down', cup: true };
+    }
+  }
+}
+
+function doorInside(roomKey) {
+  const rm = ROOMS[roomKey];
+  return rm.side === 'b' ? { x: rm.door, y: rm.y + rm.h - 8 } : { x: rm.door, y: rm.y + WALL + 6 };
+}
+// titik-titik dari pintu ke spot di dalam ruangan (menghindari menembus meja / kasur)
+function inRoomPoints(roomKey, p) {
+  const rm = ROOMS[roomKey];
+  if (rm.lane) return [{ x: rm.door, y: rm.lane }, { x: p.x, y: rm.lane }, { x: p.x, y: p.y }];
+  return [{ x: rm.door, y: p.y }, { x: p.x, y: p.y }];
+}
+function buildPath(c, spot) {
+  if (c.room === spot.room) return [{ x: spot.x, y: spot.y }];
+  const pts = [];
+  if (ROOMS[c.room]) {
+    const back = inRoomPoints(c.room, c).reverse().slice(1);
+    pts.push(...back, doorInside(c.room), { x: ROOMS[c.room].door, y: CORRIDOR_Y });
+  } else pts.push({ x: c.x, y: CORRIDOR_Y });
+  pts.push({ x: ROOMS[spot.room].door, y: CORRIDOR_Y }, doorInside(spot.room), ...inRoomPoints(spot.room, spot));
+  return pts;
+}
+
+function syncChars() {
+  let q = 0, e = 0;
+  state.agents.forEach((ag, idx) => {
+    const qi = (ag.status === 'WAITING_APPROVAL' || ag.status === 'HUMAN_NEEDED') ? q++ : 0;
+    const ei = ag.status === 'ERROR' ? e++ : 0;
+    const spot = spotFor(ag, idx, qi, ei);
+    const key = `${spot.room}:${spot.x}:${spot.y}:${spot.pose}`;
+    let c = chars[ag.id];
+    if (!c) {
+      c = chars[ag.id] = { id: ag.id, x: spot.x, y: spot.y, room: spot.room, path: [], spot, key, pose: spot.pose, frame: 0, ft: 0 };
+      return;
+    }
+    c.agent = ag;
+    if (c.key !== key) {
+      c.key = key; c.spot = spot;
+      c.path = buildPath(c, spot);
+      c.pose = 'walk';
+    }
+  });
+}
+
+function updateChars(dt) {
+  const speed = 46; // px logis per detik
+  Object.values(chars).forEach(c => {
+    c.ft += dt;
+    if (c.ft > 0.18) { c.ft = 0; c.frame++; }
+    if (!c.path.length) { c.pose = c.spot.pose; return; }
+    const t = c.path[0];
+    const dx = t.x - c.x, dy = t.y - c.y, dist = Math.hypot(dx, dy);
+    const stepLen = speed * dt;
+    c.face = dy < -0.5 ? 'up' : 'down';
+    if (dist <= stepLen) { c.x = t.x; c.y = t.y; c.path.shift(); }
+    else { c.x += dx / dist * stepLen; c.y += dy / dist * stepLen; }
+    c.room = roomAt(c.x, c.y);
+  });
+}
+function roomAt(x, y) {
+  for (const [k, r] of Object.entries(ROOMS)) if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return k;
+  return 'corridor';
+}
+
+/* =====================================================================
+   RENDER SCENE (canvas resolusi rendah -> diperbesar, tetap tajam)
+   ===================================================================== */
+const off = document.createElement('canvas'); off.width = W; off.height = H;
+const g = off.getContext('2d');
+const canvas = $('office'), ctx = canvas.getContext('2d');
+let S = 2, DPR = 1;
+
+function resize() {
+  const wrap = $('office-wrap');
+  S = wrap.clientWidth / W; DPR = window.devicePixelRatio || 1;
+  canvas.width = Math.round(W * S * DPR); canvas.height = Math.round(H * S * DPR);
+  canvas.style.height = (H * S) + 'px';
+}
+window.addEventListener('resize', resize);
+
+function floor(rm) {
+  const { x, y, w, h } = rm;
+  const fy = y + WALL;
+  for (let yy = fy; yy < y + h; yy += 4) for (let xx = x; xx < x + w; xx += 8) {
+    let c;
+    const odd = ((yy - fy) / 4) % 2, chk = ((xx / 8) + ((yy - fy) / 8 | 0)) % 2;
+    switch (rm.floor) {
+      case 'wood': c = odd ? '#9a6a3f' : '#a87545'; if (((xx + yy * 3) % 40) === 0) c = '#8a5d36'; break;
+      case 'wood2': c = odd ? '#b0834f' : '#bb8d57'; break;
+      case 'blue': c = chk ? '#3d5a80' : '#41608a'; break;
+      case 'red': c = chk ? '#7a2e2e' : '#823333'; break;
+      case 'purple': c = chk ? '#4c4577' : '#524a80'; break;
+      case 'concrete': c = chk ? '#7d7d7d' : '#858585'; break;
+      case 'tech': c = chk ? '#1f2937' : '#243041'; break;
+      case 'tile': c = chk ? '#e5e7eb' : '#cfd4dc'; break;
+    }
+    g.fillStyle = c; g.fillRect(xx, yy, 8, 4);
+  }
+  // dinding + list bawah
+  g.fillStyle = rm.wall; g.fillRect(x, y, w, WALL);
+  g.fillStyle = shade(rm.wall, .85); for (let xx = x; xx < x + w; xx += 6) g.fillRect(xx, y, 1, WALL);
+  g.fillStyle = shade(rm.wall, .55); g.fillRect(x, y + WALL - 3, w, 3);
+}
+
+function walls() {
+  g.fillStyle = '#1b1410';
+  for (const rm of Object.values(ROOMS)) {
+    const { x, y, w, h } = rm;
+    g.fillRect(x, y, w, 2); g.fillRect(x, y, 2, h); g.fillRect(x + w - 2, y, 2, h);
+    const by = rm.side === 'b' ? y + h - 3 : y;
+    const other = rm.side === 'b' ? y : y + h - 3;
+    g.fillRect(x, other, w, 3);
+    g.fillRect(x, by, rm.door - 9 - x, 3); g.fillRect(rm.door + 9, by, x + w - rm.door - 9, 3);
+    // keset pintu
+    g.fillStyle = '#5b3a1e'; g.fillRect(rm.door - 7, rm.side === 'b' ? y + h - 2 : y, 14, 2); g.fillStyle = '#1b1410';
+  }
+}
+
+function corridor() {
+  for (let xx = 0; xx < W; xx += 8) for (let yy = 128; yy < 160; yy += 8) {
+    g.fillStyle = ((xx + yy) / 8) % 2 ? '#d6cfc2' : '#cbc3b4'; g.fillRect(xx, yy, 8, 8);
+  }
+  plant(8, 152); plant(196, 152); plant(330, 152); plant(470, 152);
+  // dispenser air
+  g.fillStyle = '#e5e7eb'; g.fillRect(232, 134, 8, 14); g.fillStyle = '#60a5fa'; g.fillRect(233, 130, 6, 6);
+}
+
+function plant(x, y) {
+  g.fillStyle = '#7c3f1d'; g.fillRect(x - 3, y - 5, 6, 5);
+  g.fillStyle = '#2f7d32'; g.fillRect(x - 5, y - 11, 10, 6); g.fillStyle = '#43a047'; g.fillRect(x - 3, y - 14, 6, 5); g.fillRect(x - 6, y - 9, 3, 3);
+}
+function windowAt(x, y, night) {
+  g.fillStyle = '#5b3a1e'; g.fillRect(x - 1, y - 1, 18, 13);
+  g.fillStyle = night ? '#1e2a4a' : '#9bd4f5'; g.fillRect(x, y, 16, 11);
+  g.fillStyle = '#5b3a1e'; g.fillRect(x + 7, y, 2, 11); g.fillRect(x, y + 5, 16, 1);
+  if (night) { g.fillStyle = '#fef3c7'; g.fillRect(x + 11, y + 2, 3, 3); }
+}
+
+function furniture(activeDesks) {
+  // ---- Ruang kerja
+  windowAt(30, 4); windowAt(90, 4); windowAt(150, 4);
+  g.fillStyle = '#e5e7eb'; g.fillRect(186, 6, 12, 10); g.fillStyle = '#ef4444'; g.fillRect(188, 9, 3, 5); g.fillStyle = '#22c55e'; g.fillRect(192, 8, 3, 6);
+  for (let d = 0; d < 10; d++) {
+    const p = deskPos(d), on = activeDesks.has(d);
+    g.fillStyle = '#374151'; g.fillRect(p.x - 5, p.y + 18, 10, 8); g.fillStyle = '#4b5563'; g.fillRect(p.x - 5, p.y + 18, 10, 2);
+    g.fillStyle = '#6b4220'; g.fillRect(p.x - 14, p.y + 4, 28, 12); g.fillStyle = '#8b5a2b'; g.fillRect(p.x - 14, p.y, 28, 10);
+    g.fillStyle = '#111827'; g.fillRect(p.x - 6, p.y - 6, 12, 9); g.fillRect(p.x - 1, p.y + 3, 2, 2);
+    g.fillStyle = on ? ((tick >> 3) % 2 ? '#67e8f9' : '#5eead4') : '#1e293b'; g.fillRect(p.x - 5, p.y - 5, 10, 7);
+    if (on) { g.fillStyle = '#0f172a'; g.fillRect(p.x - 4, p.y - 3, 6, 1); g.fillRect(p.x - 4, p.y - 1, 4, 1); }
+    g.fillStyle = '#d1d5db'; g.fillRect(p.x - 5, p.y + 5, 10, 3);
+    g.fillStyle = '#f9fafb'; g.fillRect(p.x + 8, p.y + 3, 4, 5);
+  }
+  plant(6, 120); plant(200, 40);
+
+  // ---- Meeting
+  g.fillStyle = '#f9fafb'; g.fillRect(232, 4, 64, 15); g.fillStyle = '#9ca3af'; g.fillRect(232, 18, 64, 2);
+  [[238, 8, '#60a5fa'], [248, 6, '#34d399'], [258, 10, '#fbbf24'], [268, 5, '#f472b6'], [278, 7, '#a78bfa']].forEach(([bx, bh, c]) => { g.fillStyle = c; g.fillRect(bx, 17 - bh, 6, bh); });
+  g.fillStyle = '#5b3a1e'; g.fillRect(240, 56, 48, 30); g.fillStyle = '#7c4a24'; g.fillRect(242, 54, 44, 28);
+  [[236, 62], [236, 74], [290, 62], [290, 74], [256, 46], [272, 46], [256, 90], [272, 90]].forEach(([cx, cy]) => { g.fillStyle = '#374151'; g.fillRect(cx - 3, cy - 3, 7, 7); });
+  plant(214, 120); plant(314, 40);
+
+  // ---- Owner
+  windowAt(334, 4); windowAt(452, 4);
+  g.fillStyle = '#5b3a1e'; g.fillRect(364, 4, 36, 16); ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'].forEach((c, i) => { g.fillStyle = c; g.fillRect(366 + i * 5, 6, 4, 6); g.fillRect(368 + i * 5, 13, 3, 6); });
+  g.fillStyle = '#7f1d1d'; g.fillRect(360, 74, 80, 34); g.fillStyle = '#991b1b'; g.fillRect(362, 76, 76, 30);
+  drawChar(g, 400, 58, OWNER_LOOK, { face: 'down', typing: (tick >> 4) % 4 === 0, frame: tick >> 3 });
+  g.fillStyle = '#3f2a14'; g.fillRect(374, 56, 52, 14); g.fillStyle = '#5b3a1e'; g.fillRect(374, 54, 52, 10);
+  g.fillStyle = '#d1d5db'; g.fillRect(392, 50, 14, 6); g.fillStyle = '#93c5fd'; g.fillRect(393, 51, 12, 4);
+  g.fillStyle = '#fbbf24'; g.fillRect(378, 58, 10, 3);
+  g.fillStyle = '#f9fafb'; g.fillRect(414, 56, 6, 5);
+  plant(330, 120); plant(470, 120); plant(470, 44);
+  // lampu antrean approval
+  const pending = state.approvals.length > 0;
+  g.fillStyle = pending && (tick >> 4) % 2 ? '#fbbf24' : '#4b5563'; g.fillRect(328, 100, 4, 4);
+
+  // ---- Gudang
+  for (let i = 0; i < 3; i++) {
+    const sx = 8 + i * 34;
+    g.fillStyle = '#4b5563'; g.fillRect(sx, 26, 28, 40); g.fillStyle = '#6b7280';
+    for (let s = 0; s < 3; s++) g.fillRect(sx, 36 + s * 12 + 160 - 160, 28, 2);
+    for (let s = 0; s < 3; s++) for (let b = 0; b < 3; b++) {
+      g.fillStyle = (s + b + i) % 3 === 0 ? '#c08a4b' : ((s + b) % 2 ? '#d4a373' : '#9ca3af');
+      g.fillRect(sx + 2 + b * 9, 29 + s * 12, 7, 7);
+    }
+  }
+  g.save(); g.translate(0, 160);
+  g.restore();
+  // rak gudang diposisikan di ruangan bawah
+  g.drawImage(off, 0, 0, 0, 0, 0, 0, 0, 0);
+  [[10, 206], [32, 206], [10, 250], [86, 250], [86, 228]].forEach(([bx, by]) => {
+    g.fillStyle = '#8b5a2b'; g.fillRect(bx, by + 10, 16, 3); g.fillStyle = '#c08a4b'; g.fillRect(bx + 1, by, 14, 10); g.fillStyle = '#a16207'; g.fillRect(bx + 1, by + 4, 14, 1);
+  });
+  g.fillStyle = '#374151'; g.fillRect(70, 184, 34, 8); g.fillStyle = '#93c5fd'; g.fillRect(76, 185, 8, 5); g.fillStyle = '#d1d5db'; g.fillRect(88, 185, 10, 5);
+
+  // ---- Lounge
+  g.fillStyle = '#1f2937'; g.fillRect(150, 166, 40, 14); g.fillStyle = (tick >> 5) % 2 ? '#38bdf8' : '#22d3ee'; g.fillRect(152, 168, 36, 10);
+  g.fillStyle = '#9ca3af'; g.fillRect(116, 184, 26, 12); g.fillStyle = '#4b5563'; g.fillRect(118, 176, 8, 10); g.fillStyle = '#ef4444'; g.fillRect(121, 179, 2, 2);
+  g.fillStyle = '#e5e7eb'; g.fillRect(226, 178, 12, 24); g.fillStyle = '#9ca3af'; g.fillRect(226, 188, 12, 1);
+  g.fillStyle = '#7a3e3e'; g.fillRect(144, 198, 70, 14); g.fillStyle = '#a14d4d'; g.fillRect(146, 200, 66, 9); g.fillStyle = '#8f4444'; g.fillRect(142, 198, 4, 14); g.fillRect(212, 198, 4, 14);
+  g.fillStyle = '#d1b58c'; g.fillRect(150, 224, 50, 30); g.fillStyle = '#c4a57a'; g.fillRect(152, 226, 46, 26);
+  g.fillStyle = '#6b4220'; g.fillRect(162, 232, 26, 12); g.fillStyle = '#f9fafb'; g.fillRect(168, 235, 3, 3); g.fillRect(178, 236, 3, 3);
+  plant(120, 266); plant(232, 266);
+
+  // ---- Kamar tidur
+  windowAt(316, 164, true); windowAt(250, 164, true);
+  g.fillStyle = '#3b3570'; g.fillRect(244, 216, 120, 10);
+  // kasur digambar di drawActors agar penghuni tergambar di dalamnya
+
+  // ---- Server
+  for (let i = 0; i < 3; i++) {
+    const rx = 372 + i * 19; g.fillStyle = '#111827'; g.fillRect(rx, 186, 15, 44); g.fillStyle = '#1f2937'; g.fillRect(rx + 1, 187, 13, 42);
+    for (let l = 0; l < 7; l++) { g.fillStyle = ((tick >> 2) + l * 3 + i * 5) % 7 < 3 ? '#22c55e' : '#064e3b'; g.fillRect(rx + 3, 190 + l * 6, 2, 2); g.fillStyle = ((tick >> 3) + l + i) % 9 < 2 ? '#f59e0b' : '#1f2937'; g.fillRect(rx + 7, 190 + l * 6, 2, 2); }
+  }
+  g.fillStyle = '#334155'; g.fillRect(372, 240, 54, 6);
+
+  // ---- ER
+  const anyErr = state.agents.some(a => a.status === 'ERROR');
+  g.fillStyle = anyErr && (tick >> 3) % 2 ? '#ef4444' : '#7f1d1d'; g.fillRect(452, 165, 8, 5);
+  if (anyErr && (tick >> 3) % 2) { g.fillStyle = 'rgba(239,68,68,.12)'; g.fillRect(434, 182, 44, 88); }
+  g.fillStyle = '#9ca3af'; g.fillRect(438, 244, 36, 3); g.fillStyle = '#f9fafb'; g.fillRect(438, 236, 36, 8); g.fillStyle = '#93c5fd'; g.fillRect(440, 236, 8, 6);
+  g.fillStyle = '#ef4444'; g.fillRect(466, 186, 2, 8); g.fillRect(463, 189, 8, 2);
+}
+
+function drawActors() {
+  // kasur kosong dulu
+  for (let i = 0; i < 10; i++) {
+    const occ = Object.values(chars).find(c => c.spot.pose === 'sleep' && !c.path.length && c.spot.bed && c.spot.bed.x === bedPos(i).x && c.spot.bed.y === bedPos(i).y);
+    if (!occ) { const b = bedPos(i); drawSleeper(g, b.x, b.y, null); }
+  }
+  const list = Object.values(chars).sort((a, b) => a.y - b.y);
+  for (const c of list) {
+    const look = LOOK[c.id];
+    if (!look) continue;
+    if (c.id === selectedId && c.pose !== 'sleep') { g.fillStyle = 'rgba(124,92,255,.55)'; g.fillRect(Math.round(c.x) - 7, Math.round(c.y) - 1, 14, 3); }
+    if (c.pose === 'sleep') { drawSleeper(g, c.spot.bed.x, c.spot.bed.y, look); continue; }
+    const walking = c.pose === 'walk';
+    drawChar(g, c.x, c.y, look, {
+      walking, frame: c.frame,
+      face: walking ? c.face : c.spot.face,
+      sit: c.pose === 'sit',
+      typing: !walking && (c.pose === 'sit' || c.spot.typing),
+      cup: !walking && c.spot.cup,
+    });
+  }
+}
+
+/* ---------- Overlay resolusi tinggi: label ruangan, nama, balon status ---------- */
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+function bubble(sx, sy, text, bg, fg, font) {
+  ctx.font = font; const tw = ctx.measureText(text).width;
+  const pw = tw + 10, ph = 17, bx = sx - pw / 2, by = sy - ph - 6;
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; roundRect(bx + 1, by + 2, pw, ph, 5); ctx.fill();
+  ctx.fillStyle = bg; roundRect(bx, by, pw, ph, 5); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(sx - 4, by + ph); ctx.lineTo(sx + 4, by + ph); ctx.lineTo(sx, by + ph + 5); ctx.fill();
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, sx, by + ph / 2 + 1);
+}
+
+function overlay() {
+  const px = Math.max(7, Math.min(10, S * 4));
+  ctx.textBaseline = 'middle';
+  for (const rm of Object.values(ROOMS)) {
+    ctx.font = `${px}px 'Press Start 2P'`;
+    const tw = ctx.measureText(rm.label).width;
+    const lx = (rm.x + 4) * S, ly = (rm.y + 4) * S;
+    ctx.fillStyle = 'rgba(15,10,6,.78)'; roundRect(lx, ly, tw + 10, px + 9, 3); ctx.fill();
+    ctx.fillStyle = '#fde68a'; ctx.textAlign = 'left'; ctx.fillText(rm.label, lx + 5, ly + (px + 9) / 2 + 1);
+  }
+  const nameFont = `600 ${Math.max(9, Math.min(12, S * 4.6))}px Inter`;
+  const bubFont = `700 ${Math.max(9, Math.min(12, S * 4.6))}px Inter`;
+  for (const c of Object.values(chars)) {
+    const ag = c.agent || state.agents.find(a => a.id === c.id);
+    if (!ag) continue;
+    const sleeping = c.pose === 'sleep';
+    const cx = (sleeping ? c.spot.bed.x + 8 : c.x) * S;
+    const footY = (sleeping ? c.spot.bed.y + 28 : c.y) * S;
+    const headY = (sleeping ? c.spot.bed.y : c.y - 18) * S;
+
+    // name tag
+    ctx.font = nameFont; const label = ag.short; const tw = ctx.measureText(label).width;
+    const st = STATUS[ag.status] || STATUS.IDLE;
+    ctx.fillStyle = c.id === selectedId ? 'rgba(124,92,255,.95)' : 'rgba(10,14,26,.82)';
+    roundRect(cx - tw / 2 - 6, footY + 2, tw + 12, 15, 7); ctx.fill();
+    ctx.fillStyle = st.color; ctx.beginPath(); ctx.arc(cx - tw / 2 - 1, footY + 9.5, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(label, cx + 3, footY + 10);
+
+    if (c.pose === 'walk') continue;
+    if (sleeping) {
+      const t = (tick % 90) / 90;
+      ctx.font = `700 ${Math.max(9, S * 4)}px 'Press Start 2P'`; ctx.fillStyle = `rgba(199,210,254,${1 - t})`;
+      ctx.textAlign = 'left'; ctx.fillText('z', cx + 6 + t * 8, headY - t * 18); ctx.fillText('Z', cx + 12 + t * 6, headY - 8 - t * 18);
+      continue;
+    }
+    if (ag.status === 'WORKING') {
+      const dots = '.'.repeat(1 + (tick >> 4) % 3);
+      const tool = ag.tools && ag.tools.length ? ag.tools[(tick >> 6) % ag.tools.length] : null;
+      bubble(cx, headY, tool ? `⚙ ${tool}` : `⌨ ${dots}`, '#ecfdf5', '#065f46', bubFont);
+    } else if (ag.status === 'WAITING_APPROVAL') {
+      const bob = Math.sin(tick / 6) * 2 * S / 2;
+      bubble(cx, headY + bob, '!', '#fbbf24', '#1f2937', `800 ${Math.max(11, S * 6)}px Inter`);
+    } else if (ag.status === 'HUMAN_NEEDED') {
+      bubble(cx, headY, '🔒 OTP', '#fce7f3', '#9d174d', bubFont);
+    } else if (ag.status === 'ERROR') {
+      bubble(cx, headY, '✖', '#fee2e2', '#b91c1c', bubFont);
+    } else if (ag.status === 'IDLE' && ((tick + c.id.length * 37) % 400) < 70) {
+      bubble(cx, headY, '☕', '#eff6ff', '#1e3a8a', bubFont);
+    }
+  }
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; tick++;
+  updateChars(dt);
+  const activeDesks = new Set(Object.values(chars).filter(c => c.pose === 'sit').map(c => (LOOK[c.id] || {}).desk));
+  g.clearRect(0, 0, W, H);
+  corridor();
+  Object.values(ROOMS).forEach(floor);
+  furniture(activeDesks);
+  walls();
+  drawActors();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, W * S, H * S);
+  ctx.drawImage(off, 0, 0, W * S, H * S);
+  overlay();
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+   INTERAKSI PETA
+   ===================================================================== */
+function hitTest(evt) {
+  const r = canvas.getBoundingClientRect();
+  const x = (evt.clientX - r.left) / S, y = (evt.clientY - r.top) / S;
+  return Object.values(chars).find(c => {
+    if (c.pose === 'sleep') { const b = c.spot.bed; return x >= b.x - 2 && x <= b.x + 18 && y >= b.y - 2 && y <= b.y + 30; }
+    return x >= c.x - 7 && x <= c.x + 7 && y >= c.y - 20 && y <= c.y + 4;
+  });
+}
+canvas.addEventListener('mousemove', e => { canvas.style.cursor = hitTest(e) ? 'pointer' : 'default'; });
+canvas.addEventListener('click', e => { const c = hitTest(e); if (c) selectAgent(c.id); });
+
+function selectAgent(id) { selectedId = id; renderRoster(); renderDetail(); }
+
+/* =====================================================================
+   PANEL SAMPING
+   ===================================================================== */
+function avatarCanvas(id, w = 12, h = 18) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const look = LOOK[id]; if (look) drawChar(cv.getContext('2d'), w / 2, h, look, { face: 'down' });
+  return cv;
+}
+function pill(status) {
+  const s = STATUS[status] || STATUS.IDLE;
+  return `<span class="pill" style="color:${s.color}">${s.label}</span>`;
+}
+
+function renderRoster() {
+  const box = $('roster'); box.innerHTML = '';
+  state.agents.forEach(ag => {
+    const row = document.createElement('div');
+    row.className = 'agent-row' + (ag.id === selectedId ? ' selected' : '');
+    row.appendChild(avatarCanvas(ag.id));
+    const info = document.createElement('div'); info.style.minWidth = '0';
+    info.innerHTML = `<div class="agent-name">${esc(ag.name)}</div><div class="agent-sub">${ag.implemented ? esc(ROOM_NAME[ag.room] || '') : 'Belum dibangun (fase berikutnya)'}</div>`;
+    row.appendChild(info);
+    row.insertAdjacentHTML('beforeend', pill(ag.status));
+    const sw = document.createElement('button');
+    sw.className = 'switch' + (ag.powered ? ' on' : '');
+    sw.disabled = !ag.implemented;
+    sw.title = ag.implemented ? (ag.powered ? 'Tidurkan agen' : 'Bangunkan agen') : 'Agen belum dibangun';
+    sw.setAttribute('aria-label', `${ag.powered ? 'Matikan' : 'Nyalakan'} ${ag.name}`);
+    sw.addEventListener('click', ev => { ev.stopPropagation(); setPower(ag.id, !ag.powered); });
+    row.appendChild(sw);
+    row.addEventListener('click', () => selectAgent(ag.id));
+    box.appendChild(row);
+  });
+  $('roster-sub').textContent = `${state.summary.online || 0} online · ${state.agents.length} agen`;
+}
+
+let lastApvKey = '';
+function renderApprovals() {
+  const key = state.approvals.map(a => a.approval_id).join(',');
+  if (key === lastApvKey) return; lastApvKey = key;
+  const box = $('approvals');
+  if (!state.approvals.length) { box.innerHTML = '<div class="empty">Tidak ada tiket menunggu ✨</div>'; return; }
+  box.innerHTML = state.approvals.map(a => `
+    <div class="ticket">
+      <div class="ticket-head"><span>#${esc(a.approval_id)}</span><span>${esc(a.category || '')}</span></div>
+      <div class="ticket-task">“${esc(a.task)}”</div>
+      <div class="ticket-meta">${esc(a.agent_name)}${a.total ? ' · Rp ' + Number(a.total).toLocaleString('id-ID') : ''}</div>
+      <div class="btns">
+        <button class="btn btn-ok" data-apv="${esc(a.approval_id)}" data-act="APPROVED">APPROVE</button>
+        <button class="btn btn-no" data-apv="${esc(a.approval_id)}" data-act="REJECTED">REJECT</button>
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('button[data-apv]').forEach(b => b.addEventListener('click', () => decide(b.dataset.apv, b.dataset.act)));
+}
+
+function renderDetail() {
+  const box = $('detail');
+  const ag = state.agents.find(a => a.id === selectedId);
+  if (!ag) { box.innerHTML = '<div class="empty">Pilih agen di peta atau daftar</div>'; return; }
+  const ago = Math.max(0, Math.round((state.server_time - ag.since)));
+  const agoTxt = ago < 60 ? `${ago} dtk lalu` : ago < 3600 ? `${Math.floor(ago / 60)} mnt lalu` : `${Math.floor(ago / 3600)} jam lalu`;
+  box.innerHTML = `
+    <div class="detail-head">
+      <div id="detail-avatar"></div>
+      <div><div class="agent-name" style="font-size:14px">${esc(ag.name)}</div><div class="agent-sub">${esc(ag.role)} · ${esc(ag.id)}</div><div style="margin-top:6px">${pill(ag.status)}</div></div>
+    </div>
+    <dl class="detail-grid">
+      <dt>Lokasi</dt><dd>${esc(ROOM_NAME[ag.room] || '-')} <span style="color:var(--muted)">(${agoTxt})</span></dd>
+      <dt>Tugas</dt><dd>${ag.task ? '“' + esc(ag.task) + '”' : '<span style="color:var(--muted)">-</span>'}</dd>
+      <dt>Tools</dt><dd>${(ag.tools || []).length ? ag.tools.map(t => `<span class="tool-tag">${esc(t)}</span>`).join('') : '<span style="color:var(--muted)">-</span>'}</dd>
+      <dt>Selesai</dt><dd>${ag.tasks_done || 0} tugas</dd>
+    </dl>
+    ${ag.last_reply ? `<div class="reply-box">${esc(ag.last_reply)}</div>` : ''}
+    <div class="btns" style="margin-top:12px">
+      ${ag.status === 'HUMAN_NEEDED' ? `<button class="btn btn-ok" id="btn-resolve">SUDAH DITANGANI</button>` : ''}
+      ${ag.implemented ? `<button class="btn btn-ghost" id="btn-power">${ag.powered ? 'TIDURKAN' : 'BANGUNKAN'}</button>` : '<span class="agent-sub">Agen ini dijadwalkan di fase pengembangan berikutnya.</span>'}
+    </div>`;
+  const av = avatarCanvas(ag.id); av.style.cssText = 'width:40px;height:60px;image-rendering:pixelated;background:var(--panel-2);border-radius:8px;padding:4px';
+  $('detail-avatar').appendChild(av);
+  const bp = $('btn-power'); if (bp) bp.onclick = () => setPower(ag.id, !ag.powered);
+  const br = $('btn-resolve'); if (br) br.onclick = () => resolveHuman(ag.id);
+}
+
+function renderKPI() {
+  const s = state.summary || {};
+  $('k-online').textContent = `${s.online || 0}/${s.total || 10}`;
+  $('k-working').textContent = s.working || 0;
+  $('k-pending').textContent = s.pending_approvals || 0;
+}
+
+let lastRosterKey = '';
+function renderAll() {
+  const rk = state.agents.map(a => a.id + a.status + a.powered + a.room).join('|') + selectedId;
+  if (rk !== lastRosterKey) { lastRosterKey = rk; renderRoster(); }
+  renderApprovals(); renderKPI(); renderDetail();
+}
+
+/* =====================================================================
+   API (dengan fallback Mode Demo)
+   ===================================================================== */
+async function api(path, body) {
+  const opt = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
+  const res = await fetch(path, opt);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function pollState() {
+  if (demo) { demoTick(); return; }
+  try {
+    state = await api('/api/agents/state');
+  } catch (e) {
+    enterDemo(); return;
+  }
+  syncChars(); renderAll();
+}
+
+async function pollLogs() {
+  if (demo) return;
+  try {
+    const logs = await api('/api/logs');
+    const kpi = await api('/api/kpi');
+    $('k-total').textContent = kpi.total_transactions;
+    renderFeed(logs.map(l => ({
+      t: (l.waktu || '').slice(11, 19), agent: (l.agent && l.agent.name) || '-', msg: l.action + ' — ' + (l.input || ''), status: l.status,
+    })));
+  } catch (e) { /* abaikan */ }
+}
+
+function renderFeed(rows) {
+  const box = $('feed');
+  if (!rows.length) { box.innerHTML = '<div class="empty">Belum ada aktivitas</div>'; return; }
+  const col = { SUCCESS: '#34d399', PENDING_APPROVAL: '#fbbf24', ERROR: '#f87171' };
+  box.innerHTML = rows.map(r => `<div class="feed-row"><span class="t">${esc(r.t)}</span><span class="a">${esc(r.agent)}</span><span class="m" title="${esc(r.msg)}">${esc(r.msg)}</span><span class="pill" style="color:${col[r.status] || '#8a94b3'}">${esc(r.status)}</span></div>`).join('');
+}
+
+async function setPower(id, on) {
+  if (demo) { const a = state.agents.find(x => x.id === id); a.powered = on; a.status = on ? 'IDLE' : 'OFFLINE'; refreshDemo(); return; }
+  try { await api('/api/agents/power', { agent_id: id, on }); toast(on ? '☀️ Agen dibangunkan' : '🌙 Agen ditidurkan'); pollState(); }
+  catch (e) { toast('⚠️ ' + e.message); }
+}
+async function decide(apvId, action) {
+  if (demo) { const t = state.approvals.find(a => a.approval_id === apvId); state.approvals = state.approvals.filter(a => a !== t); const ag = state.agents.find(a => a.id === t.agent_id); if (ag) ag.status = 'IDLE'; refreshDemo(); toast(action === 'APPROVED' ? '✅ Disetujui' : '❌ Ditolak'); return; }
+  try { await api('/api/approve', { approval_id: apvId, action }); toast(action === 'APPROVED' ? '✅ Tiket disetujui Owner' : '❌ Tiket ditolak Owner'); pollState(); pollLogs(); }
+  catch (e) { toast('⚠️ ' + e.message); }
+}
+async function resolveHuman(id) {
+  if (demo) { state.agents.find(a => a.id === id).status = 'IDLE'; refreshDemo(); return; }
+  try { await api('/api/agents/resolve', { agent_id: id }); toast('👍 Ditangani Owner'); pollState(); } catch (e) { toast('⚠️ ' + e.message); }
+}
+
+$('cmd-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const input = $('cmd-input'), text = input.value.trim();
+  if (!text) return;
+  const btn = $('cmd-send'); btn.disabled = true;
+  $('response').innerHTML = '<span style="color:var(--muted)">⏳ Router sedang memilih agen...</span>';
+  try {
+    if (demo) { demoChat(text); }
+    else {
+      const r = await api('/api/chat', { message: text, user_id: 'owner_dashboard' });
+      const st = r.execution.status;
+      $('response').innerHTML = `<div class="route">ROUTER → ${esc(r.routing.agent_name)} · ${esc(r.routing.intent)} (${Math.round(r.routing.confidence * 100)}%) · ${esc(st)} · ${r.latency_ms} ms</div>${esc(r.execution.reply_message)}`;
+      selectedId = r.routing.agent_id;
+      await pollState(); pollLogs();
+    }
+    input.value = '';
+  } catch (err) {
+    $('response').innerHTML = `<span style="color:var(--error)">⚠️ ${esc(err.message)}</span>`;
+  } finally { btn.disabled = false; }
+});
+$('presets').innerHTML = PRESETS.map(p => `<button type="button" class="preset">${esc(p)}</button>`).join('');
+$('presets').querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => { $('cmd-input').value = b.textContent; $('cmd-input').focus(); }));
+
+/* ---------- Mode Demo (dibuka langsung tanpa server) ---------- */
+function enterDemo() {
+  if (demo) return;
+  demo = true; $('demo-banner').style.display = 'block';
+  const now = Date.now() / 1000;
+  state = {
+    server_time: now, approvals: [], summary: {},
+    agents: DEMO_ROSTER.map(([id, name, short, role, built]) => ({ id, name, short, role, implemented: built, powered: built, status: built ? 'IDLE' : 'OFFLINE', room: built ? 'lounge' : 'bedroom', task: null, tools: [], last_reply: null, tasks_done: 0, since: now })),
+  };
+  refreshDemo();
+}
+function refreshDemo() {
+  const roomOf = { WORKING: 'work', IDLE: 'lounge', OFFLINE: 'bedroom', WAITING_APPROVAL: 'owner', HUMAN_NEEDED: 'owner', ERROR: 'er' };
+  state.server_time = Date.now() / 1000;
+  state.agents.forEach(a => { if (!a.powered) a.status = 'OFFLINE'; a.room = a.id === 'AGENT-INV-01' && a.status === 'WORKING' ? 'warehouse' : roomOf[a.status]; });
+  state.summary = { online: state.agents.filter(a => a.powered).length, total: state.agents.length, working: state.agents.filter(a => a.status === 'WORKING').length, pending_approvals: state.approvals.length };
+  syncChars(); renderAll();
+}
+const DEMO_TASKS = [['AGENT-SLS-01', 'Sewa 10 laptop ThinkPad 1 bulan', ['check_inventory', 'create_quotation']], ['AGENT-INV-01', 'Cek stok MacBook Pro', ['check_inventory']], ['AGENT-CS-01', 'Komplain layar bergaris', ['create_ticket']], ['AGENT-FIN-01', 'Cek status invoice', ['search_customer']], ['AGENT-KPI-01', 'Rekap omset bulan ini', []]];
+let demoCounter = 0;
+function demoTick() {
+  if (++demoCounter % 4) return;
+  const [id, task, tools] = DEMO_TASKS[Math.floor(Math.random() * DEMO_TASKS.length)];
+  const ag = state.agents.find(a => a.id === id);
+  if (!ag.powered || ag.status !== 'IDLE') return;
+  ag.status = 'WORKING'; ag.task = task; ag.tools = tools; ag.since = Date.now() / 1000; refreshDemo();
+  setTimeout(() => { ag.status = 'IDLE'; ag.tasks_done++; refreshDemo(); }, 5000 + Math.random() * 3000);
+  pushDemoFeed(ag.name, task, 'SUCCESS');
+}
+const demoFeed = [];
+function pushDemoFeed(agent, msg, status) { demoFeed.unshift({ t: new Date().toTimeString().slice(0, 8), agent, msg, status }); renderFeed(demoFeed.slice(0, 25)); $('k-total').textContent = demoFeed.length; }
+function demoChat(text) {
+  const t = text.toLowerCase();
+  let id = 'AGENT-SLS-01', status = 'WORKING';
+  if (/stok|gudang|ready/.test(t)) id = 'AGENT-INV-01';
+  else if (/rusak|bergaris|komplain|otp|captcha/.test(t)) id = 'AGENT-CS-01';
+  else if (/invoice|bayar/.test(t)) id = 'AGENT-FIN-01';
+  else if (/omset|rekap|kpi/.test(t)) id = 'AGENT-KPI-01';
+  const ag = state.agents.find(a => a.id === id);
+  ag.status = status; ag.task = text; ag.since = Date.now() / 1000; selectedId = id; refreshDemo();
+  const disc = (t.match(/diskon\s*(\d+)/) || [])[1];
+  setTimeout(() => {
+    if (/otp|captcha/.test(t)) ag.status = 'HUMAN_NEEDED';
+    else if (disc && +disc > 10) { ag.status = 'WAITING_APPROVAL'; state.approvals.push({ approval_id: 'APV-' + Math.random().toString(16).slice(2, 8).toUpperCase(), agent_id: id, agent_name: ag.name, task: text, category: 'DISCOUNT_REQUEST' }); }
+    else ag.status = 'IDLE';
+    ag.tasks_done++; refreshDemo();
+    pushDemoFeed(ag.name, text, ag.status === 'WAITING_APPROVAL' ? 'PENDING_APPROVAL' : 'SUCCESS');
+  }, 4000);
+  $('response').innerHTML = `<div class="route">[DEMO] ROUTER → ${esc(ag.name)}</div>Simulasi: jalankan server.py untuk respon asli dari AI Core.`;
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+(function logo() {
+  const l = $('logo').getContext('2d');
+  l.fillStyle = '#fde68a'; l.fillRect(3, 3, 10, 12); l.fillStyle = '#1e1b4b';
+  for (let y = 5; y < 13; y += 3) for (let x = 5; x < 12; x += 3) l.fillRect(x, y, 2, 2);
+  l.fillStyle = '#7c2d12'; l.fillRect(7, 12, 2, 3);
+})();
+setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('id-ID', { hour12: false }); }, 1000);
+resize();
+pollState(); pollLogs();
+setInterval(pollState, 1000);
+setInterval(pollLogs, 4000);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

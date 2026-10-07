@@ -6,11 +6,12 @@ USER -> AI CORE -> ROUTER -> AGENT -> KNOWLEDGE & TOOLS -> WORKFLOW -> LOGGER ->
 
 import time
 from typing import Dict, Any, Optional
-from core.models import UserMessage, CoreResponse, RouteDecision
+from core.models import UserMessage, CoreResponse, RouteDecision, AgentExecutionResult
 from core.router import IntentRouter
 from core.knowledge_loader import KnowledgeBase
 from core.workflow_engine import WorkflowEngine, LeadState
 from core.logger import ActivityLogger
+from core.agent_state import AgentStateTracker
 from tools.business_tools import registry as tool_registry
 from agents.base_agent import BaseAgent
 from agents.sales_agent import SalesRentalAgent
@@ -31,6 +32,7 @@ class CoreOrchestrator:
         self.router = IntentRouter()
         self.agents: Dict[str, BaseAgent] = {}
         self._register_default_agents()
+        self.state = AgentStateTracker(implemented_agent_ids=list(self.agents.keys()))
 
     def _register_default_agents(self):
         """Pendaftaran seluruh agen spesialis ke dalam kernel"""
@@ -59,8 +61,25 @@ class CoreOrchestrator:
         if not agent:
             agent = self.agents["AGENT-SLS-01"]
 
+        # 3b. Guard: agen yang sedang offline (tidur) tidak boleh menerima tugas
+        if not self.state.is_online(agent.agent_id):
+            return self._offline_response(user_text, user_id, agent, route_decision, start_time)
+
         # 4. Delegasikan eksekusi ke agen
-        execution_result = await agent.process(msg, route_decision)
+        self.state.mark_working(agent.agent_id, user_text)
+        try:
+            execution_result = await agent.process(msg, route_decision)
+        except Exception as exc:
+            self.state.mark_result(agent.agent_id, "ERROR", [], str(exc), user_text)
+            raise
+        self.state.mark_result(
+            agent.agent_id,
+            execution_result.status,
+            execution_result.tools_called,
+            execution_result.reply_message,
+            user_text,
+            execution_result.approval_details,
+        )
 
         # 5. Sinkronkan ke Workflow Engine jika berkaitan dengan sewa
         if route_decision.intent == "RENTAL_SALES_INQUIRY":
@@ -92,6 +111,36 @@ class CoreOrchestrator:
         )
 
         # 8. Bentuk CoreResponse final
+        return CoreResponse(
+            user_input=user_text,
+            routing=route_decision,
+            execution=execution_result,
+            latency_ms=latency_ms
+        )
+
+    def _offline_response(self, user_text: str, user_id: str, agent: BaseAgent,
+                          route_decision: RouteDecision, start_time: float) -> CoreResponse:
+        """Respon standar saat agen tujuan sedang dimatikan oleh Owner"""
+        execution_result = AgentExecutionResult(
+            agent_id=agent.agent_id,
+            action_taken="AGENT_OFFLINE",
+            reply_message=(f"{agent.name} sedang offline (dinonaktifkan Owner). "
+                           "Permintaan belum diproses. Aktifkan agen dari dashboard atau hubungi staf."),
+            status="AGENT_OFFLINE",
+        )
+        latency_ms = int((time.time() - start_time) * 1000)
+        self.logger.log_action(
+            user=user_id,
+            agent_id=agent.agent_id,
+            agent_name=agent.name,
+            user_input=user_text,
+            keputusan=f"{route_decision.intent} ({route_decision.confidence*100:.0f}%)",
+            tools_called=[],
+            action="AGENT_OFFLINE",
+            result=execution_result.reply_message[:150],
+            error="AGENT_OFFLINE",
+            latency_ms=latency_ms
+        )
         return CoreResponse(
             user_input=user_text,
             routing=route_decision,
