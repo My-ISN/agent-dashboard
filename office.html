@@ -55,13 +55,12 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background: var(--c-101311);
       color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
       line-height: 1.45;
     }
 
@@ -83,9 +82,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      position: sticky;
-      top: 0;
+      height: 56px;
+      position: relative;
       z-index: 50;
+      flex-shrink: 0;
     }
 
     .brand-wrap {
@@ -216,25 +216,74 @@
     }
 
     /* --------------------------------------------------------------------------
-       MAIN STAGE CONTAINER
+       MAIN WORKSPACE LAYOUT (Viewport Centering)
        -------------------------------------------------------------------------- */
     .main-layout {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 57px);
+      position: absolute;
+      top: 56px;
+      bottom: 58px;
+      left: 0;
+      right: 0;
       overflow: hidden;
-      position: relative;
+      display: flex;
     }
 
-    .office-stage {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    /* 2D Scrollable Stage (Centered) */
+    .office-stage-2d {
+      width: 100%;
       height: 100%;
       overflow-y: auto;
-      padding: 16px 20px 80px;
-      background: var(--c-101311);
-      position: relative;
+      padding: 20px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stage-inner-wrap {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* --------------------------------------------------------------------------
+       3D VIEWPORT CONTAINER (Full Stage Cover & Perfectly Centered)
+       -------------------------------------------------------------------------- */
+    #office3d-canvas-wrap {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #0d1210;
+      z-index: 20;
+      display: none;
+    }
+    #office3d-canvas-wrap.active {
+      display: block;
+    }
+    #office3d-canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      outline: none;
+    }
+    .canvas-hud-hint {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 26, 24, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font: 11px 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      z-index: 25;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      white-space: nowrap;
     }
 
     /* --------------------------------------------------------------------------
@@ -322,12 +371,9 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
     }
-    @keyframes mc-talk {
-      50% { transform: translateY(-2px); }
-    }
     @keyframes mc-screen {
-      0%, 100% { opacity: 0.9; }
-      50% { opacity: 0.4; }
+      0%, 100% { opacity: 0.95; }
+      50% { opacity: 0.45; }
     }
     @keyframes mc-pulse-badge {
       0%, 100% { opacity: 1; }
@@ -349,7 +395,7 @@
     }
 
     /* --------------------------------------------------------------------------
-       OFFICE STATION (Agent Widget in Room)
+       OFFICE STATION (Agent Widget in 2D Room)
        -------------------------------------------------------------------------- */
     .pixel-station {
       display: inline-flex;
@@ -457,6 +503,7 @@
       border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
       margin-bottom: 16px;
+      width: 100%;
     }
     .room-tabs button {
       background: var(--surface-3);
@@ -484,18 +531,13 @@
       border: 1px solid var(--border);
     }
 
-    .floors-container {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
     .room-section {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px;
       position: relative;
+      width: 100%;
     }
     .room-header {
       display: flex;
@@ -771,44 +813,15 @@
     .btn-reject:hover { background: #692c26; }
 
     /* --------------------------------------------------------------------------
-       AUTHENTIC THREE.JS 3D VIEWPORT CONTAINER
-       -------------------------------------------------------------------------- */
-    #office3d-canvas-wrap {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 10;
-      background: #0d1210;
-      display: none;
-    }
-    #office3d-canvas-wrap.active {
-      display: block;
-    }
-    .canvas-hud-hint {
-      position: absolute;
-      bottom: 80px;
-      left: 20px;
-      background: rgba(18, 26, 24, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 12px;
-      font: 11px 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      z-index: 15;
-      pointer-events: none;
-    }
-
-    /* --------------------------------------------------------------------------
        COMMAND & CHAT BAR (BOTTOM LIVE DOCK)
        -------------------------------------------------------------------------- */
     .command-dock {
-      position: fixed;
+      position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(18, 22, 19, 0.94);
+      height: 58px;
+      background: rgba(18, 22, 19, 0.96);
       backdrop-filter: blur(8px);
       border-top: 1px solid var(--border-strong);
       padding: 10px 20px;
@@ -1027,7 +1040,7 @@
        -------------------------------------------------------------------------- */
     .drawer-panel {
       position: fixed;
-      top: 57px;
+      top: 56px;
       right: -480px;
       width: 480px;
       bottom: 58px;
@@ -1126,26 +1139,26 @@
   </header>
 
   <!-- ========================================================================
-       MAIN OFFICE STAGE
+       MAIN OFFICE STAGE (VIEWPORT CENTERED)
        ======================================================================== -->
   <div class="main-layout">
-    <main class="office-stage">
+    
+    <!-- 2D STAGE (CENTERED LAYOUT) -->
+    <main class="office-stage-2d" id="stage-2d">
+      <div class="stage-inner-wrap">
 
-      <!-- Floor Nav Tabs -->
-      <div class="room-tabs" role="tablist">
-        <button type="button" class="active" id="tab-floor-1" onclick="showFloor(1)">
-          🏢 Lantai 1 · Kantor & Lounge <span class="room-count" id="count-floor-1">0</span>
-        </button>
-        <button type="button" id="tab-floor-2" onclick="showFloor(2)">
-          🛏️ Lantai 2 · Dorm (Kamar Tidur) <span class="room-count" id="count-floor-2">0</span>
-        </button>
-        <button type="button" id="tab-floor-all" onclick="showFloor('all')">
-          🌐 Tampilkan Semua Lantai
-        </button>
-      </div>
-
-      <!-- 2D Virtual Office Rooms -->
-      <div class="floors-container" id="floors-container">
+        <!-- Floor Nav Tabs -->
+        <div class="room-tabs" role="tablist">
+          <button type="button" class="active" id="tab-floor-1" onclick="showFloor(1)">
+            🏢 Lantai 1 · Kantor & Lounge <span class="room-count" id="count-floor-1">0</span>
+          </button>
+          <button type="button" id="tab-floor-2" onclick="showFloor(2)">
+            🛏️ Lantai 2 · Dorm (Kamar Tidur) <span class="room-count" id="count-floor-2">0</span>
+          </button>
+          <button type="button" id="tab-floor-all" onclick="showFloor('all')">
+            🌐 Tampilkan Semua Lantai
+          </button>
+        </div>
 
         <!-- LANTAI 1: WORKSPACE & LOUNGE -->
         <section class="room-section" id="section-floor-1">
@@ -1161,9 +1174,7 @@
             <!-- HOT DESKS AREA -->
             <div>
               <p class="eyebrow" style="font-size:10px; color:var(--text-dim); margin-bottom:12px;">MEJA KERJA (HOT DESKS)</p>
-              <div class="desks-grid" id="workspace-desks">
-                <!-- Stasiun meja kerja dinamis di-render via JS -->
-              </div>
+              <div class="desks-grid" id="workspace-desks"></div>
             </div>
 
             <!-- LOUNGE & MEETING -->
@@ -1177,9 +1188,7 @@
                   <div class="pixel-plant"></div>
                 </div>
                 <div class="meeting-table">MEETING TABLE</div>
-                <div id="lounge-agents" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px; width:100%;">
-                  <!-- Agen idle duduk di lounge -->
-                </div>
+                <div id="lounge-agents" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:10px; width:100%;"></div>
               </div>
             </div>
           </div>
@@ -1208,21 +1217,18 @@
             <span class="badge muted">QUIET REST ZONE</span>
           </div>
 
-          <div class="dorm-grid" id="dorm-beds">
-            <!-- Ranjang tidur dinamis di-render via JS -->
-          </div>
+          <div class="dorm-grid" id="dorm-beds"></div>
         </section>
 
       </div>
-
-      <!-- 3D THREE.JS CANVAS OVERLAY CONTAINER -->
-      <div id="office3d-canvas-wrap">
-        <div class="canvas-hud-hint">
-          🎮 3D Camera: Drag kiri untuk rotasi · Drag kanan untuk geser · Scroll untuk zoom · Klik agen untuk inspeksi
-        </div>
-      </div>
-
     </main>
+
+    <!-- 3D THREE.JS CANVAS (FULL VIEWPORT COVER & CENTERED) -->
+    <div id="office3d-canvas-wrap">
+      <div class="canvas-hud-hint">
+        🎮 3D Office · Drag kiri: Rotasi · Drag kanan: Geser · Scroll: Zoom · Klik agen untuk inspeksi
+      </div>
+    </div>
 
     <!-- RIGHT DRAWER (LOGS & ACTIVITY) -->
     <aside class="drawer-panel" id="drawer-panel">
@@ -1234,6 +1240,7 @@
         <div style="font-size:12px; color:var(--text-dim); text-align:center; padding:20px;">Memuat riwayat log...</div>
       </div>
     </aside>
+
   </div>
 
   <!-- ========================================================================
@@ -1262,9 +1269,7 @@
       <button type="button" class="office-close" onclick="closeModal()">Tutup ✕</button>
 
       <div class="detail-head">
-        <div class="detail-avatar" id="modal-avatar">
-          <!-- Pixel character dirender di sini -->
-        </div>
+        <div class="detail-avatar" id="modal-avatar"></div>
         <div class="detail-head-info">
           <p class="eyebrow">STATION DETAIL · AGENT INSPECTION</p>
           <h2 id="modal-agent-name">Nama Agen</h2>
@@ -1295,8 +1300,8 @@
           <p style="color:var(--accent); font-weight:600; margin-bottom:6px;">Wewenang & Batasan (SOP):</p>
           <ul id="modal-sop-list" style="padding-left:18px; line-height:1.6; color:var(--text-muted);">
             <li>Diskon maksimal 10% tanpa approval Owner.</li>
-            <li>Dilarang berhalusinasi unit fiktif.</li>
-            <li>Dilarang menangani OTP/CAPTCHA secara otonom.</li>
+            <li>Dilarang berhalusinasi unit fiktif yang tidak ada di inventaris.</li>
+            <li>Dilarang menangani OTP/CAPTCHA secara otonom (wajib eskalasi ke manusia).</li>
           </ul>
         </div>
       </div>
@@ -1368,6 +1373,7 @@
     // Three.js State
     let scene3d, camera3d, renderer3d, controls3d;
     let agent3dMeshes = {};
+    let raycaster, mouse;
     let threeInitialized = false;
 
     // Badge mapper
@@ -1420,7 +1426,6 @@
         apvCountEl.parentElement.className = 'hud-chip clickable';
       }
 
-      // Fetch KPI metrics
       fetch('/api/kpi').then(r => r.json()).then(kpi => {
         if (kpi && kpi.success_rate) {
           document.getElementById('stat-success-rate').innerText = kpi.success_rate;
@@ -1447,7 +1452,6 @@
         const charHtml = createPixelCharacterHTML(agent.id);
 
         if (agent.status === 'OFFLINE') {
-          // Lantai 2: Dorm Bed
           floor2Count++;
           const cell = document.createElement('div');
           cell.className = 'dorm-cell';
@@ -1462,7 +1466,6 @@
           `;
           dormWrap.appendChild(cell);
         } else if (agent.status === 'WORKING') {
-          // Lantai 1: Workspace Hot Desk (Occupied)
           floor1Count++;
           const cell = document.createElement('div');
           cell.className = 'desk-cell';
@@ -1478,7 +1481,6 @@
           `;
           desksWrap.appendChild(cell);
         } else if (agent.status === 'WAITING_APPROVAL' || agent.status === 'HUMAN_NEEDED') {
-          // Lantai 1: Sedang menunggu di meja kerja / meja Owner
           floor1Count++;
           const cell = document.createElement('div');
           cell.className = 'desk-cell';
@@ -1494,7 +1496,6 @@
           `;
           desksWrap.appendChild(cell);
         } else {
-          // IDLE: Duduk santai di Lounge / Meeting table
           floor1Count++;
           const station = document.createElement('button');
           station.type = 'button';
@@ -1509,7 +1510,7 @@
         }
       });
 
-      // Tambahkan sisa meja kosong (hot desking) jika meja kerja sedikit
+      // Hot desks fill
       const workingCount = data.agents.filter(a => a.status === 'WORKING' || a.status === 'WAITING_APPROVAL').length;
       for (let i = workingCount; i < 6; i++) {
         const emptyCell = document.createElement('div');
@@ -1524,7 +1525,7 @@
       document.getElementById('count-floor-1').innerText = floor1Count;
       document.getElementById('count-floor-2').innerText = floor2Count;
 
-      // Render antrean approval Owner
+      // Approvals list
       const approvals = data.approvals || [];
       if (approvals.length === 0) {
         approvalsWrap.innerHTML = '<span style="font-size:11px; color:var(--text-dim);">Tidak ada tiket approval yang menunggu.</span>';
@@ -1742,21 +1743,37 @@
     }
 
     // ========================================================================
-    // THREE.JS 3D VIRTUAL OFFICE ENGINE (Adapted directly from Ruang 3D Scene)
+    // THREE.JS 3D VIRTUAL OFFICE ENGINE (PRECISELY CENTERED)
     // ========================================================================
-    function init3DOffice() {
-      if (threeInitialized) return;
+    function resize3DCanvas() {
+      if (!renderer3d || !camera3d) return;
       const container = document.getElementById('office3d-canvas-wrap');
+      const rect = container.getBoundingClientRect();
+      const width = rect.width || window.innerWidth;
+      const height = rect.height || (window.innerHeight - 114);
 
-      // Scene, Camera, Renderer
+      camera3d.aspect = width / height;
+      camera3d.updateProjectionMatrix();
+      renderer3d.setSize(width, height);
+    }
+
+    function init3DOffice() {
+      if (threeInitialized) {
+        resize3DCanvas();
+        return;
+      }
+      const container = document.getElementById('office3d-canvas-wrap');
+      const rect = container.getBoundingClientRect();
+      const width = rect.width || window.innerWidth;
+      const height = rect.height || (window.innerHeight - 114);
+
+      // Scene Setup
       scene3d = new THREE.Scene();
       scene3d.background = new THREE.Color(0x101311);
 
-      const width = container.clientWidth || window.innerWidth;
-      const height = container.clientHeight || (window.innerHeight - 57);
-
-      camera3d = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
-      camera3d.position.set(16, 22, 28);
+      // Camera centered on Office Ruko: Target (0, 2.5, -2), Camera position (0, 24, 28)
+      camera3d = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+      camera3d.position.set(0, 24, 28);
 
       renderer3d = new THREE.WebGLRenderer({ antialias: true });
       renderer3d.setSize(width, height);
@@ -1768,39 +1785,66 @@
       controls3d = new THREE.OrbitControls(camera3d, renderer3d.domElement);
       controls3d.enableDamping = true;
       controls3d.dampingFactor = 0.05;
-      controls3d.target.set(0, 2, 0);
+      controls3d.target.set(0, 2.5, -2);
+      controls3d.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below floor
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.7);
+      // Raycasting for agent click
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      renderer3d.domElement.addEventListener('click', (event) => {
+        const bounds = renderer3d.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+        mouse.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera3d);
+        const intersects = raycaster.intersectObjects(scene3d.children, true);
+        for (let hit of intersects) {
+          let curr = hit.object;
+          while (curr && curr.parent && curr.parent !== scene3d) {
+            if (curr.userData && curr.userData.agentId) {
+              openAgentModal(curr.userData.agentId);
+              return;
+            }
+            curr = curr.parent;
+          }
+          if (curr && curr.userData && curr.userData.agentId) {
+            openAgentModal(curr.userData.agentId);
+            return;
+          }
+        }
+      });
+
+      // Ambient & Directional Warm Light
+      const ambientLight = new THREE.AmbientLight(0xfff6ea, 0.75);
       scene3d.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.9);
-      dirLight.position.set(20, 40, 20);
+      const dirLight = new THREE.DirectionalLight(0xfff6ea, 0.85);
+      dirLight.position.set(15, 30, 20);
       dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
       scene3d.add(dirLight);
 
-      // Build Office Architecture: Floor 1 (Workspace) & Floor 2 (Dormitory)
+      const backLight = new THREE.DirectionalLight(0x79d6bd, 0.35);
+      backLight.position.set(-20, 20, -20);
+      scene3d.add(backLight);
+
+      // Build 3D Architecture: Ruko 2 Lantai (Centered around x=0)
       buildOfficeStructure3D();
 
-      // Handle Resize
-      window.addEventListener('resize', () => {
-        const w = container.clientWidth || window.innerWidth;
-        const h = container.clientHeight || (window.innerHeight - 57);
-        camera3d.aspect = w / h;
-        camera3d.updateProjectionMatrix();
-        renderer3d.setSize(w, h);
-      });
+      window.addEventListener('resize', resize3DCanvas);
 
       // Animation Loop
       function animate() {
         requestAnimationFrame(animate);
         controls3d.update();
 
-        // Idle bounce animation for working agents
+        // Idle bounce / typing animation for active agents
         const time = Date.now() * 0.003;
         Object.values(agent3dMeshes).forEach(mesh => {
           if (mesh.userData.status === 'WORKING') {
-            mesh.position.y = mesh.userData.baseY + Math.sin(time * 3) * 0.08;
+            mesh.position.y = mesh.userData.baseY + Math.sin(time * 4) * 0.08;
           }
         });
 
@@ -1809,86 +1853,157 @@
       animate();
 
       threeInitialized = true;
+      setTimeout(resize3DCanvas, 50);
     }
 
     function buildOfficeStructure3D() {
-      // Floor 1 (Tiled floor)
-      const f1Geo = new THREE.BoxGeometry(28, 0.4, 20);
-      const f1Mat = new THREE.MeshStandardMaterial({ color: 0x1a211c, roughness: 0.8 });
+      // Ground Platform / Street surrounding (Dark slate)
+      const groundGeo = new THREE.BoxGeometry(40, 0.2, 34);
+      const groundMat = new THREE.MeshStandardMaterial({ color: 0x0a0e0c, roughness: 0.95 });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.position.set(0, -0.2, -2);
+      scene3d.add(ground);
+
+      // LANTAI 1: Tiled Workspace & Lounge Floor (Centered around x=0, z=-2)
+      const f1Geo = new THREE.BoxGeometry(28, 0.4, 22);
+      const f1Mat = new THREE.MeshStandardMaterial({ color: 0x18201b, roughness: 0.85 });
       const f1 = new THREE.Mesh(f1Geo, f1Mat);
-      f1.position.set(0, -0.2, 0);
+      f1.position.set(0, 0, -2);
       f1.receiveShadow = true;
       scene3d.add(f1);
 
-      // Floor 2 (Dormitory raised platform)
-      const f2Geo = new THREE.BoxGeometry(28, 0.4, 12);
-      const f2Mat = new THREE.MeshStandardMaterial({ color: 0x151a16, roughness: 0.8 });
+      // Floor trim border
+      const trimGeo = new THREE.BoxGeometry(28.2, 0.42, 22.2);
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x2c352e, wireframe: false });
+      const trim = new THREE.Mesh(trimGeo, trimMat);
+      trim.position.set(0, -0.05, -2);
+      scene3d.add(trim);
+
+      // Back Wall (Lantai 1 + 2)
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x131a16 });
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(28, 12, 0.4), wallMat);
+      backWall.position.set(0, 6, -13);
+      scene3d.add(backWall);
+
+      // Left Wall
+      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 12, 22), wallMat);
+      leftWall.position.set(-14, 6, -2);
+      scene3d.add(leftWall);
+
+      // LANTAI 2: Dorm Bedroom Raised Platform (z = -8 to -13, above back desks)
+      const f2Geo = new THREE.BoxGeometry(28, 0.4, 10);
+      const f2Mat = new THREE.MeshStandardMaterial({ color: 0x141b17, roughness: 0.8 });
       const f2 = new THREE.Mesh(f2Geo, f2Mat);
-      f2.position.set(0, 5, -8);
+      f2.position.set(0, 5.2, -8);
       f2.receiveShadow = true;
       scene3d.add(f2);
 
-      // Back wall
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0x121613 });
-      const backWallGeo = new THREE.BoxGeometry(28, 10, 0.4);
-      const backWall = new THREE.Mesh(backWallGeo, wallMat);
-      backWall.position.set(0, 5, -14);
-      scene3d.add(backWall);
+      // Railing Lantai 2 (Safety glass / brass trim)
+      const railingMat = new THREE.MeshStandardMaterial({ color: 0x79d6bd, transparent: true, opacity: 0.4 });
+      const railing = new THREE.Mesh(new THREE.BoxGeometry(28, 1.0, 0.2), railingMat);
+      railing.position.set(0, 5.9, -3.1);
+      scene3d.add(railing);
 
-      // 6 Work Desks (Floor 1)
-      const deskMat = new THREE.MeshStandardMaterial({ color: 0x5c4436 });
-      const screenMat = new THREE.MeshStandardMaterial({ color: 0x6bd4c0, emissive: 0x6bd4c0, emissiveIntensity: 0.6 });
+      // Tangga Akses Lantai 2 (Kiri)
+      const stairMat = new THREE.MeshStandardMaterial({ color: 0x3d2a1f });
+      for (let s = 0; s < 10; s++) {
+        const step = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.52, 0.65), stairMat);
+        step.position.set(-12.5, 0.26 + s * 0.52, -2.5 - s * 0.65);
+        scene3d.add(step);
+      }
 
-      for (let i = 0; i < 6; i++) {
-        const x = -10 + (i % 3) * 6;
-        const z = -2 + Math.floor(i / 3) * 5;
+      // LANTAI 1 FURNITURE: Hot Desks Komputer (2 Baris di Workspace Kiri & Tengah)
+      const deskMat = new THREE.MeshStandardMaterial({ color: 0x4a3424, roughness: 0.7 });
+      const screenMat = new THREE.MeshStandardMaterial({ color: 0x6bd4c0, emissive: 0x6bd4c0, emissiveIntensity: 0.65 });
+      const chairMat = new THREE.MeshStandardMaterial({ color: 0x223028 });
 
-        // Desk Table
-        const table = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 2.2), deskMat);
-        table.position.set(x, 0.6, z);
+      // 6 Workstation Desks (x = -9, -3, 3; z = 2, 6)
+      const deskCoords = [
+        [-9, 3], [-3, 3], [3, 3],
+        [-9, 7], [-3, 7], [3, 7]
+      ];
+
+      deskCoords.forEach(([x, z]) => {
+        // Meja
+        const table = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 2.0), deskMat);
+        table.position.set(x, 0.8, z);
         table.castShadow = true;
         scene3d.add(table);
 
-        // Computer Monitor
-        const monitor = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.15), screenMat);
-        monitor.position.set(x, 1.8, z - 0.4);
+        // Monitor PC (Menghadap z+)
+        const monitor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.15), screenMat);
+        monitor.position.set(x, 2.0, z - 0.4);
         scene3d.add(monitor);
-      }
 
-      // Lounge Sofa (Floor 1)
-      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x28443e });
-      const sofa = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.4, 2.4), sofaMat);
-      sofa.position.set(9, 0.7, 4);
+        // Kursi
+        const chair = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 1.4), chairMat);
+        chair.position.set(x, 0.65, z + 1.4);
+        scene3d.add(chair);
+      });
+
+      // LANTAI 1 FURNITURE: Lounge Area (Sisi Kanan, x = 9)
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x24423b, roughness: 0.6 });
+      const sofa = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.4, 2.2), sofaMat);
+      sofa.position.set(9.5, 0.9, 4.5);
       scene3d.add(sofa);
 
-      // Dorm Beds (Floor 2)
-      const bedMat = new THREE.MeshStandardMaterial({ color: 0x233446 });
-      const blanketMat = new THREE.MeshStandardMaterial({ color: 0x3c5878 });
+      const coffeeMat = new THREE.MeshStandardMaterial({ color: 0x5c4436 });
+      const coffeeTable = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 1.4), coffeeMat);
+      coffeeTable.position.set(9.5, 0.5, 2.2);
+      scene3d.add(coffeeTable);
 
-      for (let i = 0; i < 6; i++) {
-        const x = -10 + (i % 3) * 6;
-        const z = -11 + Math.floor(i / 3) * 4;
+      // TV Layar Lebar ISKOM (Dinding Kanan)
+      const tvScreen = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.0, 3.8), new THREE.MeshStandardMaterial({ color: 0xf2b16b, emissive: 0xf2b16b, emissiveIntensity: 0.4 }));
+      tvScreen.position.set(13.8, 3.2, 4.5);
+      scene3d.add(tvScreen);
 
-        const bed = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.8, 2.0), bedMat);
-        bed.position.set(x, 5.4, z);
+      // LANTAI 2 FURNITURE: Dormitory Beds (Kamar Tidur)
+      const bedMat = new THREE.MeshStandardMaterial({ color: 0x24374b });
+      const blanketMat = new THREE.MeshStandardMaterial({ color: 0x3d5d7f });
+      const pillowMat = new THREE.MeshStandardMaterial({ color: 0xe6eef7 });
+
+      // 6 Ranjang Kasur di Lantai 2 (x = -9, -3, 3; z = -6.5, -10.5)
+      const bedCoords = [
+        [-9, -6.5], [-3, -6.5], [3, -6.5],
+        [-9, -10.5], [-3, -10.5], [3, -10.5]
+      ];
+
+      bedCoords.forEach(([x, z]) => {
+        // Rangka Kasur
+        const bed = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.7, 2.2), bedMat);
+        bed.position.set(x, 5.75, z);
         scene3d.add(bed);
 
-        const blanket = new THREE.Mesh(new THREE.BoxGeometry(3.22, 0.82, 1.2), blanketMat);
-        blanket.position.set(x, 5.41, z + 0.4);
+        // Selimut
+        const blanket = new THREE.Mesh(new THREE.BoxGeometry(3.02, 0.72, 1.3), blanketMat);
+        blanket.position.set(x, 5.76, z + 0.45);
         scene3d.add(blanket);
-      }
+
+        // Bantal
+        const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 0.6), pillowMat);
+        pillow.position.set(x, 6.2, z - 0.7);
+        scene3d.add(pillow);
+      });
     }
 
     function update3DOffice(data) {
       if (!threeInitialized) return;
 
-      // Update positions of agents in 3D
+      const deskCoords = [
+        [-9, 3], [-3, 3], [3, 3],
+        [-9, 7], [-3, 7], [3, 7]
+      ];
+      const bedCoords = [
+        [-9, -6.5], [-3, -6.5], [3, -6.5],
+        [-9, -10.5], [-3, -10.5], [3, -10.5]
+      ];
+
       data.agents.forEach((agent, index) => {
         let mesh = agent3dMeshes[agent.id];
         const look = getAgentLook(agent.id);
 
         if (!mesh) {
-          // Buat voxel character mesh (Head, Torso, Legs)
+          // Buat voxel character mesh proporsional (Head, Torso, Legs)
           const group = new THREE.Group();
 
           const headMat = new THREE.MeshStandardMaterial({ color: look.skin });
@@ -1896,13 +2011,21 @@
           head.position.y = 1.8;
           group.add(head);
 
+          // Rambut
+          const hairMat = new THREE.MeshStandardMaterial({ color: look.hair });
+          const hair = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.35, 0.84), hairMat);
+          hair.position.y = 2.15;
+          group.add(hair);
+
+          // Torso Baju
           const shirtMat = new THREE.MeshStandardMaterial({ color: look.shirt });
           const torso = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.6), shirtMat);
           torso.position.y = 0.9;
           group.add(torso);
 
+          // Celana
           const pantsMat = new THREE.MeshStandardMaterial({ color: look.pants });
-          const legs = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.5), pantsMat);
+          const legs = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.8, 0.55), pantsMat);
           legs.position.y = 0.2;
           group.add(legs);
 
@@ -1915,26 +2038,30 @@
         mesh.userData.status = agent.status;
 
         if (agent.status === 'OFFLINE') {
-          // Lantai 2: Dorm Bed (berbaring horizontal)
-          const bedIndex = index % 6;
-          const x = -10 + (bedIndex % 3) * 6;
-          const z = -11 + Math.floor(bedIndex / 3) * 4;
-          mesh.position.set(x, 5.9, z);
-          mesh.rotation.z = Math.PI / 2;
-          mesh.userData.baseY = 5.9;
+          // Lantai 2: Dorm Bed (berbaring di atas kasur)
+          const coord = bedCoords[index % bedCoords.length];
+          mesh.position.set(coord[0], 6.35, coord[1] + 0.1);
+          mesh.rotation.x = -Math.PI / 2; // Berbaring
+          mesh.rotation.y = 0;
+          mesh.rotation.z = 0;
+          mesh.userData.baseY = 6.35;
         } else if (agent.status === 'WORKING') {
-          // Lantai 1: Workstation Desk (duduk menghadap monitor)
-          const deskIndex = index % 6;
-          const x = -10 + (deskIndex % 3) * 6;
-          const z = -2 + Math.floor(deskIndex / 3) * 5 + 1.2;
-          mesh.position.set(x, 0.6, z);
+          // Lantai 1: Workstation Hot Desk (Duduk di kursi menghadap monitor)
+          const coord = deskCoords[index % deskCoords.length];
+          mesh.position.set(coord[0], 1.0, coord[1] + 1.2);
+          mesh.rotation.x = 0;
+          mesh.rotation.y = Math.PI; // Menghadap ke monitor (-z)
           mesh.rotation.z = 0;
-          mesh.userData.baseY = 0.6;
+          mesh.userData.baseY = 1.0;
         } else {
-          // Lantai 1: Lounge Sofa / Ruang santai
-          mesh.position.set(7 + (index % 3) * 1.5, 0.6, 4 + Math.floor(index / 3) * 1.5);
+          // Lantai 1: Lounge Sofa & Meeting Area (Berdiri / santai di sisi kanan)
+          const lx = 8.5 + (index % 3) * 1.5;
+          const lz = 2.5 + Math.floor(index / 3) * 1.6;
+          mesh.position.set(lx, 0.4, lz);
+          mesh.rotation.x = 0;
+          mesh.rotation.y = -Math.PI / 2;
           mesh.rotation.z = 0;
-          mesh.userData.baseY = 0.6;
+          mesh.userData.baseY = 0.4;
         }
       });
     }
@@ -1945,20 +2072,21 @@
       const btn2d = document.getElementById('btn-view-2d');
       const btn3d = document.getElementById('btn-view-3d');
       const canvasWrap = document.getElementById('office3d-canvas-wrap');
-      const floorsContainer = document.getElementById('floors-container');
+      const stage2d = document.getElementById('stage-2d');
 
       if (view === '3d') {
         btn2d.classList.remove('active');
         btn3d.classList.add('active');
+        stage2d.style.display = 'none';
         canvasWrap.classList.add('active');
-        floorsContainer.style.display = 'none';
         init3DOffice();
+        resize3DCanvas();
         if (stateCache) update3DOffice(stateCache);
       } else {
         btn3d.classList.remove('active');
         btn2d.classList.add('active');
         canvasWrap.classList.remove('active');
-        floorsContainer.style.display = 'flex';
+        stage2d.style.display = 'flex';
       }
     }
 
