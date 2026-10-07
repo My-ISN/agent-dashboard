@@ -139,6 +139,10 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
             return super().do_GET()
         if path == "/api/health":
             return self.handle_get_health()
+        if path == "/api/access":
+            return self._json({"enabled": False, "rememberDays": 30, "minLength": 6})
+        if path == "/api/profile-lock":
+            return self._json({"enabled": False, "agents": [], "unlocked": []})
         if path == "/api/agents/state":
             return self._json(orchestrator.state.snapshot())
         if path == "/api/office":
@@ -157,10 +161,16 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
             return self.handle_get_calendar()
         if path == "/api/runtime":
             return self.handle_get_runtime()
+        if path == "/api/memory":
+            return self.handle_get_memory()
+        if path == "/api/folders":
+            return self.handle_get_folders()
+        if path == "/api/knowledge":
+            return self.handle_get_knowledge()
+        if path == "/api/command-log":
+            return self.handle_get_command_log()
         if path == "/api/logs":
-            recent = read_logs()[-25:]
-            recent.reverse()
-            return self._json(recent)
+            return self.handle_get_logs()
         if path == "/api/kpi":
             return self.handle_get_kpi()
         return super().do_GET()
@@ -213,6 +223,109 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
                 "data": [{"name": a["short"], "model": "gemini-1.5-flash", "gateway": "Running" if a["powered"] else "Stopped"} for a in agents]
             },
             "openCode": {"availability": "available", "data": "Ready"},
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_memory(self):
+        import datetime
+        snap = orchestrator.state.snapshot()
+        agents = snap["agents"]
+        profiles = []
+        for a in agents:
+            profiles.append({
+                "profile": a["id"],
+                "label": a["name"],
+                "memories": [
+                    {"name": "SOUL.md", "content": f"Identity: {a['name']} ({a['role']})\nCompany: CV ISKOM (Rental Laptop & IT)"},
+                    {"name": "MEMORY.md", "content": f"Role: {a['role']}\nSOP: Diskon max 10% tanpa approval Owner. Wajib validasi unit di database fisik."},
+                    {"name": "USER.md", "content": "Owner ISKOM (Fabian) - Threshold approval Rp 25 Juta & Diskon >10%."}
+                ]
+            })
+        return self._json({
+            "profiles": profiles,
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_folders(self):
+        import datetime
+        snap = orchestrator.state.snapshot()
+        agents = snap["agents"]
+        return self._json({
+            "agents": [
+                {
+                    "profile": a["id"],
+                    "label": a["name"],
+                    "available": True,
+                    "path": f"agents/{a['id'].lower().replace('-', '_')}.py"
+                } for a in agents
+            ],
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_knowledge(self):
+        import datetime
+        return self._json({
+            "skills": {
+                "availability": "available",
+                "data": [
+                    {"name": "rental_calculator", "category": "Pricing & Billing", "source": "tools/rental_calculator.py", "trust": "verified", "status": "enabled"},
+                    {"name": "inventory_checker", "category": "Warehouse", "source": "tools/inventory_tools.py", "trust": "verified", "status": "enabled"},
+                    {"name": "payment_mock", "category": "Finance", "source": "tools/payment_mock.py", "trust": "verified", "status": "enabled"},
+                    {"name": "ticket_manager", "category": "Support", "source": "tools/ticket_tools.py", "trust": "verified", "status": "enabled"}
+                ]
+            },
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_command_log(self):
+        import datetime
+        logs = read_logs()[-20:]
+        entries = []
+        for l in logs:
+            entries.append({
+                "command": l.get("tools_called", ["orchestration"])[0] if l.get("tools_called") else "router_dispatch",
+                "ok": l.get("status") == "SUCCESS",
+                "durationMs": 14,
+                "at": l.get("timestamp", datetime.datetime.now(datetime.timezone.utc).isoformat())
+            })
+        return self._json({
+            "entries": entries,
+            "health": {
+                "total": len(logs),
+                "failed": sum(1 for l in logs if l.get("status") != "SUCCESS"),
+                "averageMs": 14
+            },
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_logs(self):
+        import datetime
+        logs = read_logs()[-40:]
+        logs.reverse()
+        data_lines = []
+        for l in logs:
+            ts = l.get("timestamp", "").split("T")[-1][:8] if "T" in l.get("timestamp", "") else "00:00:00"
+            agent = l.get("agent_name") or l.get("agent_id") or "SYSTEM"
+            inp = l.get("user_input") or "-"
+            act = l.get("action") or l.get("keputusan") or l.get("result") or "-"
+            status = l.get("status", "SUCCESS")
+            lvl = "INFO" if status == "SUCCESS" else ("WARNING" if status == "PENDING_APPROVAL" else "ERROR")
+            data_lines.append({
+                "text": f"[{ts}] [{lvl}] {agent}: {inp} -> {act}",
+                "level": lvl
+            })
+
+        return self._json({
+            "files": [
+                {
+                    "name": "activity_logs.jsonl",
+                    "label": "ISKOM AI-OS Audit Trail",
+                    "source": {
+                        "availability": "available",
+                        "data": data_lines
+                    }
+                }
+            ],
             "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
         })
 
