@@ -137,6 +137,8 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
         if path == "/classic":
             self.path = "/dashboard.html"
             return super().do_GET()
+        if path == "/api/health":
+            return self.handle_get_health()
         if path == "/api/agents/state":
             return self._json(orchestrator.state.snapshot())
         if path == "/api/office":
@@ -149,6 +151,12 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
             return self.handle_get_dashboard()
         if path == "/api/usage":
             return self.handle_get_usage()
+        if path == "/api/tasks":
+            return self.handle_get_tasks()
+        if path == "/api/calendar":
+            return self.handle_get_calendar()
+        if path == "/api/runtime":
+            return self.handle_get_runtime()
         if path == "/api/logs":
             recent = read_logs()[-25:]
             recent.reverse()
@@ -156,6 +164,57 @@ class AIOSRequestHandler(SimpleHTTPRequestHandler):
         if path == "/api/kpi":
             return self.handle_get_kpi()
         return super().do_GET()
+
+    def handle_get_health(self):
+        import datetime
+        return self._json({
+            "ok": True,
+            "apiVersion": 12,
+            "system": "ISKOM AI-OS Virtual Office",
+            "startedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_tasks(self):
+        import datetime
+        logs = read_logs()[-15:]
+        tasks = []
+        for idx, l in enumerate(logs):
+            tasks.append({
+                "id": f"TSK-{idx+1:03d}",
+                "title": l.get("user_input") or "Tugas Otomasi",
+                "status": "done" if l.get("status") == "SUCCESS" else "in_progress",
+                "assignee": l.get("agent_id") or "AGENT-MGR-01"
+            })
+        return self._json({
+            "tasks": {"availability": "available", "data": tasks},
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_calendar(self):
+        import datetime
+        return self._json({
+            "jobs": {
+                "availability": "available",
+                "data": [
+                    {"name": "Daily Sync Inventory", "schedule": "0 0 * * *", "agent": "AGENT-INV-01", "status": "active"},
+                    {"name": "Monthly Billing Cycle", "schedule": "0 0 1 * *", "agent": "AGENT-FIN-01", "status": "active"}
+                ]
+            },
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
+
+    def handle_get_runtime(self):
+        import datetime
+        snap = orchestrator.state.snapshot()
+        agents = snap["agents"]
+        return self._json({
+            "profiles": {
+                "availability": "available",
+                "data": [{"name": a["short"], "model": "gemini-1.5-flash", "gateway": "Running" if a["powered"] else "Stopped"} for a in agents]
+            },
+            "openCode": {"availability": "available", "data": "Ready"},
+            "fetchedAt": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
 
     def handle_get_office(self):
         import datetime
